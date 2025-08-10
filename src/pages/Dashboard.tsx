@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/layout/AppShell";
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { listExpenses, listInvoices } from "@/store/demoData";
 
@@ -67,7 +68,7 @@ const Dashboard = () => {
         <div className="rounded-lg border p-4">
           <div className="flex items-center justify-between pb-4">
             <h2 className="font-semibold">Cashflow</h2>
-            <a href="/reports"><Button variant="ghost" size="sm">View reports</Button></a>
+            <Link to="/reports"><Button variant="ghost" size="sm">View reports</Button></Link>
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">

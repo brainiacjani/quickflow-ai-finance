@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -42,12 +42,12 @@ export const MainNav = () => {
         </nav>
 
         <div className="flex items-center gap-2">
-          <a href="/auth/login" className="hidden sm:block">
+          <Link to="/auth/login" className="hidden sm:block">
             <Button variant="ghost" size="sm">Log in</Button>
-          </a>
-          <a href="/onboarding">
+          </Link>
+          <Link to="/onboarding">
             <Button variant="hero" size="sm">Start free trial</Button>
-          </a>
+          </Link>
         </div>
       </div>
     </header>
