@@ -1,6 +1,18 @@
+
 import { NavLink, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const links = [
   { to: "/dashboard", label: "Dashboard" },
@@ -11,14 +23,34 @@ const links = [
 ];
 
 export const MainNav = () => {
+  const { user, signOut } = useAuth();
+  const { data: profile } = useProfile();
+
+  const displayName =
+    profile?.display_name?.trim() ||
+    [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim() ||
+    user?.email ||
+    "Account";
+
+  const initials = (displayName || "")
+    .split(" ")
+    .map((s) => s[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <a href="/" className="inline-flex items-center gap-2 font-semibold">
-          <div className="h-7 w-7 rounded-md" style={{
-            background: "radial-gradient(120% 120% at 0% 0%, hsl(var(--brand)) 0%, hsl(var(--brand-glow)) 60%, hsl(var(--brand)) 100%)",
-            boxShadow: "var(--shadow-glow)" as any,
-          }} />
+          <div
+            className="h-7 w-7 rounded-md"
+            style={{
+              background:
+                "radial-gradient(120% 120% at 0% 0%, hsl(var(--brand)) 0%, hsl(var(--brand-glow)) 60%, hsl(var(--brand)) 100%)",
+              boxShadow: "var(--shadow-glow)" as any,
+            }}
+          />
           <span>QuickFlow</span>
         </a>
 
@@ -42,12 +74,51 @@ export const MainNav = () => {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link to="/auth/login" className="hidden sm:block">
-            <Button variant="ghost" size="sm">Log in</Button>
-          </Link>
-          <Link to="/onboarding">
-            <Button variant="hero" size="sm">Start free trial</Button>
-          </Link>
+          {!user ? (
+            <>
+              <Link to="/auth/login" className="hidden sm:block">
+                <Button variant="ghost" size="sm">
+                  Log in
+                </Button>
+              </Link>
+              <Link to="/onboarding">
+                <Button variant="hero" size="sm">
+                  Start free trial
+                </Button>
+              </Link>
+            </>
+          ) : (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-accent transition">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
+                      <AvatarFallback>{initials || "U"}</AvatarFallback>
+                    </Avatar>
+                    <span className="hidden sm:block text-sm">{displayName}</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                  <DropdownMenuLabel className="truncate">{displayName}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <Link to="/dashboard">
+                    <DropdownMenuItem className="cursor-pointer">Dashboard</DropdownMenuItem>
+                  </Link>
+                  <Link to="/settings">
+                    <DropdownMenuItem className="cursor-pointer">Settings</DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                    onClick={() => signOut()}
+                  >
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
         </div>
       </div>
     </header>
