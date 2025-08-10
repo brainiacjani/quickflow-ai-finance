@@ -87,7 +87,8 @@ const Onboarding = () => {
       <div className="container py-10 max-w-2xl">
         <div className="mb-6">
           <div className="text-sm text-muted-foreground">Step {step} of 5</div>
-          <h1 className="text-2xl font-semibold">Let’s set up your business</h1>
+          <h1 className="text-2xl font-semibold">Welcome{data.first_name ? `, ${data.first_name}` : ''}!</h1>
+          <p className="text-muted-foreground">Let’s set up your business</p>
         </div>
 
         {step === 1 && (

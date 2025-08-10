@@ -29,7 +29,6 @@ export const MainNav = () => {
   const displayName =
     profile?.display_name?.trim() ||
     [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim() ||
-    user?.email ||
     "Account";
 
   const initials = (displayName || "")

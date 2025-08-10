@@ -26,6 +26,8 @@ const Settings = () => {
   const [cRegion, setCRegion] = useState("");
   const [cCurrency, setCCurrency] = useState("");
   const [cStart, setCStart] = useState("");
+  const [cLogoUrl, setCLogoUrl] = useState<string>("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingCompany, setSavingCompany] = useState(false);
@@ -45,6 +47,7 @@ const Settings = () => {
       setCRegion(company.region || "");
       setCCurrency(company.currency || "");
       setCStart(company.fiscal_year_start || "");
+      setCLogoUrl((company as any)?.logo_url || "");
     }
   }, [company]);
 
@@ -87,7 +90,8 @@ const Settings = () => {
         region: cRegion || null,
         currency: cCurrency || null,
         fiscal_year_start: cStart || null,
-      };
+        logo_url: cLogoUrl || null,
+      } as any;
       const { error } = await supabase.from("companies").upsert(payload, { onConflict: "owner_id" });
       if (error) throw error;
       toast.success("Company updated");
@@ -97,6 +101,27 @@ const Settings = () => {
       toast.error(err?.message ?? "Failed to update company");
     } finally {
       setSavingCompany(false);
+    }
+  };
+
+  const handleLogoUpload = async (file: File) => {
+    if (!user || !file) return;
+    try {
+      setUploadingLogo(true);
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const path = `${user.id}/company-logo-${Date.now()}.${ext}`;
+      const { data, error } = await supabase.storage
+        .from('company-logos')
+        .upload(path, file, { cacheControl: '3600', upsert: true, contentType: file.type });
+      if (error) throw error;
+      const { data: pub } = supabase.storage.from('company-logos').getPublicUrl(data.path);
+      setCLogoUrl(pub.publicUrl);
+      toast.success('Logo uploaded');
+    } catch (err: any) {
+      console.error('Logo upload failed', err);
+      toast.error(err?.message ?? 'Failed to upload logo');
+    } finally {
+      setUploadingLogo(false);
     }
   };
 
@@ -168,6 +193,26 @@ const Settings = () => {
             <div className="grid gap-1">
               <label className="text-sm">Fiscal year start date</label>
               <input type="date" className="rounded-md border bg-background px-3 py-2" value={cStart || ""} onChange={(e) => setCStart(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm">Company logo</label>
+              <div className="flex items-center gap-4">
+                {cLogoUrl ? (
+                  <img src={cLogoUrl} alt={`${cName || 'Company'} logo`} className="h-12 w-12 rounded-md border object-cover" loading="lazy" />
+                ) : (
+                  <div className="h-12 w-12 rounded-md border grid place-items-center text-xs text-muted-foreground">No logo</div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleLogoUpload(file);
+                  }}
+                  disabled={uploadingLogo}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Recommended: Square PNG or SVG, at least 128x128.</p>
             </div>
             <div className="flex justify-end">
               <Button variant="hero" onClick={saveCompany} disabled={savingCompany}>

@@ -3,7 +3,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { saveInvoice, listInvoices, InvoiceItem, Invoice } from "@/store/demoData";
-
+import { useCompany } from "@/hooks/useCompany";
 
 const Invoices = () => {
   const [customer, setCustomer] = useState("");
@@ -11,6 +11,7 @@ const Invoices = () => {
   const [dueDate, setDueDate] = useState<string>(new Date(Date.now()+7*86400000).toISOString().slice(0,10));
   const [items, setItems] = useState<InvoiceItem[]>([{ description: "Service", quantity: 1, unitPrice: 100 }]);
   const [refresh, setRefresh] = useState(0);
+  const { data: company } = useCompany();
 
   const total = items.reduce((s, it) => s + it.quantity * it.unitPrice, 0);
 
@@ -47,19 +48,84 @@ const Invoices = () => {
     if (!inv) return;
     const newWin = window.open('', '_blank');
     if (!newWin) return;
-    newWin.document.write(`<html><head><title>Invoice ${id}</title></head><body>
-      <h1>Invoice</h1>
-      <p><strong>Customer:</strong> ${inv.customer}</p>
-      <p><strong>Issue:</strong> ${inv.issueDate} &nbsp; <strong>Due:</strong> ${inv.dueDate}</p>
-      <table border="1" cellspacing="0" cellpadding="6">
-        <tr><th>Description</th><th>Qty</th><th>Unit</th><th>Total</th></tr>
-        ${inv.items.map(it => `<tr><td>${it.description}</td><td>${it.quantity}</td><td>$${it.unitPrice.toFixed(2)}</td><td>$${(it.quantity*it.unitPrice).toFixed(2)}</td></tr>`).join('')}
+
+    const rows = inv.items
+      .map(it => `<tr>
+          <td>${it.description}</td>
+          <td class="text-center">${it.quantity}</td>
+          <td class="text-right">$${it.unitPrice.toFixed(2)}</td>
+          <td class="text-right">$${(it.quantity * it.unitPrice).toFixed(2)}</td>
+        </tr>`)
+      .join('');
+
+    const logo = company && (company as any).logo_url
+      ? `<img src="${(company as any).logo_url}" alt="${company?.name || 'Company'} logo" style="height:48px;width:auto;object-fit:contain;border-radius:8px;" />`
+      : '';
+
+    const companyName = company?.name || 'Your Company';
+
+    newWin.document.write(`<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Invoice ${id}</title>
+    <style>
+      :root { --fg: #0a0a0a; --muted: #6b7280; --border: #e5e7eb; --bg: #ffffff; --accent: #f3f4f6; }
+      * { box-sizing: border-box; }
+      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; margin: 0; padding: 32px; color: var(--fg); background: var(--bg); }
+      .card { max-width: 900px; margin: 0 auto; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+      .header { display:flex; align-items:center; justify-content:space-between; padding: 24px; background: linear-gradient(180deg, #fafafa, #fff); border-bottom: 1px solid var(--border); }
+      .brand { display:flex; align-items:center; gap: 12px; }
+      .brand-name { font-size: 20px; font-weight: 600; }
+      .title { font-size: 28px; font-weight: 700; }
+      .meta { padding: 16px 24px; color: var(--muted); font-size: 14px; border-bottom: 1px solid var(--border); display:flex; gap:24px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+      th { background: var(--accent); text-align: left; font-weight: 600; }
+      .text-right { text-align: right; }
+      .text-center { text-align: center; }
+      .footer { padding: 24px; display:flex; justify-content:flex-end; gap: 24px; }
+      .total { font-size: 20px; font-weight: 700; }
+      @media print { body { padding: 0 } .card { border: none } }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <div class="brand">
+          ${logo}
+          <div class="brand-name">${companyName}</div>
+        </div>
+        <div class="title">Invoice</div>
+      </div>
+      <div class="meta">
+        <div><strong>Issue:</strong> ${inv.issueDate}</div>
+        <div><strong>Due:</strong> ${inv.dueDate}</div>
+        <div><strong>Customer:</strong> ${inv.customer}</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th class="text-center">Qty</th>
+            <th class="text-right">Unit</th>
+            <th class="text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
       </table>
-      <h2>Total: $${inv.total.toFixed(2)}</h2>
-      </body></html>`);
+      <div class="footer">
+        <div class="total">Total: $${inv.total.toFixed(2)}</div>
+      </div>
+    </div>
+    <script>window.onload = () => { window.print(); }</script>
+  </body>
+</html>`);
     newWin.document.close();
     newWin.focus();
-    newWin.print();
   };
 
   const invoices = listInvoices();
