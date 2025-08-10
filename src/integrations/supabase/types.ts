@@ -21,6 +21,7 @@ export type Database = {
           currency: string | null
           fiscal_year_start: string | null
           id: string
+          logo_url: string | null
           name: string
           owner_id: string
           region: string | null
@@ -32,6 +33,7 @@ export type Database = {
           currency?: string | null
           fiscal_year_start?: string | null
           id?: string
+          logo_url?: string | null
           name: string
           owner_id: string
           region?: string | null
@@ -43,6 +45,7 @@ export type Database = {
           currency?: string | null
           fiscal_year_start?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
           owner_id?: string
           region?: string | null
