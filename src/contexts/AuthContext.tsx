@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export type AuthContextType = {
   user: any | null;
@@ -11,44 +12,49 @@ export type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const LOCAL_USER_KEY = "qf_user";
-
-const readLocalUser = () => {
-  try {
-    const raw = localStorage.getItem(LOCAL_USER_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-};
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setUser(readLocalUser());
-    setLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const actions = useMemo(() => ({
-    signIn: async (email: string, _password: string) => {
-      const mock = { id: "local-user", email };
-      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mock));
-      setUser(mock);
+    signIn: async (email: string, password: string) => {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
     },
-    signUp: async (email: string, _password: string) => {
-      const mock = { id: "local-user", email };
-      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mock));
-      setUser(mock);
+    signUp: async (email: string, password: string) => {
+      const redirectUrl = `${window.location.origin}/onboarding`;
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: redirectUrl },
+      });
+      if (error) throw error;
     },
     signOut: async () => {
-      localStorage.removeItem(LOCAL_USER_KEY);
-      setUser(null);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     },
-    resetPassword: async (_email: string) => {
-      // No-op locally
-      return;
+    resetPassword: async (email: string) => {
+      const redirectUrl = `${window.location.origin}/auth/update-password`;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+      if (error) throw error;
     },
   }), []);
 

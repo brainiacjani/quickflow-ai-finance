@@ -3,11 +3,28 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Signup = () => {
   const { signUp } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSignup = async () => {
+    setLoading(true);
+    try {
+      await signUp(email, password);
+      toast.success("Check your email to confirm your account");
+      navigate("/onboarding");
+    } catch (err: any) {
+      toast.error(err?.message ?? "Sign up failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <AppShell>
@@ -18,7 +35,7 @@ const Signup = () => {
           <div className="grid gap-3">
             <input placeholder="Email" className="rounded-md border bg-background px-3 py-2" value={email} onChange={e=>setEmail(e.target.value)} />
             <input type="password" placeholder="Password" className="rounded-md border bg-background px-3 py-2" value={password} onChange={e=>setPassword(e.target.value)} />
-            <Button variant="hero" onClick={() => signUp(email, password).then(()=> window.location.href='/onboarding')}>Create account</Button>
+            <Button variant="hero" onClick={handleSignup} disabled={loading}>{loading ? "Creating..." : "Create account"}</Button>
             <div className="text-sm">Have an account? <a className="text-primary underline-offset-4 hover:underline" href="/auth/login">Log in</a></div>
           </div>
         </div>

@@ -18,9 +18,12 @@ import Onboarding from "./pages/Onboarding";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import Reset from "./pages/auth/Reset";
+import UpdatePassword from "./pages/auth/UpdatePassword";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCanceled from "./pages/PaymentCanceled";
 import NotFound from "./pages/NotFound";
+import { RequireAuth } from "./components/auth/RequireAuth";
+import { RedirectIfAuthed } from "./components/auth/RedirectIfAuthed";
 
 const queryClient = new QueryClient();
 
@@ -33,28 +36,29 @@ const App = () => (
           <Sonner />
           <AuthProvider>
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Landing />} />
-                <Route path="/pricing" element={<Pricing />} />
+                <Routes>
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/pricing" element={<Pricing />} />
 
-                <Route path="/auth/login" element={<Login />} />
-                <Route path="/auth/signup" element={<Signup />} />
-                <Route path="/auth/reset" element={<Reset />} />
+                  <Route path="/auth/login" element={<RedirectIfAuthed><Login /></RedirectIfAuthed>} />
+                  <Route path="/auth/signup" element={<RedirectIfAuthed><Signup /></RedirectIfAuthed>} />
+                  <Route path="/auth/reset" element={<RedirectIfAuthed><Reset /></RedirectIfAuthed>} />
+                  <Route path="/auth/update-password" element={<UpdatePassword />} />
 
-                <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
 
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/invoices" element={<Invoices />} />
-                <Route path="/expenses" element={<Expenses />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/settings" element={<Settings />} />
+                  <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                  <Route path="/invoices" element={<RequireAuth><Invoices /></RequireAuth>} />
+                  <Route path="/expenses" element={<RequireAuth><Expenses /></RequireAuth>} />
+                  <Route path="/reports" element={<RequireAuth><Reports /></RequireAuth>} />
+                  <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
 
-                <Route path="/payment-success" element={<PaymentSuccess />} />
-                <Route path="/payment-canceled" element={<PaymentCanceled />} />
+                  <Route path="/payment-success" element={<PaymentSuccess />} />
+                  <Route path="/payment-canceled" element={<PaymentCanceled />} />
 
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
             </BrowserRouter>
           </AuthProvider>
         </TooltipProvider>
