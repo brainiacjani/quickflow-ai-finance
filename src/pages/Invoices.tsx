@@ -71,23 +71,183 @@ const Invoices = () => {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Invoice ${id}</title>
     <style>
-      :root { --fg: #0a0a0a; --muted: #6b7280; --border: #e5e7eb; --bg: #ffffff; --accent: #f3f4f6; }
+      :root { 
+        --primary: 270 95% 75%;
+        --primary-glow: 280 100% 85%;
+        --brand: 270 95% 75%;
+        --brand-glow: 280 100% 85%;
+        --brand-contrast: 0 0% 100%;
+        --accent: 270 95% 75%;
+        --accent-light: 280 100% 95%;
+        --fg: 240 10% 3.9%;
+        --fg-muted: 240 3.8% 46.1%;
+        --bg: 0 0% 100%;
+        --surface: 240 4.8% 95.9%;
+        --surface-elevated: 0 0% 100%;
+        --border: 240 5.9% 90%;
+        --border-input: 240 5.9% 90%;
+        --destructive: 0 84.2% 60.2%;
+        --warning: 38 92% 50%;
+        --success: 142 76% 36%;
+        --shadow-brand: 0 10px 30px -10px hsl(var(--brand) / 0.3);
+        --shadow-glow: 0 0 40px hsl(var(--brand-glow) / 0.4);
+        --gradient-brand: linear-gradient(135deg, hsl(var(--brand)), hsl(var(--brand-glow)));
+        --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent-light)));
+      }
       * { box-sizing: border-box; }
-      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; margin: 0; padding: 32px; color: var(--fg); background: var(--bg); }
-      .card { max-width: 900px; margin: 0 auto; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-      .header { display:flex; align-items:center; justify-content:space-between; padding: 24px; background: linear-gradient(180deg, #fafafa, #fff); border-bottom: 1px solid var(--border); }
-      .brand { display:flex; align-items:center; gap: 12px; }
-      .brand-name { font-size: 20px; font-weight: 600; }
-      .title { font-size: 28px; font-weight: 700; }
-      .meta { padding: 16px 24px; color: var(--muted); font-size: 14px; border-bottom: 1px solid var(--border); display:flex; gap:24px; }
-      table { width: 100%; border-collapse: collapse; }
-      th, td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
-      th { background: var(--accent); text-align: left; font-weight: 600; }
-      .text-right { text-align: right; }
-      .text-center { text-align: center; }
-      .footer { padding: 24px; display:flex; justify-content:flex-end; gap: 24px; }
-      .total { font-size: 20px; font-weight: 700; }
-      @media print { body { padding: 0 } .card { border: none } }
+      body { 
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; 
+        margin: 0; 
+        padding: 32px; 
+        color: hsl(var(--fg)); 
+        background: linear-gradient(135deg, hsl(var(--surface)) 0%, hsl(var(--bg)) 100%); 
+        min-height: 100vh; 
+      }
+      .card { 
+        max-width: 900px; 
+        margin: 0 auto; 
+        background: hsl(var(--surface-elevated)); 
+        border-radius: 16px; 
+        overflow: hidden; 
+        box-shadow: var(--shadow-brand), 0 1px 3px 0 hsl(240 5.9% 10% / 0.1); 
+      }
+      .header { 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+        padding: 32px; 
+        background: var(--gradient-brand); 
+        color: hsl(var(--brand-contrast)); 
+        position: relative; 
+        overflow: hidden; 
+      }
+      .header::before { 
+        content: ''; 
+        position: absolute; 
+        top: 0; 
+        right: 0; 
+        width: 200px; 
+        height: 200px; 
+        background: radial-gradient(circle, hsl(var(--brand-glow) / 0.3) 0%, transparent 70%); 
+        border-radius: 50%; 
+        transform: translate(50%, -50%); 
+      }
+      .brand { 
+        display: flex; 
+        align-items: center; 
+        gap: 16px; 
+        position: relative; 
+        z-index: 1; 
+      }
+      .brand-name { 
+        font-size: 24px; 
+        font-weight: 700; 
+        letter-spacing: -0.5px; 
+      }
+      .title { 
+        font-size: 36px; 
+        font-weight: 800; 
+        letter-spacing: -1px; 
+        position: relative; 
+        z-index: 1; 
+      }
+      .meta { 
+        padding: 24px 32px; 
+        background: var(--gradient-accent); 
+        color: hsl(var(--fg)); 
+        font-size: 15px; 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+        gap: 24px; 
+        border-bottom: 1px solid hsl(var(--border)); 
+      }
+      .meta-item { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 4px; 
+      }
+      .meta-label { 
+        font-weight: 600; 
+        color: hsl(var(--fg-muted)); 
+        text-transform: uppercase; 
+        font-size: 12px; 
+        letter-spacing: 0.5px; 
+      }
+      .meta-value { 
+        font-weight: 600; 
+        font-size: 16px; 
+      }
+      table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin: 0; 
+      }
+      th { 
+        background: hsl(var(--surface)); 
+        color: hsl(var(--fg)); 
+        text-align: left; 
+        font-weight: 700; 
+        font-size: 14px; 
+        text-transform: uppercase; 
+        letter-spacing: 0.5px; 
+        padding: 20px 32px; 
+        border-bottom: 2px solid hsl(var(--border)); 
+      }
+      td { 
+        padding: 20px 32px; 
+        border-bottom: 1px solid hsl(var(--border)); 
+        font-size: 15px; 
+      }
+      tbody tr:hover { 
+        background: hsl(var(--surface) / 0.5); 
+      }
+      .text-right { 
+        text-align: right; 
+        font-weight: 600; 
+      }
+      .text-center { 
+        text-align: center; 
+        font-weight: 500; 
+      }
+      .footer { 
+        padding: 32px; 
+        background: var(--gradient-accent); 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+      }
+      .footer-info { 
+        color: hsl(var(--fg-muted)); 
+        font-size: 14px; 
+      }
+      .total { 
+        font-size: 28px; 
+        font-weight: 800; 
+        color: hsl(var(--brand)); 
+        text-shadow: var(--shadow-glow); 
+      }
+      .invoice-number { 
+        background: hsl(var(--surface)); 
+        padding: 8px 16px; 
+        border-radius: 8px; 
+        font-family: monospace; 
+        font-size: 14px; 
+        color: hsl(var(--fg-muted)); 
+        margin-top: 8px; 
+      }
+      @media print { 
+        body { 
+          padding: 0; 
+          background: white; 
+        } 
+        .card { 
+          box-shadow: none; 
+          border-radius: 0; 
+        } 
+        tbody tr:hover { 
+          background: transparent; 
+        } 
+      }
     </style>
   </head>
   <body>
@@ -100,9 +260,22 @@ const Invoices = () => {
         <div class="title">Invoice</div>
       </div>
       <div class="meta">
-        <div><strong>Issue:</strong> ${inv.issueDate}</div>
-        <div><strong>Due:</strong> ${inv.dueDate}</div>
-        <div><strong>Customer:</strong> ${inv.customer}</div>
+        <div class="meta-item">
+          <div class="meta-label">Invoice Number</div>
+          <div class="meta-value">#${inv.id.slice(0, 8).toUpperCase()}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Issue Date</div>
+          <div class="meta-value">${inv.issueDate}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Due Date</div>
+          <div class="meta-value">${inv.dueDate}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Bill To</div>
+          <div class="meta-value">${inv.customer}</div>
+        </div>
       </div>
       <table>
         <thead>
@@ -118,6 +291,10 @@ const Invoices = () => {
         </tbody>
       </table>
       <div class="footer">
+        <div class="footer-info">
+          <div>Thank you for your business!</div>
+          <div style="margin-top: 8px; font-size: 12px;">Payment terms: Net 30 days</div>
+        </div>
         <div class="total">Total: $${inv.total.toFixed(2)}</div>
       </div>
     </div>
