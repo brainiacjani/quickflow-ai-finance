@@ -1,8 +1,11 @@
 import { Helmet } from "react-helmet-async";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
-import { useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { useMemo, useState, useRef } from "react";
 import { Expense, saveExpense, listExpenses } from "@/store/demoData";
+import { Upload, Download } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 
 const guessCategory = (vendor: string, amount: number): { category: string; confidence: number } => {
@@ -20,6 +23,8 @@ const Expenses = () => {
   const [amount, setAmount] = useState<number>(0);
   const [category, setCategory] = useState("");
   const [note, setNote] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const suggestion = useMemo(() => guessCategory(vendor, amount), [vendor, amount]);
 
@@ -27,6 +32,67 @@ const Expenses = () => {
     const exp: Expense = { id: crypto.randomUUID(), date, vendor, amount, category: category || suggestion.category, note };
     saveExpense(exp);
     setVendor(""); setAmount(0); setCategory(""); setNote("");
+  };
+
+  const downloadTemplate = () => {
+    const link = document.createElement('a');
+    link.href = '/expense-template.csv';
+    link.download = 'expense-template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const csv = e.target?.result as string;
+      const lines = csv.split('\n');
+      const headers = lines[0].split(',').map(h => h.trim());
+      
+      let imported = 0;
+      let errors = 0;
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const values = line.split(',').map(v => v.trim());
+        
+        try {
+          const expense: Expense = {
+            id: crypto.randomUUID(),
+            date: values[0] || new Date().toISOString().slice(0,10),
+            vendor: values[1] || '',
+            amount: parseFloat(values[2]) || 0,
+            category: values[3] || 'General',
+            note: values[4] || ''
+          };
+
+          if (expense.vendor && expense.amount > 0) {
+            saveExpense(expense);
+            imported++;
+          } else {
+            errors++;
+          }
+        } catch {
+          errors++;
+        }
+      }
+
+      toast({
+        title: "Import Complete",
+        description: `Imported ${imported} expenses${errors > 0 ? `. ${errors} rows had errors.` : '.'}`,
+      });
+    };
+
+    reader.readAsText(file);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const expenses = listExpenses();
@@ -41,7 +107,30 @@ const Expenses = () => {
 
       <div className="container py-8 grid gap-8">
         <section className="grid gap-4">
-          <h1 className="text-2xl font-semibold">Add expense</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-semibold">Add expense</h1>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={downloadTemplate} className="flex items-center gap-2">
+                <Download className="h-4 w-4" />
+                Download Template
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                Import CSV
+              </Button>
+              <Input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </div>
+          </div>
           <div className="grid md:grid-cols-2 gap-3">
             <div className="grid gap-2">
               <label className="text-sm">Date</label>
