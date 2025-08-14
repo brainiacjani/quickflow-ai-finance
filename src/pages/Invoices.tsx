@@ -51,10 +51,11 @@ const Invoices = () => {
 
     const rows = inv.items
       .map(it => `<tr>
-          <td>${it.description}</td>
+          <td class="item-desc">${it.description}</td>
+          <td class="text-center">${it.quantity}</td>
           <td class="text-center">${it.quantity}</td>
           <td class="text-right">$${it.unitPrice.toFixed(2)}</td>
-          <td class="text-right">$${(it.quantity * it.unitPrice).toFixed(2)}</td>
+          <td class="text-right font-bold">$${(it.quantity * it.unitPrice).toFixed(2)}</td>
         </tr>`)
       .join('');
 
@@ -71,135 +72,131 @@ const Invoices = () => {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Invoice ${id}</title>
     <style>
-      :root { 
-        --primary: 270 95% 75%;
-        --primary-glow: 280 100% 85%;
-        --brand: 270 95% 75%;
-        --brand-glow: 280 100% 85%;
-        --brand-contrast: 0 0% 100%;
-        --accent: 270 95% 75%;
-        --accent-light: 280 100% 95%;
-        --fg: 240 10% 3.9%;
-        --fg-muted: 240 3.8% 46.1%;
-        --bg: 0 0% 100%;
-        --surface: 240 4.8% 95.9%;
-        --surface-elevated: 0 0% 100%;
-        --border: 240 5.9% 90%;
-        --border-input: 240 5.9% 90%;
-        --destructive: 0 84.2% 60.2%;
-        --warning: 38 92% 50%;
-        --success: 142 76% 36%;
-        --shadow-brand: 0 10px 30px -10px hsl(var(--brand) / 0.3);
-        --shadow-glow: 0 0 40px hsl(var(--brand-glow) / 0.4);
-        --gradient-brand: linear-gradient(135deg, hsl(var(--brand)), hsl(var(--brand-glow)));
-        --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent-light)));
-      }
-      * { box-sizing: border-box; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
       body { 
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; 
-        margin: 0; 
-        padding: 32px; 
-        color: hsl(var(--fg)); 
-        background: linear-gradient(135deg, hsl(var(--surface)) 0%, hsl(var(--bg)) 100%); 
-        min-height: 100vh; 
+        font-family: 'Arial', sans-serif; 
+        background: #f8f9fa; 
+        padding: 20px; 
+        color: #333; 
+        line-height: 1.6;
       }
-      .card { 
-        max-width: 900px; 
+      .invoice-container { 
+        max-width: 800px; 
         margin: 0 auto; 
-        background: hsl(var(--surface-elevated)); 
-        border-radius: 16px; 
+        background: white; 
+        border-radius: 8px; 
         overflow: hidden; 
-        box-shadow: var(--shadow-brand), 0 1px 3px 0 hsl(240 5.9% 10% / 0.1); 
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
       }
-      .header { 
+      .invoice-header { 
         display: flex; 
-        align-items: center; 
         justify-content: space-between; 
-        padding: 32px; 
-        background: var(--gradient-brand); 
-        color: hsl(var(--brand-contrast)); 
-        position: relative; 
-        overflow: hidden; 
+        align-items: center; 
+        padding: 30px; 
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+        color: white; 
       }
-      .header::before { 
-        content: ''; 
-        position: absolute; 
-        top: 0; 
-        right: 0; 
-        width: 200px; 
-        height: 200px; 
-        background: radial-gradient(circle, hsl(var(--brand-glow) / 0.3) 0%, transparent 70%); 
-        border-radius: 50%; 
-        transform: translate(50%, -50%); 
-      }
-      .brand { 
+      .company-info { 
         display: flex; 
         align-items: center; 
-        gap: 16px; 
-        position: relative; 
-        z-index: 1; 
+        gap: 15px; 
       }
-      .brand-name { 
-        font-size: 24px; 
-        font-weight: 700; 
-        letter-spacing: -0.5px; 
-      }
-      .title { 
-        font-size: 36px; 
-        font-weight: 800; 
-        letter-spacing: -1px; 
-        position: relative; 
-        z-index: 1; 
-      }
-      .meta { 
-        padding: 24px 32px; 
-        background: var(--gradient-accent); 
-        color: hsl(var(--fg)); 
-        font-size: 15px; 
-        display: grid; 
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-        gap: 24px; 
-        border-bottom: 1px solid hsl(var(--border)); 
-      }
-      .meta-item { 
+      .company-logo { 
+        width: 50px; 
+        height: 50px; 
+        background: rgba(255,255,255,0.2); 
+        border-radius: 8px; 
         display: flex; 
-        flex-direction: column; 
-        gap: 4px; 
+        align-items: center; 
+        justify-content: center; 
+        font-weight: bold; 
+        font-size: 18px; 
       }
-      .meta-label { 
-        font-weight: 600; 
-        color: hsl(var(--fg-muted)); 
+      .company-name { 
+        font-size: 24px; 
+        font-weight: bold; 
+      }
+      .invoice-title { 
+        font-size: 32px; 
+        font-weight: bold; 
         text-transform: uppercase; 
-        font-size: 12px; 
-        letter-spacing: 0.5px; 
+        letter-spacing: 2px; 
       }
-      .meta-value { 
-        font-weight: 600; 
+      .invoice-meta { 
+        display: grid; 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 30px; 
+        padding: 30px; 
+        background: #f8f9fb; 
+        border-bottom: 3px solid #e9ecef; 
+      }
+      .supplier-info, .invoice-info { 
+        background: white; 
+        padding: 20px; 
+        border-radius: 8px; 
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
+      }
+      .section-title { 
+        font-size: 14px; 
+        font-weight: bold; 
+        text-transform: uppercase; 
+        color: #6c757d; 
+        margin-bottom: 15px; 
+        letter-spacing: 1px; 
+        border-bottom: 2px solid #dee2e6; 
+        padding-bottom: 8px; 
+      }
+      .info-row { 
+        display: flex; 
+        justify-content: space-between; 
+        margin-bottom: 8px; 
+      }
+      .info-label { 
+        color: #6c757d; 
+        font-weight: 500; 
+      }
+      .info-value { 
+        font-weight: bold; 
+        color: #212529; 
+      }
+      .product-section { 
+        padding: 30px; 
+      }
+      .product-title { 
         font-size: 16px; 
+        font-weight: bold; 
+        margin-bottom: 20px; 
+        color: #495057; 
+        text-transform: uppercase; 
+        letter-spacing: 1px; 
       }
       table { 
         width: 100%; 
         border-collapse: collapse; 
-        margin: 0; 
+        margin-bottom: 30px; 
+        background: white; 
+        border-radius: 8px; 
+        overflow: hidden; 
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
       }
       th { 
-        background: hsl(var(--surface)); 
-        color: hsl(var(--fg)); 
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
+        color: #495057; 
         text-align: left; 
-        font-weight: 700; 
-        font-size: 14px; 
+        font-weight: bold; 
+        font-size: 12px; 
         text-transform: uppercase; 
-        letter-spacing: 0.5px; 
-        padding: 20px 32px; 
-        border-bottom: 2px solid hsl(var(--border)); 
+        letter-spacing: 1px; 
+        padding: 15px; 
+        border-bottom: 2px solid #dee2e6; 
       }
       td { 
-        padding: 20px 32px; 
-        border-bottom: 1px solid hsl(var(--border)); 
-        font-size: 15px; 
+        padding: 15px; 
+        border-bottom: 1px solid #f1f3f4; 
+        font-size: 14px; 
       }
       tbody tr:hover { 
-        background: hsl(var(--surface) / 0.5); 
+        background: #f8f9fa; 
       }
       .text-right { 
         text-align: right; 
@@ -207,40 +204,54 @@ const Invoices = () => {
       }
       .text-center { 
         text-align: center; 
-        font-weight: 500; 
       }
-      .footer { 
-        padding: 32px; 
-        background: var(--gradient-accent); 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
+      .font-bold { 
+        font-weight: bold; 
+        color: #212529; 
+      }
+      .payment-summary { 
+        background: linear-gradient(135deg, #f8f9fb 0%, #ffffff 100%); 
+        padding: 30px; 
+        border-top: 3px solid #e9ecef; 
+      }
+      .payment-grid { 
+        display: grid; 
+        grid-template-columns: 1fr auto; 
+        gap: 30px; 
+        align-items: end; 
+      }
+      .payment-info { 
+        color: #6c757d; 
+        font-size: 14px; 
+      }
+      .total-amount { 
+        text-align: right; 
+      }
+      .total-label { 
+        font-size: 16px; 
+        color: #6c757d; 
+        margin-bottom: 5px; 
+      }
+      .total-value { 
+        font-size: 28px; 
+        font-weight: bold; 
+        color: #007bff; 
+        font-family: 'Georgia', serif; 
       }
       .footer-info { 
-        color: hsl(var(--fg-muted)); 
-        font-size: 14px; 
-      }
-      .total { 
-        font-size: 28px; 
-        font-weight: 800; 
-        color: hsl(var(--brand)); 
-        text-shadow: var(--shadow-glow); 
-      }
-      .invoice-number { 
-        background: hsl(var(--surface)); 
-        padding: 8px 16px; 
-        border-radius: 8px; 
-        font-family: monospace; 
-        font-size: 14px; 
-        color: hsl(var(--fg-muted)); 
-        margin-top: 8px; 
+        margin-top: 20px; 
+        padding-top: 20px; 
+        border-top: 1px solid #e9ecef; 
+        text-align: center; 
+        color: #6c757d; 
+        font-size: 12px; 
       }
       @media print { 
         body { 
-          padding: 0; 
           background: white; 
+          padding: 0; 
         } 
-        .card { 
+        .invoice-container { 
           box-shadow: none; 
           border-radius: 0; 
         } 
@@ -251,51 +262,83 @@ const Invoices = () => {
     </style>
   </head>
   <body>
-    <div class="card">
-      <div class="header">
-        <div class="brand">
-          ${logo}
-          <div class="brand-name">${companyName}</div>
+    <div class="invoice-container">
+      <div class="invoice-header">
+        <div class="company-info">
+          ${logo || '<div class="company-logo">C</div>'}
+          <div class="company-name">${companyName}</div>
         </div>
-        <div class="title">Invoice</div>
+        <div class="invoice-title">Invoice</div>
       </div>
-      <div class="meta">
-        <div class="meta-item">
-          <div class="meta-label">Invoice Number</div>
-          <div class="meta-value">#${inv.id.slice(0, 8).toUpperCase()}</div>
+      
+      <div class="invoice-meta">
+        <div class="supplier-info">
+          <div class="section-title">Supplier Information</div>
+          <div class="info-row">
+            <span class="info-label">Company:</span>
+            <span class="info-value">${companyName}</span>
+          </div>
         </div>
-        <div class="meta-item">
-          <div class="meta-label">Issue Date</div>
-          <div class="meta-value">${inv.issueDate}</div>
-        </div>
-        <div class="meta-item">
-          <div class="meta-label">Due Date</div>
-          <div class="meta-value">${inv.dueDate}</div>
-        </div>
-        <div class="meta-item">
-          <div class="meta-label">Bill To</div>
-          <div class="meta-value">${inv.customer}</div>
+        
+        <div class="invoice-info">
+          <div class="section-title">Invoice Details</div>
+          <div class="info-row">
+            <span class="info-label">Invoice #:</span>
+            <span class="info-value">#${inv.id.slice(0, 8).toUpperCase()}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Date:</span>
+            <span class="info-value">${inv.issueDate}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Due Date:</span>
+            <span class="info-value">${inv.dueDate}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Bill To:</span>
+            <span class="info-value">${inv.customer}</span>
+          </div>
         </div>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Description</th>
-            <th class="text-center">Qty</th>
-            <th class="text-right">Unit</th>
-            <th class="text-right">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
-      <div class="footer">
-        <div class="footer-info">
-          <div>Thank you for your business!</div>
-          <div style="margin-top: 8px; font-size: 12px;">Payment terms: Net 30 days</div>
+      
+      <div class="product-section">
+        <div class="product-title">Product Information</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 40%;">Description</th>
+              <th class="text-center" style="width: 15%;">Ordered Qty</th>
+              <th class="text-center" style="width: 15%;">Received Qty</th>
+              <th class="text-right" style="width: 15%;">Rate</th>
+              <th class="text-right" style="width: 15%;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="payment-summary">
+        <div class="payment-grid">
+          <div class="payment-info">
+            <div><strong>Payment Information</strong></div>
+            <div style="margin-top: 10px;">
+              <div>Amount Paid: $0.00</div>
+              <div>Amount Due: $${inv.total.toFixed(2)}</div>
+            </div>
+            <div class="footer-info">
+              <div><strong>Order Summary</strong></div>
+              <div>Order Date: ${inv.issueDate}</div>
+              <div>Received Date: N/A</div>
+            </div>
+          </div>
+          
+          <div class="total-amount">
+            <div class="total-label">Total Amount:</div>
+            <div class="total-value">$${inv.total.toFixed(2)}</div>
+          </div>
         </div>
-        <div class="total">Total: $${inv.total.toFixed(2)}</div>
       </div>
     </div>
     <script>window.onload = () => { window.print(); }</script>
