@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AppShell } from "@/components/layout/AppShell";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { 
   Area, 
@@ -22,7 +22,7 @@ import {
   LineChart,
   Line
 } from "recharts";
-import { listExpenses, listInvoices } from "@/store/demoData";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -42,8 +42,78 @@ import {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Fetch data from Supabase
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      
+      try {
+        const [invoicesData, expensesData] = await Promise.all([
+          supabase.from('invoices').select('*'),
+          supabase.from('expenses').select('*')
+        ]);
+        
+        if (invoicesData.data) setInvoices(invoicesData.data);
+        if (expensesData.data) setExpenses(expensesData.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
+
+  // Set up realtime subscriptions
+  useEffect(() => {
+    if (!user) return;
+
+    const invoicesChannel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'invoices'
+        },
+        async () => {
+          const { data } = await supabase.from('invoices').select('*');
+          if (data) setInvoices(data);
+        }
+      )
+      .subscribe();
+
+    const expensesChannel = supabase
+      .channel('expenses-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'expenses'
+        },
+        async () => {
+          const { data } = await supabase.from('expenses').select('*');
+          if (data) setExpenses(data);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(invoicesChannel);
+      supabase.removeChannel(expensesChannel);
+    };
+  }, [user]);
   
   const { chartData, metrics, recentActivity, expenseCategories } = useMemo(() => {
+    if (loading) return { chartData: [], metrics: {}, recentActivity: [], expenseCategories: [] };
+    
     // Build comprehensive dataset
     const months = Array.from({ length: 12 }).map((_, i) => {
       const d = new Date();
@@ -52,19 +122,16 @@ const Dashboard = () => {
     });
 
     const monthKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()+1}`;
-
-    const invoices = listInvoices();
-    const expenses = listExpenses();
     
     const chartData = months.map((m) => {
       const mk = monthKey(m);
       const earned = invoices
         .filter(i => i.status !== 'draft')
-        .filter(i => monthKey(new Date(i.issueDate)) === mk)
-        .reduce((s, i) => s + i.total, 0);
+        .filter(i => monthKey(new Date(i.issuedate)) === mk)
+        .reduce((s, i) => s + Number(i.total), 0);
       const spent = expenses
         .filter(e => monthKey(new Date(e.date)) === mk)
-        .reduce((s, e) => s + e.amount, 0);
+        .reduce((s, e) => s + Number(e.amount), 0);
       return {
         name: m.toLocaleString(undefined, { month: 'short' }),
         earned,
@@ -86,23 +153,40 @@ const Dashboard = () => {
     const expenseTrend = ((latest.spent - previous.spent) / Math.max(previous.spent, 1)) * 100;
     const profitTrend = ((latest.profit - previous.profit) / Math.max(Math.abs(previous.profit), 1)) * 100;
 
-    // Recent activity simulation
+    // Recent activity from real data
     const recentActivity = [
-      { type: 'invoice', description: 'Invoice #1234 paid', amount: 2500, time: '2 hours ago', status: 'success' },
-      { type: 'expense', description: 'Office supplies', amount: -150, time: '5 hours ago', status: 'neutral' },
-      { type: 'invoice', description: 'Invoice #1233 sent', amount: 1800, time: '1 day ago', status: 'pending' },
-      { type: 'expense', description: 'Software subscription', amount: -99, time: '2 days ago', status: 'neutral' },
-      { type: 'invoice', description: 'Invoice #1232 overdue', amount: 3200, time: '3 days ago', status: 'warning' },
-    ];
+      ...invoices.slice(-3).map(invoice => ({
+        type: 'invoice',
+        description: `Invoice to ${invoice.customer} - ${invoice.status}`,
+        amount: Number(invoice.total),
+        time: new Date(invoice.created_at).toLocaleDateString(),
+        status: invoice.status === 'paid' ? 'success' : invoice.status === 'sent' ? 'pending' : 'neutral'
+      })),
+      ...expenses.slice(-2).map(expense => ({
+        type: 'expense',
+        description: `${expense.vendor} - ${expense.category}`,
+        amount: -Number(expense.amount),
+        time: new Date(expense.created_at).toLocaleDateString(),
+        status: 'neutral'
+      }))
+    ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 5);
 
-    // Expense categories
-    const expenseCategories = [
-      { name: 'Office Supplies', value: 2400, color: 'hsl(var(--primary))' },
-      { name: 'Software', value: 1800, color: 'hsl(var(--secondary))' },
-      { name: 'Marketing', value: 3200, color: 'hsl(var(--accent))' },
-      { name: 'Travel', value: 1200, color: 'hsl(var(--destructive))' },
-      { name: 'Utilities', value: 800, color: 'hsl(var(--muted))' }
-    ];
+    // Expense categories from real data
+    const categoryTotals = expenses.reduce((acc, expense) => {
+      const category = expense.category || 'Other';
+      acc[category] = (acc[category] || 0) + Number(expense.amount);
+      return acc;
+    }, {} as Record<string, number>);
+
+    const colors = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--destructive))', 'hsl(var(--muted))'];
+    const expenseCategories = Object.entries(categoryTotals)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([name, value], index) => ({
+        name,
+        value,
+        color: colors[index] || 'hsl(var(--muted))'
+      }));
 
     return {
       chartData,
@@ -119,7 +203,7 @@ const Dashboard = () => {
         profitTrend,
         invoiceCount: invoices.length,
         overdueInvoices: invoices.filter(i => {
-          const dueDate = new Date(i.dueDate);
+          const dueDate = new Date(i.duedate);
           const today = new Date();
           return i.status === 'sent' && dueDate < today;
         }).length,
@@ -128,7 +212,7 @@ const Dashboard = () => {
       recentActivity,
       expenseCategories
     };
-  }, [user]);
+  }, [invoices, expenses, loading]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
