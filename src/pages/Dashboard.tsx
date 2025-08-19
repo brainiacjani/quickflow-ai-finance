@@ -23,6 +23,8 @@ import {
   Line
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/hooks/useProfile";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -42,6 +44,8 @@ import {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { data: profile } = useProfile();
+  const displayName = profile?.first_name ?? profile?.display_name ?? (user?.email ? user.email.split('@')[0] : '');
   const [invoices, setInvoices] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -256,12 +260,42 @@ const Dashboard = () => {
         <link rel="canonical" href="https://quickflow.app/dashboard" />
       </Helmet>
       
+      {loading ? (
+        <div className="space-y-6 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <div>
+              <Skeleton className="h-8 w-72 mb-2" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-24" />
+            </div>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-28 w-full" />
+            ))}
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            <Skeleton className="h-80 lg:col-span-2 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            <Skeleton className="h-64 lg:col-span-2 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+      ) : (
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-              Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}! 👋
+              Welcome back{displayName ? `, ${displayName}` : ''}! 👋
             </h1>
             <p className="text-muted-foreground mt-1">Here's what's happening with your business today.</p>
           </div>
@@ -527,6 +561,7 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
+      )}
     </AppShell>
   );
 };
