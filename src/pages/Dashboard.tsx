@@ -112,7 +112,26 @@ const Dashboard = () => {
   }, [user]);
   
   const { chartData, metrics, recentActivity, expenseCategories } = useMemo(() => {
-    if (loading) return { chartData: [], metrics: {}, recentActivity: [], expenseCategories: [] };
+    if (loading) return {
+      chartData: [],
+      metrics: {
+        currentRevenue: 0,
+        currentExpenses: 0,
+        currentProfit: 0,
+        totalRevenue: 0,
+        totalExpenses: 0,
+        avgMonthlyRevenue: 0,
+        cashDays: 0,
+        revenueTrend: 0,
+        expenseTrend: 0,
+        profitTrend: 0,
+        invoiceCount: 0,
+        overdueInvoices: 0,
+        paidInvoices: 0
+      },
+      recentActivity: [],
+      expenseCategories: []
+    };
     
     // Build comprehensive dataset
     const months = Array.from({ length: 12 }).map((_, i) => {
