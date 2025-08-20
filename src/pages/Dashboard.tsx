@@ -45,7 +45,39 @@ import {
 const Dashboard = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
-  const displayName = profile?.first_name ?? profile?.display_name ?? (user?.email ? user.email.split('@')[0] : '');
+  const [localProfileName, setLocalProfileName] = useState<string | null>(null);
+
+  // If onboarding just wrote the profile, useProfile() may not have returned yet.
+  // Do a quick fallback fetch to pick up the user's first name and avoid showing the email prefix.
+  useEffect(() => {
+    if (!user || profile) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('first_name,display_name,full_name')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (!mounted) return;
+        setLocalProfileName(data?.first_name ?? data?.display_name ?? data?.full_name ?? null);
+      } catch (e) {
+        console.error('profile fallback fetch failed', e);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [user, profile]);
+
+  const displayName =
+    profile?.first_name
+    ?? profile?.display_name
+    /* full_name not present in generated types */
+    ?? localProfileName
+    ?? user?.user_metadata?.full_name
+    ?? user?.user_metadata?.name
+    ?? user?.user_metadata?.given_name
+    ?? (user?.email ? user.email.split('@')[0] : '');
+
   const [invoices, setInvoices] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -203,7 +235,7 @@ const Dashboard = () => {
 
     const colors = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--destructive))', 'hsl(var(--muted))'];
     const expenseCategories = Object.entries(categoryTotals)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([,a], [,b]) => Number(b) - Number(a))
       .slice(0, 5)
       .map(([name, value], index) => ({
         name,
