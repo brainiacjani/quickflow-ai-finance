@@ -57,7 +57,7 @@ const Landing = () => {
                 automated workflows, and professional invoicing that gets results.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <a href="/onboarding">
+                <a href="/auth/signup">
                   <Button variant="hero" size="xl" className="group">
                     Start Free Trial
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -470,7 +470,7 @@ const Landing = () => {
             Start your free trial today—no credit card required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/onboarding">
+            <a href="/auth/signup">
               <Button variant="secondary" size="xl" className="group">
                 Start Free Trial
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
