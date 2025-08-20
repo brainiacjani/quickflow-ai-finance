@@ -17,6 +17,7 @@ import {
   Clock,
   DollarSign
 } from "lucide-react";
+import { Link } from 'react-router-dom';
 
 // Import screenshots
 import dashboardScreenshot from "@/assets/dashboard-screenshot.jpg";
@@ -57,17 +58,17 @@ const Landing = () => {
                 automated workflows, and professional invoicing that gets results.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <a href="/auth/signup">
+                <Link to="/auth/signup">
                   <Button variant="hero" size="xl" className="group">
                     Start Free Trial
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Button>
-                </a>
-                <a href="/pricing">
+                </Link>
+                <Link to="/pricing">
                   <Button variant="outline" size="xl">
                     View Pricing
                   </Button>
-                </a>
+                </Link>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
                 <div className="text-center">
@@ -470,17 +471,17 @@ const Landing = () => {
             Start your free trial today—no credit card required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/auth/signup">
+            <Link to="/auth/signup">
               <Button variant="secondary" size="xl" className="group">
                 Start Free Trial
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
-            </a>
-            <a href="/pricing">
+            </Link>
+            <Link to="/pricing">
               <Button variant="outline" size="xl" className="border-white/20 text-white hover:bg-white/10">
                 View Pricing
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
       </section>
