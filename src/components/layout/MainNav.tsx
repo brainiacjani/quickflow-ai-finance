@@ -97,7 +97,7 @@ export const MainNav = () => {
                   Log in
                 </Button>
               </Link>
-              <Link to="/onboarding">
+              <Link to="/auth/signup">
                 <Button variant="hero" size="sm">
                   Start free trial
                 </Button>
@@ -128,6 +128,11 @@ export const MainNav = () => {
                     <DropdownMenuItem className="cursor-pointer">Settings</DropdownMenuItem>
                   </Link>
                   <DropdownMenuSeparator />
+                  {!user && (
+                    <Link to="/auth/signup">
+                      <DropdownMenuItem className="cursor-pointer">Sign up</DropdownMenuItem>
+                    </Link>
+                  )}
                   <DropdownMenuItem
                     className="cursor-pointer text-destructive focus:text-destructive"
                     onClick={() => signOut()}
