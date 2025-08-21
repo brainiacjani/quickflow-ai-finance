@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { InvoiceItem, Invoice } from "@/store/demoData"; // keep types for UI
 import { useCompany } from "@/hooks/useCompany";
+import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Invoices = () => {
@@ -15,6 +16,8 @@ const Invoices = () => {
   const [items, setItems] = useState<InvoiceItem[]>([{ description: "Service", quantity: 1, unitPrice: 100 }]);
   const [refresh, setRefresh] = useState(0);
   const { data: company } = useCompany();
+  const { data: profile } = useProfile();
+  const isAdmin = Boolean((profile as any)?.is_admin || user?.user_metadata?.role === 'admin');
   const [invoices, setInvoices] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -378,7 +381,10 @@ const Invoices = () => {
           setInvoices([]);
           return;
         }
-        const { data, error } = await supabase.from('invoices').select('*').eq('created_by', user.id).order('created_at', { ascending: false });
+        // If current user is admin, fetch all invoices; otherwise fetch only user's invoices
+        let q = supabase.from('invoices').select('*').order('created_at', { ascending: false });
+        if (!isAdmin) q = q.eq('created_by', user.id);
+        const { data, error } = await q;
         if (error) throw error;
         // Normalize items column (may be stored as JSON string or jsonb) and unify date field names
         const normalized = (data ?? []).map((d: any) => {
@@ -406,7 +412,7 @@ const Invoices = () => {
        }
      };
      fetchInvoices();
-   }, [refresh, user?.id]);
+   }, [refresh, user?.id, isAdmin]);
 
   return (
     <AppShell>

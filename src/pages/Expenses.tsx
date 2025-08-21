@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Upload, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 
 
 const guessCategory = (vendor: string, amount: number): { category: string; confidence: number } => {
@@ -29,6 +30,8 @@ const Expenses = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [expenses, setExpenses] = useState<any[]>([]);
+  const { data: profile } = useProfile();
+  const isAdmin = Boolean((profile as any)?.is_admin || user?.user_metadata?.role === 'admin');
 
   const suggestion = useMemo(() => guessCategory(vendor, amount), [vendor, amount]);
 
@@ -126,7 +129,9 @@ const Expenses = () => {
   const fetchExpenses = async () => {
     try {
       if (!user?.id) { setExpenses([]); return; }
-      const { data, error } = await supabase.from('expenses').select('*').eq('created_by', user.id).order('date', { ascending: false });
+      let q = supabase.from('expenses').select('*').order('date', { ascending: false });
+      if (!isAdmin) q = q.eq('created_by', user.id);
+      const { data, error } = await q;
       if (error) throw error;
       setExpenses(data ?? []);
     } catch (e) {
@@ -134,7 +139,7 @@ const Expenses = () => {
     }
   };
 
-  useEffect(() => { fetchExpenses(); }, [user?.id]);
+  useEffect(() => { fetchExpenses(); }, [user?.id, isAdmin]);
 
   return (
     <AppShell>
