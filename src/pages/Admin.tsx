@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useEffect, useState } from "react";
-import { RequireAuth } from "@/components/auth/RequireAuth";
+import { RequireAdmin } from "@/components/auth/RequireAdmin";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -180,7 +180,7 @@ const AdminPage = () => {
   if (!user) return null;
 
   return (
-    <RequireAuth>
+    <RequireAdmin>
       <AppShell>
         <div className="container py-10">
           <Helmet>
@@ -376,20 +376,10 @@ const AdminPage = () => {
             </CardContent>
           </Card>
 
-          {/* If current user is not admin, hide admin actions entirely */}
-          {!currentProfile?.is_admin && (
-            <div className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Not authorized</CardTitle>
-                  <CardDescription>You do not have permission to manage users.</CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
-          )}
+          {/* Access is enforced by RequireAdmin */}
         </div>
       </AppShell>
-    </RequireAuth>
+    </RequireAdmin>
   );
 };
 
