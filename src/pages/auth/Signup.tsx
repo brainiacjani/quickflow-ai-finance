@@ -14,13 +14,23 @@ const Signup = () => {
   const navigate = useNavigate();
 
   const handleSignup = async () => {
+    if (!email || !password) {
+      toast.error('Please enter email and password');
+      return;
+    }
     setLoading(true);
     try {
       await signUp(email, password);
       toast.success("Check your email to confirm your account");
       navigate("/onboarding");
     } catch (err: any) {
-      toast.error(err?.message ?? "Sign up failed");
+      console.error('Signup error:', err);
+      const msg = err?.message ?? 'Sign up failed';
+      if (typeof msg === 'string' && msg.toLowerCase().includes('error sending confirmation')) {
+        toast.error('Unable to send confirmation email. Please configure SMTP in your Supabase project (Auth → Settings → SMTP) and ensure redirect URLs include your site (e.g. http://localhost:8080 and your production domain).');
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -35,7 +45,7 @@ const Signup = () => {
           <div className="grid gap-3">
             <input placeholder="Email" className="rounded-md border bg-background px-3 py-2" value={email} onChange={e=>setEmail(e.target.value)} />
             <input type="password" placeholder="Password" className="rounded-md border bg-background px-3 py-2" value={password} onChange={e=>setPassword(e.target.value)} />
-            <Button variant="hero" onClick={handleSignup} disabled={loading}>{loading ? "Creating..." : "Create account"}</Button>
+            <Button variant="hero" onClick={handleSignup} disabled={loading || !email || !password}>{loading ? "Creating..." : "Create account"}</Button>
             <div className="text-sm">Have an account? <a className="text-primary underline-offset-4 hover:underline" href="/auth/login">Log in</a></div>
           </div>
         </div>

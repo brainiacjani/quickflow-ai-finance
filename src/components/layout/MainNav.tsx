@@ -1,4 +1,3 @@
-
 import { NavLink, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -25,6 +24,11 @@ const links = [
 export const MainNav = () => {
   const { user, signOut } = useAuth();
   const { data: profile } = useProfile();
+
+  // Determine if current user is an admin: prefer explicit is_admin flag, then profile.role, then user metadata
+  const profileAny = profile as any;
+  const role = profileAny?.role ?? (user?.user_metadata?.role as string | undefined);
+  const isAdmin = (profileAny?.is_admin === true) || role === 'admin';
 
   const displayName =
     profile?.display_name?.trim() ||
@@ -70,6 +74,19 @@ export const MainNav = () => {
               {l.label}
             </NavLink>
           ))}
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
+              cn(
+                "px-3 py-2 text-sm rounded-md transition-colors",
+                isActive
+                  ? "bg-accent text-accent-foreground"
+                  : "text-foreground/70 hover:text-foreground hover:bg-accent"
+              )
+            }
+          >
+            Admin
+          </NavLink>
         </nav>
 
         <div className="flex items-center gap-2">
@@ -103,6 +120,9 @@ export const MainNav = () => {
                   <DropdownMenuSeparator />
                   <Link to="/dashboard">
                     <DropdownMenuItem className="cursor-pointer">Dashboard</DropdownMenuItem>
+                  </Link>
+                  <Link to="/admin">
+                    <DropdownMenuItem className="cursor-pointer">Admin</DropdownMenuItem>
                   </Link>
                   <Link to="/settings">
                     <DropdownMenuItem className="cursor-pointer">Settings</DropdownMenuItem>
