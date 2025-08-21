@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Modal } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
 const roleOptions = ["user", "viewer", "admin"];
@@ -192,25 +192,27 @@ const AdminPage = () => {
               </div>
             </div>
 
-            <Modal open={reportModalOpen} onOpenChange={setReportModalOpen}>
-              <div className="p-4">
-                <h3 className="text-lg font-semibold mb-2">{editingReport ? 'Edit Report' : 'Create Report'}</h3>
-                <div className="grid gap-2">
-                  <Label>Name</Label>
-                  <Input value={reportForm.name} onChange={(e) => setReportForm(s => ({ ...s, name: e.target.value }))} />
-                  <Label>Description</Label>
-                  <Input value={reportForm.description} onChange={(e) => setReportForm(s => ({ ...s, description: e.target.value }))} />
-                  <Label>SQL Query</Label>
-                  <textarea className="w-full h-40 rounded border p-2" value={reportForm.query} onChange={(e) => setReportForm(s => ({ ...s, query: e.target.value }))} />
-                  <Label>Access (roles or user ids, comma separated)</Label>
-                  <Input value={reportForm.access.join(',')} onChange={(e) => setReportForm(s => ({ ...s, access: e.target.value.split(',').map(x => x.trim()).filter(Boolean) }))} />
-                  <div className="flex gap-2 mt-3">
-                    <Button onClick={saveReport}>{editingReport ? 'Save' : 'Create'}</Button>
-                    <Button variant="outline" onClick={() => setReportModalOpen(false)}>Cancel</Button>
+            <Dialog open={reportModalOpen} onOpenChange={setReportModalOpen}>
+              <DialogContent>
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold mb-2">{editingReport ? 'Edit Report' : 'Create Report'}</h3>
+                  <div className="grid gap-2">
+                    <Label>Name</Label>
+                    <Input value={reportForm.name} onChange={(e) => setReportForm(s => ({ ...s, name: e.target.value }))} />
+                    <Label>Description</Label>
+                    <Input value={reportForm.description} onChange={(e) => setReportForm(s => ({ ...s, description: e.target.value }))} />
+                    <Label>SQL Query</Label>
+                    <textarea className="w-full h-40 rounded border p-2" value={reportForm.query} onChange={(e) => setReportForm(s => ({ ...s, query: e.target.value }))} />
+                    <Label>Access (roles or user ids, comma separated)</Label>
+                    <Input value={reportForm.access.join(',')} onChange={(e) => setReportForm(s => ({ ...s, access: e.target.value.split(',').map(x => x.trim()).filter(Boolean) }))} />
+                    <div className="flex gap-2 mt-3">
+                      <Button onClick={saveReport}>{editingReport ? 'Save' : 'Create'}</Button>
+                      <Button variant="outline" onClick={() => setReportModalOpen(false)}>Cancel</Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Modal>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
       </div>
