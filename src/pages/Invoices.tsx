@@ -5,8 +5,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { InvoiceItem, Invoice } from "@/store/demoData"; // keep types for UI
 import { useCompany } from "@/hooks/useCompany";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Invoices = () => {
+  const { user } = useAuth();
   const [customer, setCustomer] = useState("");
   const [issueDate, setIssueDate] = useState<string>(new Date().toISOString().slice(0,10));
   const [dueDate, setDueDate] = useState<string>(new Date(Date.now()+7*86400000).toISOString().slice(0,10));
@@ -28,6 +30,7 @@ const Invoices = () => {
   const createInvoice = async () => {
     setSaving(true);
     try {
+      if (!user?.id) throw new Error('You must be signed in to create invoices');
       const payload = {
         id: crypto.randomUUID(),
         customer,
@@ -35,7 +38,8 @@ const Invoices = () => {
         duedate: dueDate,
         items: JSON.stringify(items),
         status: 'draft',
-        total
+        total,
+        created_by: user.id
       };
       const { error } = await supabase.from('invoices').insert(payload);
       if (error) throw error;
@@ -370,7 +374,11 @@ const Invoices = () => {
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
-        const { data, error } = await supabase.from('invoices').select('*').order('created_at', { ascending: false });
+        if (!user?.id) {
+          setInvoices([]);
+          return;
+        }
+        const { data, error } = await supabase.from('invoices').select('*').eq('created_by', user.id).order('created_at', { ascending: false });
         if (error) throw error;
         setInvoices(data ?? []);
       } catch (e) {
@@ -378,7 +386,7 @@ const Invoices = () => {
       }
     };
     fetchInvoices();
-  }, [refresh]);
+  }, [refresh, user?.id]);
 
   return (
     <AppShell>
