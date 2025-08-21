@@ -24,6 +24,8 @@ import PaymentCanceled from "./pages/PaymentCanceled";
 import NotFound from "./pages/NotFound";
 import { RequireAuth } from "./components/auth/RequireAuth";
 import { RedirectIfAuthed } from "./components/auth/RedirectIfAuthed";
+import Admin from "./pages/Admin";
+import RequireRole from "./components/auth/RequireRole";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +53,7 @@ const App = () => (
                   <Route path="/invoices" element={<RequireAuth><Invoices /></RequireAuth>} />
                   <Route path="/expenses" element={<RequireAuth><Expenses /></RequireAuth>} />
                   <Route path="/reports" element={<RequireAuth><Reports /></RequireAuth>} />
+                  <Route path="/admin" element={<RequireAuth><RequireRole roles={["admin"]}><Admin /></RequireRole></RequireAuth>} />
                   <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
 
                   <Route path="/payment-success" element={<PaymentSuccess />} />
