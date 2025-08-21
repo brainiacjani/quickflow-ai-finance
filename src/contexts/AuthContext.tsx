@@ -81,6 +81,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signOut: async () => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      try {
+        // clear local user state and redirect to login
+        setUser(null);
+      } catch (e) {
+        // ignore
+      }
+      // Use a hard redirect to ensure auth state is fully reset
+      if (typeof window !== 'undefined') {
+        window.location.assign('/auth/login');
+      }
     },
     resetPassword: async (email: string) => {
       const redirectUrl = `${window.location.origin}/auth/update-password`;
