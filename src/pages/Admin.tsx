@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { AppShell } from "@/components/layout/AppShell";
 
 const roleOptions = ["user", "viewer", "admin"];
-const availableReports = ["sales", "expenses", "invoices", "cashflow"];
+const availableReports = ['invoices','expenses','reports'];
+const availablePages = ['invoices','expenses','reports'];
 
 const AdminPage = () => {
   const { user } = useAuth();
@@ -66,6 +68,14 @@ const AdminPage = () => {
     fetchReports();
   }, []);
 
+  // Persist page_access for a profile using the latest local state
+  const savePageAccess = async (id: string) => {
+    const profile = profiles.find((p) => p.id === id);
+    if (!profile) return;
+    const pages = Array.isArray(profile.page_access) ? profile.page_access : (profile.page_access ? JSON.parse(profile.page_access) : []);
+    await updateProfile(id, { page_access: JSON.stringify(pages) });
+  };
+
   const saveReport = async () => {
     try {
       if (editingReport) {
@@ -99,123 +109,165 @@ const AdminPage = () => {
 
   return (
     <RequireAuth>
-      <div className="container py-10">
-        <Helmet>
-          <title>Admin · QuickFlow</title>
-        </Helmet>
+      <AppShell>
+        <div className="container py-10">
+          <Helmet>
+            <title>Admin · QuickFlow</title>
+          </Helmet>
 
-        <h1 className="text-2xl font-bold mb-6">Admin — User Management</h1>
+          <h1 className="text-2xl font-bold mb-6">Admin — User Management</h1>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Users</CardTitle>
-            <CardDescription>View and manage user roles and report access</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div>Loading users…</div>
-            ) : (
-              <div className="space-y-4">
-                {profiles.map((p) => {
-                  const reports = Array.isArray(p.report_access) ? p.report_access : (p.report_access ? JSON.parse(p.report_access) : []);
-                  return (
-                    <div key={p.id} className="flex items-center justify-between gap-4 p-3 border rounded">
-                      <div className="flex-1">
-                        <div className="font-medium">{p.first_name ? `${p.first_name} ${p.last_name ?? ''}`.trim() : p.display_name ?? p.email ?? p.id}</div>
-                        <div className="text-sm text-muted-foreground">{p.email ?? ''}</div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <select
-                          value={p.role ?? 'user'}
-                          onChange={(e) => updateProfile(p.id, { role: e.target.value })}
-                          className="rounded border px-2 py-1"
-                        >
-                          {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
-
-                        <div className="flex items-center gap-2">
-                          {availableReports.map((r) => (
-                            <label key={r} className="flex items-center gap-1 text-sm">
-                              <input
-                                type="checkbox"
-                                checked={reports.includes(r)}
-                                onChange={async (ev) => {
-                                  const next = ev.target.checked ? Array.from(new Set([...reports, r])) : reports.filter((x: string) => x !== r);
-                                  await updateProfile(p.id, { report_access: JSON.stringify(next) });
-                                }}
-                              />
-                              <span className="capitalize">{r}</span>
-                            </label>
-                          ))}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Users</CardTitle>
+              <CardDescription>View and manage user roles and report access</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div>Loading users…</div>
+              ) : (
+                <div className="space-y-4">
+                  {profiles.map((p) => {
+                    const reports = Array.isArray(p.report_access) ? p.report_access : (p.report_access ? JSON.parse(p.report_access) : []);
+                    const isAdminFlag = p?.is_admin === true;
+                    return (
+                      <div key={p.id} className="flex items-center justify-between gap-4 p-3 border rounded">
+                        <div className="flex-1">
+                          <div className="font-medium">{p.first_name ? `${p.first_name} ${p.last_name ?? ''}`.trim() : p.display_name ?? p.email ?? p.id}</div>
+                          <div className="text-sm text-muted-foreground">{p.email ?? ''}</div>
                         </div>
 
-                        <Button size="sm" onClick={() => updateProfile(p.id, { is_active: !p.is_active })}>
-                          {p.is_active ? 'Disable' : 'Enable'}
-                        </Button>
+                        <div className="flex items-center gap-3">
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={isAdminFlag}
+                              onChange={async (ev) => {
+                                await updateProfile(p.id, { is_admin: ev.target.checked });
+                              }}
+                            />
+                            <span>Admin</span>
+                          </label>
+
+                          {/* Page-level access controls (pages the user can see) */}
+                          <div className="flex items-center gap-2">
+                            {availablePages.map((page) => (
+                              <label key={page} className="flex items-center gap-1 text-sm">
+                                <input
+                                  type="checkbox"
+                                  checked={Array.isArray(p.page_access) ? p.page_access.includes(page) : (p.page_access ? JSON.parse(p.page_access).includes(page) : false)}
+                                  onChange={async (ev) => {
+                                    const checked = ev.target.checked;
+                                    const current = Array.isArray(p.page_access) ? p.page_access : (p.page_access ? JSON.parse(p.page_access) : []);
+                                    const next = checked ? Array.from(new Set([...current, page])) : current.filter((x: string) => x !== page);
+                                    // optimistic update so checkbox toggles immediately
+                                    setProfiles((prev) => prev.map((pr) => (pr.id === p.id ? { ...pr, page_access: next } : pr)));
+                                    try {
+                                      await updateProfile(p.id, { page_access: JSON.stringify(next) });
+                                    } catch (e) {
+                                      // revert if update fails
+                                      await fetchProfiles();
+                                    }
+                                  }}
+                                />
+                                <span className="capitalize">{page}</span>
+                              </label>
+                            ))}
+                          </div>
+
+                          {/* Report access (existing) */}
+                          <div className="flex items-center gap-2">
+                            {availableReports.map((r) => (
+                              <label key={r} className="flex items-center gap-1 text-sm">
+                                <input
+                                  type="checkbox"
+                                  checked={reports.includes(r)}
+                                  onChange={async (ev) => {
+                                    const checked = ev.target.checked;
+                                    const currentReports = Array.isArray(p.report_access) ? p.report_access : (p.report_access ? JSON.parse(p.report_access) : []);
+                                    const next = checked ? Array.from(new Set([...currentReports, r])) : currentReports.filter((x: string) => x !== r);
+                                    // optimistic update
+                                    setProfiles((prev) => prev.map((pr) => (pr.id === p.id ? { ...pr, report_access: next } : pr)));
+                                    try {
+                                      await updateProfile(p.id, { report_access: JSON.stringify(next) });
+                                    } catch (e) {
+                                      await fetchProfiles();
+                                    }
+                                  }}
+                                />
+                                <span className="capitalize">{r}</span>
+                              </label>
+                            ))}
+                          </div>
+
+                          {/* Save button persists page_access (and can also be used to re-save) */}
+                          <Button size="sm" disabled={savingId === p.id} onClick={() => savePageAccess(p.id)}>
+                            {savingId === p.id ? 'Saving...' : 'Save'}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Reports Designer</CardTitle>
+              <CardDescription>Design custom reports and assign access (placeholder)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4 text-sm text-muted-foreground">This is a starting UI for creating reports. You can store report definitions in a `reports` table and assign access to users via their `report_access` field.</p>
+              <div className="mb-4">
+                <div className="flex gap-2 mb-3">
+                  <Button onClick={() => { setReportModalOpen(true); setEditingReport(null); }}>Create Report</Button>
+                  <Button variant="outline" onClick={fetchReports}>Refresh</Button>
+                </div>
+
+                <div className="space-y-3">
+                  {reports.map(r => (
+                    <div key={r.id} className="p-3 border rounded flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="font-medium">{r.name}</div>
+                        <div className="text-sm text-muted-foreground">{r.description}</div>
+                        <div className="mt-2 text-xs text-muted-foreground">Access: {(Array.isArray(r.access) ? r.access.join(', ') : (r.access ? JSON.parse(r.access).join(', ') : 'None'))}</div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Button size="sm" onClick={() => { setEditingReport(r); setReportForm({ name: r.name, description: r.description, query: r.query, access: Array.isArray(r.access) ? r.access : (r.access ? JSON.parse(r.access) : []) }); setReportModalOpen(true); }}>Edit</Button>
+                        <Button size="sm" variant="destructive" onClick={() => deleteReport(r.id)}>Delete</Button>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Reports Designer</CardTitle>
-            <CardDescription>Design custom reports and assign access (placeholder)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4 text-sm text-muted-foreground">This is a starting UI for creating reports. You can store report definitions in a `reports` table and assign access to users via their `report_access` field.</p>
-            <div className="mb-4">
-              <div className="flex gap-2 mb-3">
-                <Button onClick={() => { setReportModalOpen(true); setEditingReport(null); }}>Create Report</Button>
-                <Button variant="outline" onClick={fetchReports}>Refresh</Button>
-              </div>
-
-              <div className="space-y-3">
-                {reports.map(r => (
-                  <div key={r.id} className="p-3 border rounded flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="font-medium">{r.name}</div>
-                      <div className="text-sm text-muted-foreground">{r.description}</div>
-                      <div className="mt-2 text-xs text-muted-foreground">Access: {(Array.isArray(r.access) ? r.access.join(', ') : (r.access ? JSON.parse(r.access).join(', ') : 'None'))}</div>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Button size="sm" onClick={() => { setEditingReport(r); setReportForm({ name: r.name, description: r.description, query: r.query, access: Array.isArray(r.access) ? r.access : (r.access ? JSON.parse(r.access) : []) }); setReportModalOpen(true); }}>Edit</Button>
-                      <Button size="sm" variant="destructive" onClick={() => deleteReport(r.id)}>Delete</Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <Dialog open={reportModalOpen} onOpenChange={setReportModalOpen}>
-              <DialogContent>
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold mb-2">{editingReport ? 'Edit Report' : 'Create Report'}</h3>
-                  <div className="grid gap-2">
-                    <Label>Name</Label>
-                    <Input value={reportForm.name} onChange={(e) => setReportForm(s => ({ ...s, name: e.target.value }))} />
-                    <Label>Description</Label>
-                    <Input value={reportForm.description} onChange={(e) => setReportForm(s => ({ ...s, description: e.target.value }))} />
-                    <Label>SQL Query</Label>
-                    <textarea className="w-full h-40 rounded border p-2" value={reportForm.query} onChange={(e) => setReportForm(s => ({ ...s, query: e.target.value }))} />
-                    <Label>Access (roles or user ids, comma separated)</Label>
-                    <Input value={reportForm.access.join(',')} onChange={(e) => setReportForm(s => ({ ...s, access: e.target.value.split(',').map(x => x.trim()).filter(Boolean) }))} />
-                    <div className="flex gap-2 mt-3">
-                      <Button onClick={saveReport}>{editingReport ? 'Save' : 'Create'}</Button>
-                      <Button variant="outline" onClick={() => setReportModalOpen(false)}>Cancel</Button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-        </Card>
-      </div>
+              </div>
+
+              <Dialog open={reportModalOpen} onOpenChange={setReportModalOpen}>
+                <DialogContent>
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold mb-2">{editingReport ? 'Edit Report' : 'Create Report'}</h3>
+                    <div className="grid gap-2">
+                      <Label>Name</Label>
+                      <Input value={reportForm.name} onChange={(e) => setReportForm(s => ({ ...s, name: e.target.value }))} />
+                      <Label>Description</Label>
+                      <Input value={reportForm.description} onChange={(e) => setReportForm(s => ({ ...s, description: e.target.value }))} />
+                      <Label>SQL Query</Label>
+                      <textarea className="w-full h-40 rounded border p-2" value={reportForm.query} onChange={(e) => setReportForm(s => ({ ...s, query: e.target.value }))} />
+                      <Label>Access (roles or user ids, comma separated)</Label>
+                      <Input value={reportForm.access.join(',')} onChange={(e) => setReportForm(s => ({ ...s, access: e.target.value.split(',').map(x => x.trim()).filter(Boolean) }))} />
+                      <div className="flex gap-2 mt-3">
+                        <Button onClick={saveReport}>{editingReport ? 'Save' : 'Create'}</Button>
+                        <Button variant="outline" onClick={() => setReportModalOpen(false)}>Cancel</Button>
+                      </div>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardContent>
+          </Card>
+        </div>
+      </AppShell>
     </RequireAuth>
   );
 };
