@@ -5,28 +5,25 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-transform transform-gpu focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-        hero: "bg-[radial-gradient(120%_120%_at_0%_0%,hsl(var(--brand))_0%,hsl(var(--brand-glow))_60%,hsl(var(--brand))_100%)] text-[hsl(var(--brand-contrast))] shadow-[var(--shadow-glow)] hover:shadow-[var(--shadow-glow-strong)] hover:brightness-110 transition-transform duration-200 will-change-transform",
-        soft: "bg-accent text-accent-foreground border border-border/60 hover:bg-accent/70",
+        default: "bg-gradient-to-r from-[hsl(var(--primary-1))] to-[hsl(var(--primary-2))] text-white shadow-[var(--shadow-glow)] hover:brightness-105",
+        destructive: "bg-red-600 text-white shadow-sm hover:bg-red-700",
+        outline: "border border-input bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] hover:shadow-sm",
+        secondary: "bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] hover:brightness-95",
+        ghost: "bg-transparent hover:bg-[hsl(var(--card))]",
+        link: "text-[hsl(var(--primary-2))] underline-offset-4 hover:underline",
+        hero: "bg-gradient-to-r from-[hsl(var(--primary-1))] to-[hsl(var(--primary-2))] text-white shadow-[var(--shadow-glow)] hover:scale-[1.02]",
+        soft: "bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border border-border/60 hover:bg-[hsl(var(--secondary))]",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        xl: "h-12 rounded-md px-10 text-base",
-        icon: "h-10 w-10",
+        default: "h-11 px-5",
+        sm: "h-9 px-3 text-sm",
+        lg: "h-12 px-6 text-base",
+        xl: "h-14 px-8 text-lg",
+        icon: "h-10 w-10 p-0",
       },
     },
     defaultVariants: {
