@@ -146,10 +146,26 @@ const Expenses = () => {
   // View modal state
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<any | null>(null);
+  const [creatorName, setCreatorName] = useState<string | null>(null);
 
   const openView = (e: any) => {
     setSelectedExpense(e);
+    setCreatorName(null);
     setViewModalOpen(true);
+
+    // fetch creator's profile first name for display
+    (async () => {
+      try {
+        if (!e?.created_by) return;
+        const { data, error } = await supabase.from('profiles').select('first_name,display_name,email').eq('id', e.created_by).maybeSingle();
+        if (error) throw error;
+        const name = data?.first_name ?? data?.display_name ?? data?.email ?? e.created_by;
+        setCreatorName(name ?? null);
+      } catch (err) {
+        console.error('fetch creator profile error', err);
+        setCreatorName(e.created_by ?? null);
+      }
+    })();
   };
 
   const closeView = () => {
@@ -274,7 +290,7 @@ const Expenses = () => {
                             </div>
                           </div>
                         )}
-                        <div className="text-sm text-muted-foreground">Created by: {selectedExpense.created_by ?? '—'}</div>
+                        <div className="text-sm text-muted-foreground">Created by: {creatorName ?? selectedExpense.created_by ?? '—'}</div>
                       </div>
                       <div className="mt-4 flex justify-end">
                         <Button onClick={() => { closeView(); }}>Close</Button>
