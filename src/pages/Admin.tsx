@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { useEffect, useState } from "react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,12 @@ const AdminPage = () => {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<any | null>(null);
   const [reportForm, setReportForm] = useState({ name: '', description: '', query: '', access: [] as string[] });
+
+  // current signed-in user's profile (to optionally control admin-only actions)
+  const { data: currentProfile } = useProfile();
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingProfile, setEditingProfile] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ first_name: '', last_name: '', display_name: '', email: '', avatar_url: '', role: 'user', is_active: true, is_admin: false, page_access: [] as string[], report_access: [] as string[] });
 
   const fetchProfiles = async () => {
     setLoading(true);
@@ -102,6 +109,55 @@ const AdminPage = () => {
       await fetchReports();
     } catch (e) {
       console.error('deleteReport error', e);
+    }
+  };
+
+  const openEditProfile = (p: any) => {
+    setEditingProfile(p);
+    setEditForm({
+      first_name: p.first_name ?? '',
+      last_name: p.last_name ?? '',
+      display_name: p.display_name ?? '',
+      email: p.email ?? '',
+      avatar_url: p.avatar_url ?? '',
+      role: p.role ?? 'user',
+      is_active: p.is_active ?? true,
+      is_admin: p.is_admin === true,
+      page_access: Array.isArray(p.page_access) ? p.page_access : (p.page_access ? JSON.parse(p.page_access) : []),
+      report_access: Array.isArray(p.report_access) ? p.report_access : (p.report_access ? JSON.parse(p.report_access) : []),
+    });
+    setEditModalOpen(true);
+  };
+
+  const saveEditedProfile = async () => {
+    if (!editingProfile) return;
+    const patch: Record<string, any> = {
+      first_name: editForm.first_name,
+      last_name: editForm.last_name,
+      display_name: editForm.display_name,
+      avatar_url: editForm.avatar_url,
+      role: editForm.role,
+      is_active: editForm.is_active,
+      is_admin: editForm.is_admin,
+      page_access: JSON.stringify(editForm.page_access),
+      report_access: JSON.stringify(editForm.report_access),
+    };
+    await updateProfile(editingProfile.id, patch);
+    setEditModalOpen(false);
+    setEditingProfile(null);
+  };
+
+  const deleteProfile = async (id: string) => {
+    if (!confirm('Delete this profile? This will remove the profile row but will not remove the auth user.')) return;
+    setSavingId(id);
+    try {
+      const { error } = await supabase.from('profiles').delete().eq('id', id);
+      if (error) throw error;
+      await fetchProfiles();
+    } catch (e) {
+      console.error('deleteProfile error', e);
+    } finally {
+      setSavingId(null);
     }
   };
 
@@ -200,10 +256,14 @@ const AdminPage = () => {
                             ))}
                           </div>
 
-                          {/* Save button persists page_access (and can also be used to re-save) */}
-                          <Button size="sm" disabled={savingId === p.id} onClick={() => savePageAccess(p.id)}>
-                            {savingId === p.id ? 'Saving...' : 'Save'}
-                          </Button>
+                          {/* Row actions: Edit, Delete, Save page access */}
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" onClick={() => openEditProfile(p)} disabled={savingId === p.id}>Edit</Button>
+                            <Button size="sm" variant="destructive" onClick={() => deleteProfile(p.id)} disabled={savingId === p.id}>Delete</Button>
+                            <Button size="sm" disabled={savingId === p.id} onClick={() => savePageAccess(p.id)}>
+                              {savingId === p.id ? 'Saving...' : 'Save'}
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     );
@@ -259,6 +319,35 @@ const AdminPage = () => {
                       <div className="flex gap-2 mt-3">
                         <Button onClick={saveReport}>{editingReport ? 'Save' : 'Create'}</Button>
                         <Button variant="outline" onClick={() => setReportModalOpen(false)}>Cancel</Button>
+                      </div>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+                <DialogContent>
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold mb-2">Edit Profile</h3>
+                    <div className="grid gap-2">
+                      <Label>First name</Label>
+                      <Input value={editForm.first_name} onChange={(e) => setEditForm(s => ({ ...s, first_name: e.target.value }))} />
+                      <Label>Last name</Label>
+                      <Input value={editForm.last_name} onChange={(e) => setEditForm(s => ({ ...s, last_name: e.target.value }))} />
+                      <Label>Display name</Label>
+                      <Input value={editForm.display_name} onChange={(e) => setEditForm(s => ({ ...s, display_name: e.target.value }))} />
+                      <Label>Avatar URL</Label>
+                      <Input value={editForm.avatar_url} onChange={(e) => setEditForm(s => ({ ...s, avatar_url: e.target.value }))} />
+                      <Label>Role</Label>
+                      <select value={editForm.role} onChange={(e) => setEditForm(s => ({ ...s, role: e.target.value }))} className="rounded border px-2 py-1">
+                        {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                      <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={editForm.is_admin} onChange={(e) => setEditForm(s => ({ ...s, is_admin: e.target.checked }))} /> Admin</label>
+                      <label className="flex items-center gap-2"><input type="checkbox" checked={editForm.is_active} onChange={(e) => setEditForm(s => ({ ...s, is_active: e.target.checked }))} /> Active</label>
+
+                      <div className="flex gap-2 mt-3">
+                        <Button onClick={saveEditedProfile}>Save</Button>
+                        <Button variant="outline" onClick={() => { setEditModalOpen(false); setEditingProfile(null); }}>Cancel</Button>
                       </div>
                     </div>
                   </div>
