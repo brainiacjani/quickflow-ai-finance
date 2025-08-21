@@ -25,9 +25,10 @@ export const MainNav = () => {
   const { user, signOut } = useAuth();
   const { data: profile } = useProfile();
 
-  // Determine if current user is an admin (profile.role preferred, fallback to user metadata)
-  const role = (profile as any)?.role ?? (user?.user_metadata?.role as string | undefined);
-  const isAdmin = role === 'admin';
+  // Determine if current user is an admin: prefer explicit is_admin flag, then profile.role, then user metadata
+  const profileAny = profile as any;
+  const role = profileAny?.role ?? (user?.user_metadata?.role as string | undefined);
+  const isAdmin = (profileAny?.is_admin === true) || role === 'admin';
 
   const displayName =
     profile?.display_name?.trim() ||
