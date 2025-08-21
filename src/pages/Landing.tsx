@@ -1,4 +1,7 @@
 import { Helmet } from "react-helmet-async";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,6 +28,19 @@ import invoicesScreenshot from "@/assets/invoices-screenshot.jpg";
 import expensesScreenshot from "@/assets/expenses-screenshot.jpg";
 
 const Landing = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (loading) return; // wait for auth to resolve
+    if (user) {
+      // If user is already signed in, redirect to dashboard
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  // While auth is being determined, don't render landing to avoid showing sidebar for authed users
+  if (loading) return null;
   return (
     <AppShell>
       <Helmet>
