@@ -380,13 +380,33 @@ const Invoices = () => {
         }
         const { data, error } = await supabase.from('invoices').select('*').eq('created_by', user.id).order('created_at', { ascending: false });
         if (error) throw error;
-        setInvoices(data ?? []);
-      } catch (e) {
-        console.error('fetchInvoices error', e);
-      }
-    };
-    fetchInvoices();
-  }, [refresh, user?.id]);
+        // Normalize items column (may be stored as JSON string or jsonb) and unify date field names
+        const normalized = (data ?? []).map((d: any) => {
+          let parsedItems = [];
+          try {
+            if (typeof d.items === 'string') parsedItems = JSON.parse(d.items || '[]');
+            else if (Array.isArray(d.items)) parsedItems = d.items;
+            else parsedItems = [];
+          } catch (e) {
+            parsedItems = [];
+          }
+
+          return {
+            ...d,
+            items: parsedItems,
+            // UI expects issueDate/dueDate keys
+            issueDate: d.issuedate ?? d.issueDate ?? d.issuedAt ?? d.created_at ?? null,
+            dueDate: d.duedate ?? d.dueDate ?? null,
+          };
+        });
+
+        setInvoices(normalized);
+       } catch (e) {
+         console.error('fetchInvoices error', e);
+       }
+     };
+     fetchInvoices();
+   }, [refresh, user?.id]);
 
   return (
     <AppShell>
