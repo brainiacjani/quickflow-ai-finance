@@ -48,6 +48,10 @@ export function AppSidebar() {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { data: profile } = useProfile();
+  const profileAny = profile as any;
+  const role = profileAny?.role ?? (user?.user_metadata?.role as string | undefined);
+  const isAdmin = (profileAny?.is_admin === true) || role === 'admin';
+  const visibleNavItems = navItems.filter(i => i.url !== '/admin' || isAdmin);
   
   const currentPath = location.pathname;
   const isCollapsed = state === "collapsed";
@@ -89,7 +93,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
+              {visibleNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild

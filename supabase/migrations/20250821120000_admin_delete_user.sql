@@ -7,16 +7,16 @@ create or replace function public.admin_delete_user(target_uid uuid)
 returns void as $$
 declare
   caller uuid := auth.uid();
-  is_admin boolean;
+  v_is_admin boolean;
 begin
   -- Ensure caller is authenticated
   if caller is null then
     raise exception 'not authenticated';
   end if;
 
-  -- Check if caller is admin
-  select coalesce(is_admin, false) into is_admin from public.profiles where id = caller;
-  if not is_admin then
+  -- Check if caller is admin (qualify column with table alias to avoid ambiguity)
+  select coalesce(p.is_admin, false) into v_is_admin from public.profiles p where p.id = caller;
+  if not v_is_admin then
     raise exception 'not authorized';
   end if;
 
