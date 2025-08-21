@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { AppShell } from "@/components/layout/AppShell";
+import { useToast } from "@/hooks/use-toast";
 
 const roleOptions = ["user", "viewer", "admin"];
 const availableReports = ['invoices','expenses','reports'];
@@ -30,6 +31,7 @@ const AdminPage = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<any | null>(null);
   const [editForm, setEditForm] = useState({ first_name: '', last_name: '', display_name: '', email: '', avatar_url: '', role: 'user', is_active: true, is_admin: false, page_access: [] as string[], report_access: [] as string[] });
+  const { toast } = useToast();
 
   const fetchProfiles = async () => {
     setLoading(true);
@@ -142,20 +144,34 @@ const AdminPage = () => {
       page_access: JSON.stringify(editForm.page_access),
       report_access: JSON.stringify(editForm.report_access),
     };
-    await updateProfile(editingProfile.id, patch);
+    try {
+      await updateProfile(editingProfile.id, patch);
+      toast({ title: 'Profile saved', description: 'Profile updated successfully.' });
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Save failed', description: 'Unable to save profile.', action: undefined });
+    }
     setEditModalOpen(false);
     setEditingProfile(null);
   };
 
   const deleteProfile = async (id: string) => {
-    if (!confirm('Delete this profile? This will remove the profile row but will not remove the auth user.')) return;
+    if (!confirm('Delete this profile and auth user? This action is irreversible.')) return;
     setSavingId(id);
     try {
-      const { error } = await supabase.from('profiles').delete().eq('id', id);
-      if (error) throw error;
+      // Try to call admin RPC which will remove auth user and profile (server-side)
+      const { data, error: rpcError } = await supabase.rpc('admin_delete_user', { target_uid: id });
+      if (rpcError) {
+        // fallback: delete profile row only
+        console.warn('admin_delete_user RPC error, falling back to profile delete', rpcError);
+        const { error } = await supabase.from('profiles').delete().eq('id', id);
+        if (error) throw error;
+      }
+      toast({ title: 'Deleted', description: 'User deleted successfully.' });
       await fetchProfiles();
     } catch (e) {
       console.error('deleteProfile error', e);
+      toast({ title: 'Delete failed', description: 'Unable to delete user.' });
     } finally {
       setSavingId(null);
     }
@@ -256,14 +272,18 @@ const AdminPage = () => {
                             ))}
                           </div>
 
-                          {/* Row actions: Edit, Delete, Save page access */}
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" onClick={() => openEditProfile(p)} disabled={savingId === p.id}>Edit</Button>
-                            <Button size="sm" variant="destructive" onClick={() => deleteProfile(p.id)} disabled={savingId === p.id}>Delete</Button>
-                            <Button size="sm" disabled={savingId === p.id} onClick={() => savePageAccess(p.id)}>
-                              {savingId === p.id ? 'Saving...' : 'Save'}
-                            </Button>
-                          </div>
+                          {/* Row actions: Only visible to admins */}
+                          {currentProfile?.is_admin ? (
+                            <div className="flex items-center gap-2">
+                              <Button size="sm" onClick={() => openEditProfile(p)} disabled={savingId === p.id}>Edit</Button>
+                              <Button size="sm" variant="destructive" onClick={() => deleteProfile(p.id)} disabled={savingId === p.id}>Delete</Button>
+                              <Button size="sm" disabled={savingId === p.id} onClick={() => savePageAccess(p.id)}>
+                                {savingId === p.id ? 'Saving...' : 'Save'}
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="text-sm text-muted-foreground">Admin only</div>
+                          )}
                         </div>
                       </div>
                     );
@@ -355,6 +375,18 @@ const AdminPage = () => {
               </Dialog>
             </CardContent>
           </Card>
+
+          {/* If current user is not admin, hide admin actions entirely */}
+          {!currentProfile?.is_admin && (
+            <div className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Not authorized</CardTitle>
+                  <CardDescription>You do not have permission to manage users.</CardDescription>
+                </CardHeader>
+              </Card>
+            </div>
+          )}
         </div>
       </AppShell>
     </RequireAuth>
