@@ -28,6 +28,7 @@ const AdminPage = () => {
 
   // current signed-in user's profile (to optionally control admin-only actions)
   const { data: currentProfile } = useProfile();
+  const currentProfileAny = currentProfile as any;
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<any | null>(null);
   const [editForm, setEditForm] = useState({ first_name: '', last_name: '', display_name: '', email: '', avatar_url: '', role: 'user', is_active: true, is_admin: false, page_access: [] as string[], report_access: [] as string[] });
@@ -177,6 +178,46 @@ const AdminPage = () => {
     }
   };
 
+  // Send password reset email to a user (admin action)
+  const sendPasswordReset = async (id: string, email?: string) => {
+    if (!email) {
+      toast({ title: 'No email', description: 'User does not have an email address.' });
+      return;
+    }
+    setSavingId(id);
+    try {
+      const redirectUrl = `${window.location.origin}/auth/update-password`;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
+      if (error) throw error;
+      toast({ title: 'Reset email sent', description: `Password reset email sent to ${email}.` });
+    } catch (e) {
+      console.error('sendPasswordReset error', e);
+      toast({ title: 'Reset failed', description: 'Unable to send password reset email.' });
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  // Admin: directly set a user's password via RPC (requires migration to be applied)
+  const setUserPassword = async (id: string) => {
+    const pwd = prompt('Enter a new password for the user (min 6 chars):')
+    if (!pwd || pwd.length < 6) {
+      toast({ title: 'Invalid password', description: 'Password must be at least 6 characters.' })
+      return
+    }
+    setSavingId(id)
+    try {
+      const { error } = await supabase.rpc('admin_set_user_password', { target_uid: id, new_password: pwd })
+      if (error) throw error
+      toast({ title: 'Password set', description: 'User password updated successfully.' })
+    } catch (e) {
+      console.error('setUserPassword error', e)
+      toast({ title: 'Set password failed', description: 'Unable to update user password. Ensure RPC exists.' })
+    } finally {
+      setSavingId(null)
+    }
+  }
+
   if (!user) return null;
 
   return (
@@ -273,10 +314,12 @@ const AdminPage = () => {
                           </div>
 
                           {/* Row actions: Only visible to admins */}
-                          {currentProfile?.is_admin ? (
+                          {currentProfileAny?.is_admin ? (
                             <div className="flex items-center gap-2">
                               <Button size="sm" onClick={() => openEditProfile(p)} disabled={savingId === p.id}>Edit</Button>
                               <Button size="sm" variant="destructive" onClick={() => deleteProfile(p.id)} disabled={savingId === p.id}>Delete</Button>
+                              <Button size="sm" variant="outline" onClick={() => sendPasswordReset(p.id, p.email)} disabled={savingId === p.id || !p.email}>Reset Password</Button>
+                              <Button size="sm" variant="outline" onClick={() => setUserPassword(p.id)} disabled={savingId === p.id}>Set Password</Button>
                               <Button size="sm" disabled={savingId === p.id} onClick={() => savePageAccess(p.id)}>
                                 {savingId === p.id ? 'Saving...' : 'Save'}
                               </Button>
