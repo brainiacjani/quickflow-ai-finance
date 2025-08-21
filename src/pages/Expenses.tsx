@@ -9,6 +9,8 @@ import { Upload, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
 
 
 const guessCategory = (vendor: string, amount: number): { category: string; confidence: number } => {
@@ -141,6 +143,20 @@ const Expenses = () => {
 
   useEffect(() => { fetchExpenses(); }, [user?.id, isAdmin]);
 
+  // View modal state
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<any | null>(null);
+
+  const openView = (e: any) => {
+    setSelectedExpense(e);
+    setViewModalOpen(true);
+  };
+
+  const closeView = () => {
+    setSelectedExpense(null);
+    setViewModalOpen(false);
+  };
+
   return (
     <AppShell>
       <Helmet>
@@ -213,6 +229,7 @@ const Expenses = () => {
                   <th className="text-left p-3">Vendor</th>
                   <th className="text-left p-3">Category</th>
                   <th className="text-left p-3">Amount</th>
+                  <th className="text-left p-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -221,12 +238,55 @@ const Expenses = () => {
                     <td className="p-3">{e.date}</td>
                     <td className="p-3">{e.vendor}</td>
                     <td className="p-3">{e.category}</td>
-                    <td className="p-3">${e.amount.toFixed(2)}</td>
+                    <td className="p-3">${Number(e.amount).toFixed(2)}</td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="ghost" onClick={() => openView(e)}>View</Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          {/* Expense view modal */}
+          <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
+            <DialogContent>
+              <div className="p-4">
+                <DialogTitle>Expense details</DialogTitle>
+                <DialogDescription>Full details for the selected expense</DialogDescription>
+                {selectedExpense ? (
+                  <Card className="mt-4">
+                    <CardContent>
+                      <div className="grid gap-2">
+                        <div><strong>Date:</strong> {selectedExpense.date}</div>
+                        <div><strong>Vendor:</strong> {selectedExpense.vendor}</div>
+                        <div><strong>Category:</strong> {selectedExpense.category}</div>
+                        <div><strong>Amount:</strong> ${Number(selectedExpense.amount).toFixed(2)}</div>
+                        <div><strong>Notes:</strong></div>
+                        <div className="whitespace-pre-wrap p-2 bg-muted/5 rounded">{selectedExpense.note ?? '—'}</div>
+                        {selectedExpense.receipt_url && (
+                          <div>
+                            <strong>Receipt:</strong>
+                            <div className="mt-2">
+                              <a href={selectedExpense.receipt_url} target="_blank" rel="noreferrer" className="text-primary underline">View receipt</a>
+                            </div>
+                          </div>
+                        )}
+                        <div className="text-sm text-muted-foreground">Created by: {selectedExpense.created_by ?? '—'}</div>
+                      </div>
+                      <div className="mt-4 flex justify-end">
+                        <Button onClick={() => { closeView(); }}>Close</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div>Loading…</div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </section>
       </div>
     </AppShell>
