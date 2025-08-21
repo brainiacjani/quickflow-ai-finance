@@ -26,6 +26,12 @@ const AdminPage = () => {
   const [editingReport, setEditingReport] = useState<any | null>(null);
   const [reportForm, setReportForm] = useState({ name: '', description: '', query: '', access: [] as string[] });
 
+  // Password modal state for admin password set
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [passwordModalUser, setPasswordModalUser] = useState<any | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
   // current signed-in user's profile (to optionally control admin-only actions)
   const { data: currentProfile } = useProfile();
   const currentProfileAny = currentProfile as any;
@@ -199,15 +205,15 @@ const AdminPage = () => {
   };
 
   // Admin: directly set a user's password via RPC (requires migration to be applied)
-  const setUserPassword = async (id: string) => {
-    const pwd = prompt('Enter a new password for the user (min 6 chars):')
-    if (!pwd || pwd.length < 6) {
+  const setUserPassword = async (id: string, pwd?: string) => {
+    const password = pwd ?? newPassword
+    if (!password || password.length < 6) {
       toast({ title: 'Invalid password', description: 'Password must be at least 6 characters.' })
       return
     }
     setSavingId(id)
     try {
-      const { error } = await supabase.rpc('admin_set_user_password', { target_uid: id, new_password: pwd })
+      const { error } = await supabase.rpc('admin_set_user_password', { target_uid: id, new_password: password })
       if (error) throw error
       toast({ title: 'Password set', description: 'User password updated successfully.' })
     } catch (e) {
@@ -215,6 +221,11 @@ const AdminPage = () => {
       toast({ title: 'Set password failed', description: 'Unable to update user password. Ensure RPC exists.' })
     } finally {
       setSavingId(null)
+      // reset modal state
+      setPasswordModalOpen(false)
+      setPasswordModalUser(null)
+      setNewPassword('')
+      setConfirmPassword('')
     }
   }
 
@@ -318,8 +329,7 @@ const AdminPage = () => {
                             <div className="flex items-center gap-2">
                               <Button size="sm" onClick={() => openEditProfile(p)} disabled={savingId === p.id}>Edit</Button>
                               <Button size="sm" variant="destructive" onClick={() => deleteProfile(p.id)} disabled={savingId === p.id}>Delete</Button>
-                              <Button size="sm" variant="outline" onClick={() => sendPasswordReset(p.id, p.email)} disabled={savingId === p.id || !p.email}>Reset Password</Button>
-                              <Button size="sm" variant="outline" onClick={() => setUserPassword(p.id)} disabled={savingId === p.id}>Set Password</Button>
+                              <Button size="sm" variant="outline" onClick={() => { setPasswordModalUser(p); setPasswordModalOpen(true); }} disabled={savingId === p.id}>Set Password</Button>
                               <Button size="sm" disabled={savingId === p.id} onClick={() => savePageAccess(p.id)}>
                                 {savingId === p.id ? 'Saving...' : 'Save'}
                               </Button>
@@ -411,6 +421,33 @@ const AdminPage = () => {
                       <div className="flex gap-2 mt-3">
                         <Button onClick={saveEditedProfile}>Save</Button>
                         <Button variant="outline" onClick={() => { setEditModalOpen(false); setEditingProfile(null); }}>Cancel</Button>
+                      </div>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Password modal for admins */}
+              <Dialog open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>
+                <DialogContent>
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold mb-2">Set User Password</h3>
+                    <div className="grid gap-2">
+                      <div className="text-sm text-muted-foreground">Setting password for: <strong>{passwordModalUser?.email ?? passwordModalUser?.display_name ?? passwordModalUser?.id}</strong></div>
+                      <label className="text-sm font-medium">New Password</label>
+                      <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full rounded border px-2 py-1" />
+                      <label className="text-sm font-medium">Confirm Password</label>
+                      <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full rounded border px-2 py-1" />
+                      <div className="flex gap-2 mt-3">
+                        <Button onClick={async () => {
+                          if (newPassword !== confirmPassword) {
+                            toast({ title: 'Mismatch', description: 'Passwords do not match.' })
+                            return
+                          }
+                          if (!passwordModalUser) return
+                          await setUserPassword(passwordModalUser.id, newPassword)
+                        }}>{savingId && passwordModalUser?.id === savingId ? 'Saving...' : 'Set Password'}</Button>
+                        <Button variant="outline" onClick={() => { setPasswordModalOpen(false); setPasswordModalUser(null); setNewPassword(''); setConfirmPassword(''); }}>Cancel</Button>
                       </div>
                     </div>
                   </div>
