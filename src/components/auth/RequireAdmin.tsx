@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
+import Forbidden from "@/pages/Forbidden";
 
 export function RequireAdmin({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -20,8 +21,8 @@ export function RequireAdmin({ children }: { children: ReactNode }) {
   const profileAny = profile as any;
   const isAdmin = profileAny?.is_admin === true || (user?.user_metadata as any)?.role === "admin";
   if (!isAdmin) {
-    // Not authorized -> redirect to dashboard
-    return <Navigate to="/dashboard" replace />;
+    // Not authorized -> show a 403 page
+    return <Forbidden title="403 — Not authorized" message="You do not have permission to access the Admin panel." />;
   }
 
   return <>{children}</>;
