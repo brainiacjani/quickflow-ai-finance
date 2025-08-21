@@ -14,9 +14,11 @@ export function RequireRole({ roles = [], children }: { roles?: string[]; childr
     return <Navigate to="/auth/login" state={{ from: location.pathname }} replace />;
   }
 
-  const role = (profileQuery.data as any)?.role ?? (user?.user_metadata?.role as string | undefined);
+  const profileAny = profileQuery.data as any;
+  const role = profileAny?.role ?? (user?.user_metadata?.role as string | undefined);
+  const isAdminFlag = profileAny?.is_admin ?? false;
 
-  if (roles.length > 0 && !roles.includes(role ?? '')) {
+  if (roles.length > 0 && !(isAdminFlag || roles.includes(role ?? ''))) {
     // Not authorized for this role
     return <Navigate to="/dashboard" replace />;
   }
