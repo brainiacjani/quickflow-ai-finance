@@ -7,6 +7,7 @@ import { Expense } from "@/store/demoData";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 const guessCategory = (vendor: string, amount: number): { category: string; confidence: number } => {
@@ -19,6 +20,7 @@ const guessCategory = (vendor: string, amount: number): { category: string; conf
 };
 
 const Expenses = () => {
+  const { user } = useAuth();
   const [date, setDate] = useState<string>(new Date().toISOString().slice(0,10));
   const [vendor, setVendor] = useState("");
   const [amount, setAmount] = useState<number>(0);
@@ -31,9 +33,13 @@ const Expenses = () => {
   const suggestion = useMemo(() => guessCategory(vendor, amount), [vendor, amount]);
 
   const addExpense = async () => {
+    if (!user?.id) {
+      toast({ title: 'Not signed in', description: 'Please sign in to add expenses.' });
+      return;
+    }
     const exp: Expense = { id: crypto.randomUUID(), date, vendor, amount, category: category || suggestion.category, note };
     try {
-      const payload = { id: exp.id, date: exp.date, vendor: exp.vendor, amount: exp.amount, category: exp.category, note: exp.note };
+      const payload = { id: exp.id, date: exp.date, vendor: exp.vendor, amount: exp.amount, category: exp.category, note: exp.note, created_by: user.id };
       const { error } = await supabase.from('expenses').insert(payload);
       if (error) throw error;
       await fetchExpenses();
@@ -84,7 +90,7 @@ const Expenses = () => {
           };
 
           if (expense.vendor && expense.amount > 0) {
-            toInsert.push({ id: expense.id, date: expense.date, vendor: expense.vendor, amount: expense.amount, category: expense.category, note: expense.note });
+            toInsert.push({ id: expense.id, date: expense.date, vendor: expense.vendor, amount: expense.amount, category: expense.category, note: expense.note, created_by: user?.id ?? null });
             imported++;
           } else {
             errors++;
@@ -119,7 +125,8 @@ const Expenses = () => {
 
   const fetchExpenses = async () => {
     try {
-      const { data, error } = await supabase.from('expenses').select('*').order('date', { ascending: false });
+      if (!user?.id) { setExpenses([]); return; }
+      const { data, error } = await supabase.from('expenses').select('*').eq('created_by', user.id).order('date', { ascending: false });
       if (error) throw error;
       setExpenses(data ?? []);
     } catch (e) {
@@ -127,7 +134,7 @@ const Expenses = () => {
     }
   };
 
-  useEffect(() => { fetchExpenses(); }, []);
+  useEffect(() => { fetchExpenses(); }, [user?.id]);
 
   return (
     <AppShell>
