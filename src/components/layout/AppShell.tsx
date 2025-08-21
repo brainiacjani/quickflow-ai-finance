@@ -31,7 +31,7 @@ export const AppShell = ({ children }: PropsWithChildren) => {
                   Log in
                 </Button>
               </Link>
-              <Link to="/onboarding">
+              <Link to="/auth/signup">
                 <Button variant="hero" size="sm">
                   Start free trial
                 </Button>
