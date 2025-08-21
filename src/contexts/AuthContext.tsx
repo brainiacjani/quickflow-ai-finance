@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 export type AuthContextType = {
   user: any | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  // return the raw Supabase auth result so callers can await session info
+  signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -65,9 +66,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const actions = useMemo(() => ({
+    // return Supabase result so caller can act when session/user is available
     signIn: async (email: string, password: string) => {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      const res = await supabase.auth.signInWithPassword({ email, password });
+      if (res.error) throw res.error;
+      // set local user immediately if available
+      const userFromRes = res.data?.user ?? res.data?.session?.user ?? null;
+      try { if (userFromRes) setUser(userFromRes); } catch (e) { /* ignore */ }
+      return res;
     },
     signUp: async (email: string, password: string) => {
       const redirectUrl = `${window.location.origin}/onboarding`;
@@ -99,17 +105,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       if (error) throw error;
     },
-  }), []);
+   }), []);
 
-  return (
-    <AuthContext.Provider value={{ user, loading, ...actions }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+   return (
+     <AuthContext.Provider value={{ user, loading, ...actions }}>
+       {children}
+     </AuthContext.Provider>
+   );
+ };
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
-};
+ export const useAuth = () => {
+   const ctx = useContext(AuthContext);
+   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+   return ctx;
+ };
