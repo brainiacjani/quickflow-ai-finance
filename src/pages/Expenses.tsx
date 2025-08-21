@@ -2,8 +2,9 @@ import { Helmet } from "react-helmet-async";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useMemo, useState, useRef } from "react";
-import { Expense, saveExpense, listExpenses } from "@/store/demoData";
+import { useMemo, useState, useRef, useEffect } from "react";
+import { Expense } from "@/store/demoData";
+import { supabase } from "@/integrations/supabase/client";
 import { Upload, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,13 +26,22 @@ const Expenses = () => {
   const [note, setNote] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const [expenses, setExpenses] = useState<any[]>([]);
 
   const suggestion = useMemo(() => guessCategory(vendor, amount), [vendor, amount]);
 
-  const addExpense = () => {
+  const addExpense = async () => {
     const exp: Expense = { id: crypto.randomUUID(), date, vendor, amount, category: category || suggestion.category, note };
-    saveExpense(exp);
-    setVendor(""); setAmount(0); setCategory(""); setNote("");
+    try {
+      const payload = { id: exp.id, date: exp.date, vendor: exp.vendor, amount: exp.amount, category: exp.category, note: exp.note };
+      const { error } = await supabase.from('expenses').insert(payload);
+      if (error) throw error;
+      await fetchExpenses();
+      setVendor(""); setAmount(0); setCategory(""); setNote("");
+    } catch (e) {
+      console.error('addExpense error', e);
+      toast({ title: 'Save failed', description: 'Unable to save expense.' });
+    }
   };
 
   const downloadTemplate = () => {
@@ -48,13 +58,14 @@ const Expenses = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const csv = e.target?.result as string;
       const lines = csv.split('\n');
       const headers = lines[0].split(',').map(h => h.trim());
       
       let imported = 0;
       let errors = 0;
+      const toInsert: any[] = [];
 
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
@@ -73,7 +84,7 @@ const Expenses = () => {
           };
 
           if (expense.vendor && expense.amount > 0) {
-            saveExpense(expense);
+            toInsert.push({ id: expense.id, date: expense.date, vendor: expense.vendor, amount: expense.amount, category: expense.category, note: expense.note });
             imported++;
           } else {
             errors++;
@@ -81,6 +92,17 @@ const Expenses = () => {
         } catch {
           errors++;
         }
+      }
+
+      try {
+        if (toInsert.length > 0) {
+          const { error } = await supabase.from('expenses').insert(toInsert);
+          if (error) throw error;
+          await fetchExpenses();
+        }
+      } catch (e) {
+        console.error('importExpenses error', e);
+        toast({ title: 'Import failed', description: 'Unable to import expenses.' });
       }
 
       toast({
@@ -95,7 +117,17 @@ const Expenses = () => {
     }
   };
 
-  const expenses = listExpenses();
+  const fetchExpenses = async () => {
+    try {
+      const { data, error } = await supabase.from('expenses').select('*').order('date', { ascending: false });
+      if (error) throw error;
+      setExpenses(data ?? []);
+    } catch (e) {
+      console.error('fetchExpenses error', e);
+    }
+  };
+
+  useEffect(() => { fetchExpenses(); }, []);
 
   return (
     <AppShell>

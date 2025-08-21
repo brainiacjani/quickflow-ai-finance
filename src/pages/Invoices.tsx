@@ -1,8 +1,9 @@
 import { Helmet } from "react-helmet-async";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { saveInvoice, listInvoices, InvoiceItem, Invoice } from "@/store/demoData";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { InvoiceItem, Invoice } from "@/store/demoData"; // keep types for UI
 import { useCompany } from "@/hooks/useCompany";
 
 const Invoices = () => {
@@ -12,6 +13,8 @@ const Invoices = () => {
   const [items, setItems] = useState<InvoiceItem[]>([{ description: "Service", quantity: 1, unitPrice: 100 }]);
   const [refresh, setRefresh] = useState(0);
   const { data: company } = useCompany();
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [saving, setSaving] = useState(false);
 
   const total = items.reduce((s, it) => s + it.quantity * it.unitPrice, 0);
 
@@ -22,29 +25,45 @@ const Invoices = () => {
     setItems(next);
   };
 
-  const createInvoice = () => {
-    const inv: Invoice = {
-      id: crypto.randomUUID(),
-      customer, issueDate, dueDate, items, status: 'draft', total
-    };
-    saveInvoice(inv);
-    setCustomer("");
-    setItems([{ description: "Service", quantity: 1, unitPrice: 100 }]);
-    setRefresh(x => x+1);
+  const createInvoice = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        id: crypto.randomUUID(),
+        customer,
+        issuedate: issueDate,
+        duedate: dueDate,
+        items: JSON.stringify(items),
+        status: 'draft',
+        total
+      };
+      const { error } = await supabase.from('invoices').insert(payload);
+      if (error) throw error;
+      setCustomer("");
+      setItems([{ description: "Service", quantity: 1, unitPrice: 100 }]);
+      setRefresh(x => x+1);
+    } catch (e) {
+      console.error('createInvoice error', e);
+      alert('Failed to save invoice');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const sendInvoice = (id: string) => {
-    const invs = listInvoices();
-    const found = invs.find(i => i.id === id);
-    if (!found) return;
-    found.status = 'sent';
-    saveInvoice(found);
-    setRefresh(x => x+1);
-    alert('Invoice sent (simulated). Use Print to save as PDF.');
+  const sendInvoice = async (id: string) => {
+    try {
+      const { error } = await supabase.from('invoices').update({ status: 'sent' }).eq('id', id);
+      if (error) throw error;
+      setRefresh(x => x+1);
+      alert('Invoice sent (simulated). Use Print to save as PDF.');
+    } catch (e) {
+      console.error('sendInvoice error', e);
+      alert('Failed to send invoice');
+    }
   };
 
   const printInvoice = (id: string) => {
-    const inv = listInvoices().find(i => i.id === id);
+    const inv = invoices.find(i => i.id === id);
     if (!inv) return;
     const newWin = window.open('', '_blank');
     if (!newWin) return;
@@ -348,7 +367,18 @@ const Invoices = () => {
     newWin.focus();
   };
 
-  const invoices = listInvoices();
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const { data, error } = await supabase.from('invoices').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        setInvoices(data ?? []);
+      } catch (e) {
+        console.error('fetchInvoices error', e);
+      }
+    };
+    fetchInvoices();
+  }, [refresh]);
 
   return (
     <AppShell>
@@ -393,7 +423,7 @@ const Invoices = () => {
           </div>
           <div className="flex items-center justify-between">
             <div className="text-lg font-semibold">Total: ${total.toFixed(2)}</div>
-            <Button variant="hero" onClick={createInvoice}>Save invoice</Button>
+            <Button variant="hero" onClick={createInvoice} disabled={saving}>{saving ? 'Saving...' : 'Save invoice'}</Button>
           </div>
         </section>
 
