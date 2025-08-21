@@ -7,6 +7,7 @@ import {
   CreditCard,
   Settings 
 } from "lucide-react";
+import { Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -38,6 +39,7 @@ const navItems = [
   { title: "Invoices", url: "/invoices", icon: FileText },
   { title: "Expenses", url: "/expenses", icon: Receipt },
   { title: "Reports", url: "/reports", icon: BarChart3 },
+  { title: "Admin", url: "/admin", icon: Users },
   { title: "Pricing", url: "/pricing", icon: CreditCard },
 ];
 
