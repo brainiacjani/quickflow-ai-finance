@@ -71,11 +71,11 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path;
 
   return (
-    <Sidebar collapsible="icon" className="border-r">
-      <SidebarHeader className="border-b">
+    <Sidebar collapsible="icon" className="border-r bg-white">
+      <SidebarHeader className="border-b pb-2">
         <div className="flex items-center gap-2 px-4 py-2">
           <div
-            className="h-7 w-7 rounded-md flex-shrink-0"
+            className="h-8 w-8 rounded-lg flex-shrink-0"
             style={{
               background:
                 "radial-gradient(120% 120% at 0% 0%, hsl(var(--brand)) 0%, hsl(var(--brand-glow)) 60%, hsl(var(--brand)) 100%)",
@@ -83,7 +83,7 @@ export function AppSidebar() {
             }}
           />
           {!isCollapsed && (
-            <span className="font-semibold text-lg">QuickFlow</span>
+            <span className="font-extrabold text-lg">QuickFlow</span>
           )}
         </div>
       </SidebarHeader>
@@ -131,49 +131,49 @@ export function AppSidebar() {
       </SidebarContent>
 
       {user && (
-        <SidebarFooter className="border-t">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <SidebarMenuButton
-                size="lg"
-                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-              >
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
-                  <AvatarFallback className="rounded-lg">{initials || "U"}</AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{displayName}</span>
-                  <span className="truncate text-xs text-muted-foreground">{user.email}</span>
-                </div>
-              </SidebarMenuButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-              side="bottom"
-              align="end"
-              sideOffset={4}
-            >
-              <DropdownMenuLabel className="p-0 font-normal">
-                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
-                    <AvatarFallback className="rounded-lg">{initials || "U"}</AvatarFallback>
-                  </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">{displayName}</span>
-                    <span className="truncate text-xs text-muted-foreground">{user.email}</span>
-                  </div>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => signOut()} className="text-red-600">
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </SidebarFooter>
-      )}
-    </Sidebar>
-  );
-}
+        <SidebarFooter className="border-t bg-white">
+           <DropdownMenu>
+             <DropdownMenuTrigger asChild>
+               <SidebarMenuButton
+                 size="lg"
+                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+               >
+                <Avatar className="h-8 w-8 rounded-full">
+                   <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
+                  <AvatarFallback className="rounded-full">{initials || "U"}</AvatarFallback>
+                 </Avatar>
+                 <div className="grid flex-1 text-left text-sm leading-tight">
+                   <span className="truncate font-semibold">{displayName}</span>
+                   <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                 </div>
+               </SidebarMenuButton>
+             </DropdownMenuTrigger>
+             <DropdownMenuContent
+               className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+               side="bottom"
+               align="end"
+               sideOffset={4}
+             >
+               <DropdownMenuLabel className="p-0 font-normal">
+                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                  <Avatar className="h-8 w-8 rounded-full">
+                     <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
+                    <AvatarFallback className="rounded-full">{initials || "U"}</AvatarFallback>
+                   </Avatar>
+                   <div className="grid flex-1 text-left text-sm leading-tight">
+                     <span className="truncate font-semibold">{displayName}</span>
+                     <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                   </div>
+                 </div>
+               </DropdownMenuLabel>
+               <DropdownMenuSeparator />
+               <DropdownMenuItem onClick={() => signOut()} className="text-red-600">
+                 Log out
+               </DropdownMenuItem>
+             </DropdownMenuContent>
+           </DropdownMenu>
+         </SidebarFooter>
+       )}
+     </Sidebar>
+   );
+ }
