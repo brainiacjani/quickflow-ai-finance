@@ -50,12 +50,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Existing onAuthStateChange and initial session fetch
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        setUser(session?.user ?? null);
+        const u = session?.user ?? null;
+        setUser(u);
+        // If we have a stored unconfirmed email, clear it when Supabase reports the email as confirmed
+        try {
+          const stored = typeof window !== 'undefined' ? localStorage.getItem('qf_unconfirmed_email') : null;
+          const confirmed = !!(u && ((u as any).email_confirmed_at || (u as any).confirmed_at || (u as any).email_confirmed));
+          if (stored && confirmed) {
+            try { localStorage.removeItem('qf_unconfirmed_email'); } catch (e) { /* ignore */ }
+          }
+        } catch (e) {
+          // ignore
+        }
       });
 
       supabase.auth.getSession().then(({ data: { session } }) => {
         setUser(session?.user ?? null);
         setLoading(false);
+        // Also attempt to clear the stored flag if already confirmed
+        try {
+          const u = session?.user ?? null;
+          const stored = typeof window !== 'undefined' ? localStorage.getItem('qf_unconfirmed_email') : null;
+          const confirmed = !!(u && ((u as any).email_confirmed_at || (u as any).confirmed_at || (u as any).email_confirmed));
+          if (stored && confirmed) {
+            try { localStorage.removeItem('qf_unconfirmed_email'); } catch (e) { /* ignore */ }
+          }
+        } catch (e) {
+          // ignore
+        }
       });
 
       return () => {
@@ -65,6 +87,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     handleRedirect();
   }, []);
+
+  // Re-check confirmation when `user` changes (handles cases where confirmation occurs in another tab)
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('qf_unconfirmed_email') : null;
+      if (!stored) return;
+      (async () => {
+        try {
+          const { data: { user: freshUser }, error } = await supabase.auth.getUser();
+          if (error) return;
+          const confirmed = !!(freshUser && ((freshUser as any).email_confirmed_at || (freshUser as any).confirmed_at || (freshUser as any).email_confirmed));
+          if (confirmed) {
+            try { localStorage.removeItem('qf_unconfirmed_email'); } catch (e) { /* ignore */ }
+            setUser(freshUser);
+          }
+        } catch (e) {
+          // ignore
+        }
+      })();
+    } catch (e) {
+      // ignore
+    }
+  }, [user]);
 
   const actions = useMemo(() => ({
     // return Supabase result so caller can act when session/user is available
