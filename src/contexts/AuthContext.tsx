@@ -124,12 +124,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     },
     signUp: async (email: string, password: string, profile?: Record<string, any>) => {
       const redirectUrl = `${window.location.origin}/onboarding`;
-      const { error } = await supabase.auth.signUp({
+      // Perform signUp (this may require email confirmation depending on your Supabase settings)
+      const res = await supabase.auth.signUp({
         email,
         password,
         options: { emailRedirectTo: redirectUrl, data: profile },
       });
-      if (error) throw error;
+      if (res.error) throw res.error;
+
+      // Try to sign the user in immediately to create a session if allowed by your Supabase configuration.
+      // If the instance requires email confirmation before sign-in, the signIn call may error — ignore that error
+      // and continue to treat the account as created (we store an unconfirmed-email flag for UX).
+      try {
+        const signInRes = await supabase.auth.signInWithPassword({ email, password });
+        if (!signInRes.error) {
+          const userFromRes = signInRes.data?.user ?? signInRes.data?.session?.user ?? null;
+          if (userFromRes) setUser(userFromRes);
+        }
+      } catch (e) {
+        // ignore sign-in error (likely due to required email confirmation)
+      }
     },
     signOut: async () => {
       const { error } = await supabase.auth.signOut();
