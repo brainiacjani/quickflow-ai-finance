@@ -23,6 +23,14 @@ const guessCategory = (vendor: string, amount: number): { category: string; conf
   return { category: "General", confidence: 0.55 };
 };
 
+// Robust currency formatter: strips currency symbols and returns fixed 2-decimal string
+const formatCurrency = (value: unknown) => {
+  const raw = String(value ?? "");
+  const num = parseFloat(raw.replace(/[^0-9.-]+/g, ""));
+  if (Number.isNaN(num)) return "0.00";
+  return num.toFixed(2);
+};
+
 const Expenses = () => {
   const { user } = useAuth();
   const [date, setDate] = useState<string>(new Date().toISOString().slice(0,10));
@@ -256,7 +264,8 @@ const Expenses = () => {
             }))}
             renderActions={(row) => (
               <>
-                <Button size="sm" variant="ghost" onClick={() => openView(row)}>View</Button>
+                {/* Pass original expense object to openView to preserve numeric amount and metadata */}
+                <Button size="sm" variant="ghost" onClick={() => openView(expenses.find(ex => ex.id === row.id) ?? row)}>View</Button>
               </>
             )}
           />
@@ -269,13 +278,13 @@ const Expenses = () => {
               <DialogTitle>Expense details</DialogTitle>
               <DialogDescription>Full details for the selected expense</DialogDescription>
               {selectedExpense ? (
-                <Card className="mt-4">
+                <Card className="mt-4 bg-white">
                   <CardContent>
                     <div className="grid gap-2">
                       <div><strong>Date:</strong> {selectedExpense.date}</div>
                       <div><strong>Vendor:</strong> {selectedExpense.vendor}</div>
                       <div><strong>Category:</strong> {selectedExpense.category}</div>
-                      <div><strong>Amount:</strong> ${Number(selectedExpense.amount).toFixed(2)}</div>
+                      <div><strong>Amount:</strong> ${formatCurrency(selectedExpense.amount)}</div>
                       <div><strong>Notes:</strong></div>
                       <div className="whitespace-pre-wrap p-2 bg-muted/5 rounded">{selectedExpense.note ?? '—'}</div>
                       {selectedExpense.receipt_url && (
