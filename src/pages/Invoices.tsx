@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { InvoiceItem, Invoice } from "@/store/demoData"; // keep types for UI
+import DataTable from "@/components/dashboard/DataTable";
 import { useCompany } from "@/hooks/useCompany";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
@@ -463,37 +464,32 @@ const Invoices = () => {
 
         <section className="grid gap-4">
           <h2 className="text-xl font-semibold">Your invoices</h2>
-          <div className="overflow-x-auto rounded-md border">
-            <table className="min-w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="text-left p-3">Customer</th>
-                  <th className="text-left p-3">Issue</th>
-                  <th className="text-left p-3">Due</th>
-                  <th className="text-left p-3">Total</th>
-                  <th className="text-left p-3">Status</th>
-                  <th className="p-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoices.map((inv) => (
-                  <tr key={inv.id} className="border-t">
-                    <td className="p-3">{inv.customer}</td>
-                    <td className="p-3">{inv.issueDate}</td>
-                    <td className="p-3">{inv.dueDate}</td>
-                    <td className="p-3">${inv.total.toFixed(2)}</td>
-                    <td className="p-3 capitalize">{inv.status}</td>
-                    <td className="p-3 flex gap-2 justify-end">
-                      <Button size="sm" variant="outline" onClick={() => printInvoice(inv.id)}>Print</Button>
-                      {inv.status !== 'paid' && (
-                        <Button size="sm" onClick={() => sendInvoice(inv.id)}>Send</Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            title="Invoices"
+            columns={[
+              { key: 'invoiceNumber', label: 'Invoice #', bold: true },
+              { key: 'customer', label: 'Customer' },
+              { key: 'total', label: 'Amount' },
+              { key: 'status', label: 'Status' },
+              { key: 'issueDate', label: 'Date' },
+            ]}
+            data={invoices.map(i => ({
+              id: i.id,
+              invoiceNumber: (i.id || '').toString().slice(0,8).toUpperCase(),
+              customer: i.customer,
+              total: `$${Number(i.total ?? 0).toFixed(2)}`,
+              status: i.status,
+              issueDate: i.issueDate ?? i.created_at ?? null,
+            }))}
+            renderActions={(row) => (
+              <>
+                <Button size="sm" variant="outline" onClick={() => printInvoice(row.id)}>Print</Button>
+                {row.status !== 'paid' && (
+                  <Button size="sm" onClick={() => sendInvoice(row.id)}>Send</Button>
+                )}
+              </>
+            )}
+          />
         </section>
       </div>
     </AppShell>

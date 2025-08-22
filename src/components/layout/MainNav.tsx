@@ -64,9 +64,9 @@ export const MainNav = () => {
               to={l.to}
               className={({ isActive }) =>
                 cn(
-                  "px-3 py-2 text-sm rounded-md transition-colors",
+                  "px-3 py-2 text-sm rounded-full transition-colors",
                   isActive
-                    ? "bg-accent text-accent-foreground"
+                    ? "bg-gradient-to-r from-[hsl(var(--primary-1))] to-[hsl(var(--primary-2))] text-white shadow-[var(--shadow-glow)]"
                     : "text-foreground/70 hover:text-foreground hover:bg-accent"
                 )
               }
@@ -107,7 +107,7 @@ export const MainNav = () => {
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-accent transition">
+                  <button className="flex items-center gap-2 rounded-full px-3 py-1.5 hover:bg-accent transition shadow-sm">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
                       <AvatarFallback>{initials || "U"}</AvatarFallback>

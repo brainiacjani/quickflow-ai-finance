@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
+import DataTable from "@/components/dashboard/DataTable";
 
 
 const guessCategory = (vendor: string, amount: number): { category: string; confidence: number } => {
@@ -237,73 +238,67 @@ const Expenses = () => {
 
         <section className="grid gap-4">
           <h2 className="text-xl font-semibold">Recent expenses</h2>
-          <div className="overflow-x-auto rounded-md border">
-            <table className="min-w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="text-left p-3">Date</th>
-                  <th className="text-left p-3">Vendor</th>
-                  <th className="text-left p-3">Category</th>
-                  <th className="text-left p-3">Amount</th>
-                  <th className="text-left p-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {expenses.map((e) => (
-                  <tr key={e.id} className="border-t">
-                    <td className="p-3">{e.date}</td>
-                    <td className="p-3">{e.vendor}</td>
-                    <td className="p-3">{e.category}</td>
-                    <td className="p-3">${Number(e.amount).toFixed(2)}</td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="ghost" onClick={() => openView(e)}>View</Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Expense view modal */}
-          <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
-            <DialogContent>
-              <div className="p-4">
-                <DialogTitle>Expense details</DialogTitle>
-                <DialogDescription>Full details for the selected expense</DialogDescription>
-                {selectedExpense ? (
-                  <Card className="mt-4">
-                    <CardContent>
-                      <div className="grid gap-2">
-                        <div><strong>Date:</strong> {selectedExpense.date}</div>
-                        <div><strong>Vendor:</strong> {selectedExpense.vendor}</div>
-                        <div><strong>Category:</strong> {selectedExpense.category}</div>
-                        <div><strong>Amount:</strong> ${Number(selectedExpense.amount).toFixed(2)}</div>
-                        <div><strong>Notes:</strong></div>
-                        <div className="whitespace-pre-wrap p-2 bg-muted/5 rounded">{selectedExpense.note ?? '—'}</div>
-                        {selectedExpense.receipt_url && (
-                          <div>
-                            <strong>Receipt:</strong>
-                            <div className="mt-2">
-                              <a href={selectedExpense.receipt_url} target="_blank" rel="noreferrer" className="text-primary underline">View receipt</a>
-                            </div>
-                          </div>
-                        )}
-                        <div className="text-sm text-muted-foreground">Created by: {creatorName ?? selectedExpense.created_by ?? '—'}</div>
-                      </div>
-                      <div className="mt-4 flex justify-end">
-                        <Button onClick={() => { closeView(); }}>Close</Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div>Loading…</div>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
+          <DataTable
+            title="Expenses"
+            columns={[
+              { key: 'date', label: 'Date' , bold: true},
+              { key: 'vendor', label: 'Vendor' },
+              { key: 'category', label: 'Category' },
+              { key: 'amount', label: 'Amount' },
+            ]}
+            data={expenses.map(e => ({
+              id: e.id,
+              date: e.date,
+              vendor: e.vendor,
+              category: e.category,
+              amount: `$${Number(e.amount ?? 0).toFixed(2)}`,
+              created_by: e.created_by,
+            }))}
+            renderActions={(row) => (
+              <>
+                <Button size="sm" variant="ghost" onClick={() => openView(row)}>View</Button>
+              </>
+            )}
+          />
         </section>
+
+        {/* Expense view modal */}
+        <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
+          <DialogContent>
+            <div className="p-4">
+              <DialogTitle>Expense details</DialogTitle>
+              <DialogDescription>Full details for the selected expense</DialogDescription>
+              {selectedExpense ? (
+                <Card className="mt-4">
+                  <CardContent>
+                    <div className="grid gap-2">
+                      <div><strong>Date:</strong> {selectedExpense.date}</div>
+                      <div><strong>Vendor:</strong> {selectedExpense.vendor}</div>
+                      <div><strong>Category:</strong> {selectedExpense.category}</div>
+                      <div><strong>Amount:</strong> ${Number(selectedExpense.amount).toFixed(2)}</div>
+                      <div><strong>Notes:</strong></div>
+                      <div className="whitespace-pre-wrap p-2 bg-muted/5 rounded">{selectedExpense.note ?? '—'}</div>
+                      {selectedExpense.receipt_url && (
+                        <div>
+                          <strong>Receipt:</strong>
+                          <div className="mt-2">
+                            <a href={selectedExpense.receipt_url} target="_blank" rel="noreferrer" className="text-primary underline">View receipt</a>
+                          </div>
+                        </div>
+                      )}
+                      <div className="text-sm text-muted-foreground">Created by: {creatorName ?? selectedExpense.created_by ?? '—'}</div>
+                    </div>
+                    <div className="mt-4 flex justify-end">
+                      <Button onClick={() => { closeView(); }}>Close</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div>Loading…</div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppShell>
   );
