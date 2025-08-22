@@ -13,6 +13,7 @@ const Signup = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showConfirmationCard, setShowConfirmationCard] = useState(false);
   const navigate = useNavigate();
 
   const handleSignup = async () => {
@@ -23,8 +24,10 @@ const Signup = () => {
     setLoading(true);
     try {
       await signUp(email, password, { first_name: firstName, last_name: lastName });
-      toast.success("Account created — a confirmation email has been sent. Please confirm your email before continuing.");
-      navigate("/onboarding");
+      // mark unconfirmed email so AppShell can show a persistent top-bar reminder
+      try { localStorage.setItem('qf_unconfirmed_email', email); } catch (e) { /* ignore */ }
+      setShowConfirmationCard(true);
+      toast.success("Account created — confirmation email sent.");
     } catch (err: any) {
       console.error('Signup error:', err);
       const msg = err?.message ?? 'Sign up failed';
@@ -36,6 +39,10 @@ const Signup = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleContinueToOnboarding = () => {
+    navigate('/onboarding');
   };
 
   return (
@@ -53,8 +60,23 @@ const Signup = () => {
             <input type="password" placeholder="Password" className="rounded-md border bg-background px-3 py-2" value={password} onChange={e=>setPassword(e.target.value)} />
             <Button variant="hero" onClick={handleSignup} disabled={loading || !email || !password || !firstName}>{loading ? "Creating..." : "Create account"}</Button>
             <div className="text-sm">Have an account? <a className="text-primary underline-offset-4 hover:underline" href="/auth/login">Log in</a></div>
-            <div className="text-sm text-yellow-600">Please check your email and confirm your address before continuing the onboarding.</div>
           </div>
+
+          {/* Confirmation card shown after successful sign-up */}
+          {showConfirmationCard && (
+            <div className="mt-6">
+              <div className="max-w-md">
+                <div className="rounded-xl border bg-white p-4 shadow-md">
+                  <h3 className="text-lg font-semibold">Check your email</h3>
+                  <p className="text-sm text-muted-foreground mt-2">We've sent a confirmation email to <strong>{email}</strong>. Please confirm your email address to activate your account.</p>
+                  <div className="mt-4 flex items-center gap-2">
+                    <Button variant="hero" onClick={handleContinueToOnboarding}>Continue to onboarding</Button>
+                    <Button variant="outline" onClick={() => { try { navigator.clipboard.writeText(email); } catch {} }}>Copy email</Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </AppShell>
