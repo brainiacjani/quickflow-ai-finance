@@ -51,8 +51,22 @@ export default function Contact() {
         console.debug("contacts insert failed", err);
       }
 
-      // try calling local server endpoint to send via SMTP
+      // call Supabase Edge Function to send via the SMTP credentials configured in Supabase
       const payload = { name, email, message, source, plan };
+      try {
+        const fnRes: any = await supabase.functions.invoke('send-contact', { body: JSON.stringify(payload) });
+        // supabase-js returns an object; assume success if no error and status 200
+        if (!fnRes?.error) {
+          toast.success("Message sent. We'll get back to you soon.");
+          setMessage('');
+          return;
+        }
+        console.debug('supabase function error', fnRes.error || fnRes);
+      } catch (err) {
+        console.debug('supabase function invoke failed', err);
+      }
+
+      // fallback to local server endpoint if function isn't available (dev)
       try {
         const res = await fetch("/api/send-contact", {
           method: "POST",
@@ -60,7 +74,7 @@ export default function Contact() {
           body: JSON.stringify(payload),
         });
         if (res.ok) {
-          toast.success("Message sent. We'll get back to you soon.");
+          toast.success("Message sent via local helper. We'll get back to you soon.");
           setMessage('');
           return;
         }
@@ -69,7 +83,7 @@ export default function Contact() {
         console.debug('send-contact failed', err);
       }
 
-      // fallback to mailto
+      // final fallback to mailto
       const subject = `QuickFlow contact${plan ? ` - ${plan}` : ""}`;
       const body = `${message}\n\n---\nName: ${name || "-"}\nEmail: ${email}\nSource: ${source || "-"}\nPlan: ${plan || "-"}`;
       const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
