@@ -26,6 +26,7 @@ import { RequireAuth } from "./components/auth/RequireAuth";
 import { RedirectIfAuthed } from "./components/auth/RedirectIfAuthed";
 import Admin from "./pages/Admin";
 import RequireRole from "./components/auth/RequireRole";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
                   <Route path="/reports" element={<RequireAuth><Reports /></RequireAuth>} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+                  <Route path="/contact" element={<Contact />} />
 
                   <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/payment-canceled" element={<PaymentCanceled />} />
