@@ -1,5 +1,4 @@
 import { Helmet } from "react-helmet-async";
-import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -35,23 +34,26 @@ const UpdatePassword = () => {
   };
 
   return (
-    <AppShell>
+    <>
       <Helmet>
         <title>Update password | QuickFlow</title>
         <meta name="description" content="Set a new password for your QuickFlow account." />
         <link rel="canonical" href={`${window.location.origin}/auth/update-password`} />
       </Helmet>
-      <div className="container py-16 grid place-items-center">
-        <div className="w-full max-w-md rounded-xl border p-6">
-          <h1 className="text-2xl font-semibold mb-4">Set a new password</h1>
-          <div className="grid gap-3">
-            <input type="password" placeholder="New password" className="rounded-md border bg-background px-3 py-2" value={password} onChange={e=>setPassword(e.target.value)} />
-            <input type="password" placeholder="Confirm new password" className="rounded-md border bg-background px-3 py-2" value={confirm} onChange={e=>setConfirm(e.target.value)} />
-            <Button variant="hero" onClick={handleUpdate} disabled={loading}>{loading ? "Updating..." : "Update password"}</Button>
+
+      <div className="min-h-screen bg-background py-16">
+        <div className="container grid place-items-center px-4">
+          <div className="w-full max-w-md rounded-xl border p-6 bg-card">
+            <h1 className="text-2xl font-semibold mb-4">Set a new password</h1>
+            <div className="grid gap-3">
+              <input type="password" placeholder="New password" className="rounded-md border bg-background px-3 py-2" value={password} onChange={e=>setPassword(e.target.value)} />
+              <input type="password" placeholder="Confirm new password" className="rounded-md border bg-background px-3 py-2" value={confirm} onChange={e=>setConfirm(e.target.value)} />
+              <Button variant="hero" onClick={handleUpdate} disabled={loading}>{loading ? "Updating..." : "Update password"}</Button>
+            </div>
           </div>
         </div>
       </div>
-    </AppShell>
+    </>
   );
 };
 
