@@ -1,4 +1,3 @@
-
 import { Helmet } from "react-helmet-async";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -131,110 +130,121 @@ const Settings = () => {
         <title>Settings | QuickFlow</title>
         <meta name="description" content="Manage your QuickFlow account and integrations." />
       </Helmet>
-      <div className="container py-8 grid gap-8 max-w-3xl">
-        <section className="grid gap-3">
-          <h1 className="text-2xl font-semibold">Account</h1>
-          <div className="rounded-lg border p-4 flex items-center justify-between">
-            <div>
-              <div className="font-medium">{pDisplay || [pFirst, pLast].filter(Boolean).join(" ").trim() || user?.email || "Account"}</div>
-              <div className="text-sm text-muted-foreground">Signed in as {user?.email}</div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => navigate("/auth/update-password")}>
-                Change password
-              </Button>
-              <Button variant="outline" onClick={signOut}>Log out</Button>
-            </div>
-          </div>
-        </section>
 
-        <section className="grid gap-3">
-          <h2 className="text-xl font-semibold">Personal info</h2>
-          <div className="rounded-lg border p-4 grid gap-3">
-            <div className="grid gap-1">
-              <label className="text-sm">First name</label>
-              <input className="rounded-md border bg-background px-3 py-2" value={pFirst} onChange={(e) => setPFirst(e.target.value)} />
-            </div>
-            <div className="grid gap-1">
-              <label className="text-sm">Last name</label>
-              <input className="rounded-md border bg-background px-3 py-2" value={pLast} onChange={(e) => setPLast(e.target.value)} />
-            </div>
-            <div className="grid gap-1">
-              <label className="text-sm">Display name</label>
-              <input className="rounded-md border bg-background px-3 py-2" value={pDisplay} onChange={(e) => setPDisplay(e.target.value)} placeholder="Shown in the app" />
-            </div>
-            <div className="flex justify-end">
-              <Button variant="hero" onClick={saveProfile} disabled={savingProfile}>
-                {savingProfile ? "Saving..." : "Save changes"}
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        <section className="grid gap-3">
-          <h2 className="text-xl font-semibold">Company</h2>
-          <div className="rounded-lg border p-4 grid gap-3">
-            <div className="grid gap-1">
-              <label className="text-sm">Company name</label>
-              <input className="rounded-md border bg-background px-3 py-2" value={cName} onChange={(e) => setCName(e.target.value)} />
-            </div>
-            <div className="grid gap-1">
-              <label className="text-sm">Business type</label>
-              <input className="rounded-md border bg-background px-3 py-2" value={cType} onChange={(e) => setCType(e.target.value)} placeholder="Freelancer / Retail / SaaS..." />
-            </div>
-            <div className="grid gap-1">
-              <label className="text-sm">Country/State</label>
-              <input className="rounded-md border bg-background px-3 py-2" value={cRegion} onChange={(e) => setCRegion(e.target.value)} placeholder="US / CA / EU..." />
-            </div>
-            <div className="grid gap-1">
-              <label className="text-sm">Currency</label>
-              <input className="rounded-md border bg-background px-3 py-2" value={cCurrency} onChange={(e) => setCCurrency(e.target.value)} placeholder="USD" />
-            </div>
-            <div className="grid gap-1">
-              <label className="text-sm">Fiscal year start date</label>
-              <input type="date" className="rounded-md border bg-background px-3 py-2" value={cStart || ""} onChange={(e) => setCStart(e.target.value)} />
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm">Company logo</label>
-              <div className="flex items-center gap-4">
-                {cLogoUrl ? (
-                  <img src={cLogoUrl} alt={`${cName || 'Company'} logo`} className="h-12 w-12 rounded-md border object-cover" loading="lazy" />
-                ) : (
-                  <div className="h-12 w-12 rounded-md border grid place-items-center text-xs text-muted-foreground">No logo</div>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleLogoUpload(file);
-                  }}
-                  disabled={uploadingLogo}
-                />
+      <div className="max-w-full px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-3xl w-full mx-auto grid gap-8">
+          <section className="grid gap-3">
+            <h1 className="text-2xl font-semibold">Account</h1>
+            <div className="rounded-lg border p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+              <div className="flex-1 min-w-0">
+                <div className="font-medium">{pDisplay || [pFirst, pLast].filter(Boolean).join(" ").trim() || user?.email || "Account"}</div>
+                <div className="text-sm text-muted-foreground">Signed in as {user?.email}</div>
               </div>
-              <p className="text-xs text-muted-foreground">Recommended: Square PNG or SVG, at least 128x128.</p>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button variant="outline" onClick={() => navigate("/auth/update-password")} className="w-full sm:w-auto">Change password</Button>
+                <Button variant="outline" onClick={signOut} className="w-full sm:w-auto">Log out</Button>
+              </div>
             </div>
-            <div className="flex justify-end">
-              <Button variant="hero" onClick={saveCompany} disabled={savingCompany}>
-                {savingCompany ? "Saving..." : "Save changes"}
-              </Button>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="grid gap-3">
-          <h2 className="text-xl font-semibold">Integrations</h2>
-          <div className="rounded-lg border p-4 grid gap-4">
-            <div>
-              <div className="font-medium">Stripe (Payments)</div>
-              <div className="text-sm text-muted-foreground">Enable Stripe Checkout to accept card/ACH. Configure your Stripe secret key in the backend when ready.</div>
+          <section className="grid gap-3">
+            <h2 className="text-xl font-semibold">Personal info</h2>
+            <div className="rounded-lg border p-4 grid gap-3">
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="grid gap-1">
+                  <label className="text-sm">First name</label>
+                  <input className="rounded-md border bg-background px-3 py-2 w-full" value={pFirst} onChange={(e) => setPFirst(e.target.value)} />
+                </div>
+                <div className="grid gap-1">
+                  <label className="text-sm">Last name</label>
+                  <input className="rounded-md border bg-background px-3 py-2 w-full" value={pLast} onChange={(e) => setPLast(e.target.value)} />
+                </div>
+              </div>
+
+              <div className="grid gap-1">
+                <label className="text-sm">Display name</label>
+                <input className="rounded-md border bg-background px-3 py-2 w-full" value={pDisplay} onChange={(e) => setPDisplay(e.target.value)} placeholder="Shown in the app" />
+              </div>
+
+              <div className="flex justify-end">
+                <Button variant="hero" onClick={saveProfile} disabled={savingProfile} className="w-full sm:w-auto">
+                  {savingProfile ? "Saving..." : "Save changes"}
+                </Button>
+              </div>
             </div>
-            <div>
-              <div className="font-medium">AWS S3 (Receipts)</div>
-              <div className="text-sm text-muted-foreground">Connect S3 to store receipts securely. Configure credentials in the backend when ready.</div>
+          </section>
+
+          <section className="grid gap-3">
+            <h2 className="text-xl font-semibold">Company</h2>
+            <div className="rounded-lg border p-4 grid gap-3">
+              <div className="grid gap-1">
+                <label className="text-sm">Company name</label>
+                <input className="rounded-md border bg-background px-3 py-2 w-full" value={cName} onChange={(e) => setCName(e.target.value)} />
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="grid gap-1">
+                  <label className="text-sm">Business type</label>
+                  <input className="rounded-md border bg-background px-3 py-2 w-full" value={cType} onChange={(e) => setCType(e.target.value)} placeholder="Freelancer / Retail / SaaS..." />
+                </div>
+                <div className="grid gap-1">
+                  <label className="text-sm">Country/State</label>
+                  <input className="rounded-md border bg-background px-3 py-2 w-full" value={cRegion} onChange={(e) => setCRegion(e.target.value)} placeholder="US / CA / EU..." />
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="grid gap-1">
+                  <label className="text-sm">Currency</label>
+                  <input className="rounded-md border bg-background px-3 py-2 w-full" value={cCurrency} onChange={(e) => setCCurrency(e.target.value)} placeholder="USD" />
+                </div>
+                <div className="grid gap-1">
+                  <label className="text-sm">Fiscal year start date</label>
+                  <input type="date" className="rounded-md border bg-background px-3 py-2 w-full" value={cStart || ""} onChange={(e) => setCStart(e.target.value)} />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm">Company logo</label>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  {cLogoUrl ? (
+                    <img src={cLogoUrl} alt={`${cName || 'Company'} logo`} className="h-12 w-12 rounded-md border object-cover" loading="lazy" />
+                  ) : (
+                    <div className="h-12 w-12 rounded-md border grid place-items-center text-xs text-muted-foreground">No logo</div>
+                  )}
+                  <div className="flex flex-col gap-2 w-full sm:w-auto">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleLogoUpload(file);
+                      }}
+                      disabled={uploadingLogo}
+                    />
+                    <p className="text-xs text-muted-foreground">Recommended: Square PNG or SVG, at least 128x128.</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button variant="hero" onClick={saveCompany} disabled={savingCompany} className="w-full sm:w-auto">
+                  {savingCompany ? "Saving..." : "Save changes"}
+                </Button>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+
+          <section className="grid gap-3">
+            <h2 className="text-xl font-semibold">Integrations</h2>
+            <div className="rounded-lg border p-4 grid gap-4">
+              <div>
+                <div className="font-medium">Stripe (Payments)</div>
+                <div className="text-sm text-muted-foreground">Enable Stripe Checkout to accept card/ACH. Configure your Stripe secret key in the backend when ready.</div>
+              </div>
+              <div>
+                <div className="font-medium">AWS S3 (Receipts)</div>
+                <div className="text-sm text-muted-foreground">Connect S3 to store receipts securely. Configure credentials in the backend when ready.</div>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </AppShell>
   );

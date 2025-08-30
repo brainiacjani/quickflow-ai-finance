@@ -74,18 +74,26 @@ const Landing = () => {
                 automated workflows, and professional invoicing that gets results.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/auth/signup">
-                  <Button variant="hero" size="xl" className="group">
+                <Link to="/auth/signup" className="w-full sm:w-auto">
+                  <Button variant="hero" size="xl" className="group w-full sm:w-auto">
                     Start Free Trial
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </Link>
-                <Link to="/pricing">
-                  <Button variant="outline" size="xl">
+                <Link to="/pricing" className="w-full sm:w-auto">
+                  <Button variant="outline" size="xl" className="w-full sm:w-auto">
                     View Pricing
                   </Button>
                 </Link>
               </div>
+
+              {/* Add a small visible login link on mobile */}
+              <div className="mt-3 sm:mt-0">
+                <Link to="/auth/login" className="block sm:hidden">
+                  <Button variant="ghost" size="sm" className="w-full">Log in</Button>
+                </Link>
+              </div>
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">99%</div>
@@ -110,7 +118,7 @@ const Landing = () => {
               <img 
                 src={dashboardScreenshot} 
                 alt="QuickFlow Dashboard Interface" 
-                className="relative rounded-2xl shadow-2xl border"
+                className="relative rounded-2xl shadow-2xl border max-w-full h-auto"
               />
             </div>
           </div>

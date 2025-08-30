@@ -190,14 +190,15 @@ const Expenses = () => {
         <link rel="canonical" href="https://quickflow.app/expenses" />
       </Helmet>
 
-      <div className="container py-8 grid gap-8">
+      <div className="max-w-full px-4 sm:px-6 lg:px-8 py-8 grid gap-8">
         <section className="grid gap-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h1 className="text-2xl font-semibold">Add expense</h1>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={downloadTemplate} className="flex items-center gap-2">
                 <Download className="h-4 w-4" />
-                Download Template
+                <span className="hidden sm:inline">Download Template</span>
+                <span className="sm:hidden">Template</span>
               </Button>
               <Button 
                 variant="outline" 
@@ -205,7 +206,8 @@ const Expenses = () => {
                 className="flex items-center gap-2"
               >
                 <Upload className="h-4 w-4" />
-                Import CSV
+                <span className="hidden sm:inline">Import CSV</span>
+                <span className="sm:hidden">Import</span>
               </Button>
               <Input
                 ref={fileInputRef}
@@ -216,31 +218,31 @@ const Expenses = () => {
               />
             </div>
           </div>
-          <div className="grid md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-2">
               <label className="text-sm">Date</label>
-              <input type="date" className="rounded-md border bg-background px-3 py-2" value={date} onChange={e=>setDate(e.target.value)} />
+              <input type="date" className="rounded-md border bg-background px-3 py-2 w-full" value={date} onChange={e=>setDate(e.target.value)} />
             </div>
             <div className="grid gap-2">
               <label className="text-sm">Vendor</label>
-              <input className="rounded-md border bg-background px-3 py-2" value={vendor} onChange={e=>setVendor(e.target.value)} placeholder="Amazon" />
+              <input className="rounded-md border bg-background px-3 py-2 w-full" value={vendor} onChange={e=>setVendor(e.target.value)} placeholder="Amazon" />
             </div>
             <div className="grid gap-2">
               <label className="text-sm">Amount</label>
-              <input type="number" className="rounded-md border bg-background px-3 py-2" value={amount} onChange={e=>setAmount(Number(e.target.value))} />
+              <input type="number" className="rounded-md border bg-background px-3 py-2 w-full" value={amount} onChange={e=>setAmount(Number(e.target.value))} />
             </div>
             <div className="grid gap-2">
               <label className="text-sm">Category</label>
-              <input className="rounded-md border bg-background px-3 py-2" value={category} onChange={e=>setCategory(e.target.value)} placeholder="e.g. Office Supplies" />
+              <input className="rounded-md border bg-background px-3 py-2 w-full" value={category} onChange={e=>setCategory(e.target.value)} placeholder="e.g. Office Supplies" />
               <p className="text-xs text-muted-foreground">AI suggests: <span className="font-medium">{suggestion.category}</span> ({Math.round(suggestion.confidence*100)}% confidence)</p>
             </div>
-            <div className="md:col-span-2 grid gap-2">
+            <div className="sm:col-span-2 grid gap-2">
               <label className="text-sm">Note</label>
-              <textarea className="rounded-md border bg-background px-3 py-2" value={note} onChange={e=>setNote(e.target.value)} placeholder="Optional" />
+              <textarea className="rounded-md border bg-background px-3 py-2 w-full" value={note} onChange={e=>setNote(e.target.value)} placeholder="Optional" />
             </div>
           </div>
           <div>
-            <Button variant="hero" onClick={addExpense}>Save expense</Button>
+            <Button variant="hero" onClick={addExpense} className="w-full sm:w-auto">Save expense</Button>
           </div>
         </section>
 

@@ -41,8 +41,9 @@ export default function DataTable({
       </CardHeader>
 
       <CardContent className="p-0">
-        <div className="w-full overflow-x-auto">
-          <table className="w-full min-w-[720px] table-auto">
+        {/* Desktop / tablet: table view */}
+        <div className="hidden md:block w-full overflow-x-auto">
+          <table className="w-full table-auto">
             <thead>
               <tr className="sticky top-0 z-10">
                 {columns.map((c) => (
@@ -97,6 +98,33 @@ export default function DataTable({
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile: stacked cards view */}
+        <div className="md:hidden p-2">
+          {data.length === 0 && (
+            <div className="px-4 py-6 text-center text-sm text-muted-foreground">No records found.</div>
+          )}
+
+          {data.map((row, idx) => (
+            <div key={row[primaryKey] ?? idx} className="mb-3 rounded-lg border bg-white p-3 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  {columns.map((c) => (
+                    <div key={c.key} className="mb-1">
+                      <div className="text-xs text-muted-foreground">{c.label}</div>
+                      <div className={`text-sm ${c.bold ? 'font-semibold' : ''} truncate`}>{row[c.key]}</div>
+                    </div>
+                  ))}
+                </div>
+                {renderActions && (
+                  <div className="flex flex-col items-end gap-2">
+                    {renderActions(row)}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>
