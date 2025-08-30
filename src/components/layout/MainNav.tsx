@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Menu } from 'lucide-react';
 
 const links = [
   { to: "/dashboard", label: "Dashboard" },
@@ -57,6 +58,7 @@ export const MainNav = () => {
           <span>QuickFlow</span>
         </a>
 
+        {/* Desktop links */}
         <nav className="hidden md:flex items-center gap-1">
           {links.map((l) => (
             <NavLink
@@ -90,9 +92,39 @@ export const MainNav = () => {
         </nav>
 
         <div className="flex items-center gap-2">
+          {/* Mobile menu trigger (shows links in a dropdown) */}
+          <div className="md:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 rounded-md hover:bg-accent">
+                  <Menu className="h-5 w-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Navigation</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {links.map((l) => (
+                  <Link key={l.to} to={l.to}>
+                    <DropdownMenuItem className="cursor-pointer">{l.label}</DropdownMenuItem>
+                  </Link>
+                ))}
+                <Link to="/admin">
+                  <DropdownMenuItem className="cursor-pointer">Admin</DropdownMenuItem>
+                </Link>
+                {!user && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <Link to="/auth/login"><DropdownMenuItem className="cursor-pointer">Log in</DropdownMenuItem></Link>
+                    <Link to="/auth/signup"><DropdownMenuItem className="cursor-pointer">Sign up</DropdownMenuItem></Link>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
           {!user ? (
             <>
-              <Link to="/auth/login" className="hidden sm:block">
+              <Link to="/auth/login">
                 <Button variant="ghost" size="sm">
                   Log in
                 </Button>
