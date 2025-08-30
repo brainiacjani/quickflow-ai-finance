@@ -7,7 +7,7 @@ export type AuthContextType = {
   // return the raw Supabase auth result so callers can await session info
   signIn: (email: string, password: string) => Promise<any>;
   // signUp accepts optional profile metadata (e.g. { first_name, last_name })
-  signUp: (email: string, password: string, profile?: Record<string, any>) => Promise<void>;
+  signUp: (email: string, password: string, profile?: Record<string, any>) => Promise<any>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 };
@@ -144,6 +144,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (e) {
         // ignore sign-in error (likely due to required email confirmation)
       }
+
+      return res;
     },
     signOut: async () => {
       const { error } = await supabase.auth.signOut();
