@@ -83,7 +83,7 @@ const Invoices = () => {
           <td class="text-center">${it.quantity}</td>
           <td class="text-right">$${it.unitPrice.toFixed(2)}</td>
           <td class="text-right font-bold">$${(it.quantity * it.unitPrice).toFixed(2)}</td>
-        </tr>`)
+        </tr>`) 
       .join('');
 
     const logo = company && (company as any).logo_url
@@ -100,191 +100,79 @@ const Invoices = () => {
     <title>Invoice ${id}</title>
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; }
       body { 
         font-family: 'Arial', sans-serif; 
-        background: #f8f9fa; 
-        padding: 20px; 
+        background: #fff; 
         color: #333; 
-        line-height: 1.6;
+        line-height: 1.4;
       }
+
+      /* Container uses full printable width and is compact for print */
       .invoice-container { 
+        width: 100%; 
         max-width: 800px; 
         margin: 0 auto; 
         background: white; 
-        border-radius: 8px; 
+        border-radius: 6px; 
         overflow: hidden; 
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
+        padding: 16px; 
       }
+
       .invoice-header { 
         display: flex; 
         justify-content: space-between; 
         align-items: center; 
-        padding: 30px; 
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-        color: white; 
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e9ecef;
       }
-      .company-info { 
-        display: flex; 
-        align-items: center; 
-        gap: 15px; 
-      }
-      .company-logo { 
-        width: 50px; 
-        height: 50px; 
-        background: rgba(255,255,255,0.2); 
-        border-radius: 8px; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        font-weight: bold; 
-        font-size: 18px; 
-      }
-      .company-name { 
-        font-size: 24px; 
-        font-weight: bold; 
-      }
-      .invoice-title { 
-        font-size: 32px; 
-        font-weight: bold; 
-        text-transform: uppercase; 
-        letter-spacing: 2px; 
-      }
+      .company-info { display:flex; align-items:center; gap:12px; }
+      .company-name { font-size: 18px; font-weight: 700; }
+      .invoice-title { font-size: 18px; font-weight: 700; text-transform: uppercase; }
+
       .invoice-meta { 
-        display: grid; 
-        grid-template-columns: repeat(2, 1fr); 
-        gap: 30px; 
-        padding: 30px; 
-        background: #f8f9fb; 
-        border-bottom: 3px solid #e9ecef; 
-      }
-      .supplier-info, .invoice-info { 
-        background: white; 
-        padding: 20px; 
-        border-radius: 8px; 
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
-      }
-      .section-title { 
-        font-size: 14px; 
-        font-weight: bold; 
-        text-transform: uppercase; 
-        color: #6c757d; 
-        margin-bottom: 15px; 
-        letter-spacing: 1px; 
-        border-bottom: 2px solid #dee2e6; 
-        padding-bottom: 8px; 
-      }
-      .info-row { 
         display: flex; 
-        justify-content: space-between; 
-        margin-bottom: 8px; 
+        gap: 12px; 
+        padding: 12px 0; 
       }
-      .info-label { 
-        color: #6c757d; 
-        font-weight: 500; 
-      }
-      .info-value { 
-        font-weight: bold; 
-        color: #212529; 
-      }
-      .product-section { 
-        padding: 30px; 
-      }
-      .product-title { 
-        font-size: 16px; 
-        font-weight: bold; 
-        margin-bottom: 20px; 
-        color: #495057; 
-        text-transform: uppercase; 
-        letter-spacing: 1px; 
-      }
-      table { 
-        width: 100%; 
-        border-collapse: collapse; 
-        margin-bottom: 30px; 
-        background: white; 
-        border-radius: 8px; 
-        overflow: hidden; 
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
-      }
-      th { 
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
-        color: #495057; 
-        text-align: left; 
-        font-weight: bold; 
-        font-size: 12px; 
-        text-transform: uppercase; 
-        letter-spacing: 1px; 
-        padding: 15px; 
-        border-bottom: 2px solid #dee2e6; 
-      }
-      td { 
-        padding: 15px; 
-        border-bottom: 1px solid #f1f3f4; 
-        font-size: 14px; 
-      }
-      tbody tr:hover { 
-        background: #f8f9fa; 
-      }
-      .text-right { 
-        text-align: right; 
-        font-weight: 600; 
-      }
-      .text-center { 
-        text-align: center; 
-      }
-      .font-bold { 
-        font-weight: bold; 
-        color: #212529; 
-      }
-      .payment-summary { 
-        background: linear-gradient(135deg, #f8f9fb 0%, #ffffff 100%); 
-        padding: 30px; 
-        border-top: 3px solid #e9ecef; 
-      }
-      .payment-grid { 
-        display: grid; 
-        grid-template-columns: 1fr auto; 
-        gap: 30px; 
-        align-items: end; 
-      }
-      .payment-info { 
-        color: #6c757d; 
-        font-size: 14px; 
-      }
-      .total-amount { 
-        text-align: right; 
-      }
-      .total-label { 
-        font-size: 16px; 
-        color: #6c757d; 
-        margin-bottom: 5px; 
-      }
-      .total-value { 
-        font-size: 28px; 
-        font-weight: bold; 
-        color: #007bff; 
-        font-family: 'Georgia', serif; 
-      }
-      .footer-info { 
-        margin-top: 20px; 
-        padding-top: 20px; 
-        border-top: 1px solid #e9ecef; 
-        text-align: center; 
-        color: #6c757d; 
-        font-size: 12px; 
-      }
-      @media print { 
-        body { 
-          background: white; 
-          padding: 0; 
-        } 
-        .invoice-container { 
-          box-shadow: none; 
-          border-radius: 0; 
-        } 
-        tbody tr:hover { 
-          background: transparent; 
-        } 
+      .supplier-info, .invoice-info { flex: 1; font-size: 12px; }
+      .section-title { font-size: 11px; font-weight: 700; color: #666; margin-bottom: 6px; }
+      .info-row { display:flex; justify-content:space-between; margin-bottom:4px; }
+      .info-label{ color:#666; }
+
+      /* New: ensure supplier info values align left instead of being spaced to the right */
+      .supplier-info .info-row { justify-content: flex-start; }
+      .supplier-info .info-row span { display: inline-block; }
+      .supplier-info .info-row span + span { margin-left: 8px; text-align: left; }
+
+      .product-section { padding-top: 8px; }
+      table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 12px; }
+      th { text-align: left; font-size: 11px; padding: 8px; color: #444; border-bottom:1px solid #eaeaea; }
+      td { padding: 8px; border-bottom: 1px solid #f3f3f3; }
+      .text-right { text-align: right; }
+      .text-center { text-align: center; }
+      .font-bold { font-weight: 700; }
+
+      .payment-summary { padding-top: 8px; display:flex; justify-content:space-between; align-items:flex-end; font-size:12px; }
+      .total-value { font-size: 18px; font-weight: 800; color:#0b67ff; }
+
+      .footer-info { margin-top: 8px; font-size: 11px; color:#666; text-align:center; }
+
+      /* Print-focused rules: remove shadows, tighten spacing, and force single-page if possible */
+      @page { size: A4 portrait; margin: 10mm; }
+      @media print {
+        body { background: white; padding: 0; }
+        .invoice-container { box-shadow: none; border-radius: 0; padding: 8px; }
+        th, td { padding: 6px; }
+        .invoice-header, .invoice-meta, .payment-summary { padding: 4px 0; }
+        .company-name, .invoice-title, .total-value { font-size: 16px; }
+        .footer-info { font-size: 10px; }
+        /* Avoid page breaks inside the invoice container */
+        .invoice-container { page-break-inside: avoid; }
+
+        /* Ensure supplier rows are left-aligned when printed */
+        .supplier-info .info-row { justify-content: flex-start; }
+        .supplier-info .info-row span + span { margin-left: 6px; }
       }
     </style>
   </head>
@@ -292,52 +180,33 @@ const Invoices = () => {
     <div class="invoice-container">
       <div class="invoice-header">
         <div class="company-info">
-          ${logo || '<div class="company-logo">C</div>'}
+          ${logo || '<div style="width:36px;height:36px;background:#eee;border-radius:6px;display:inline-block"></div>'}
           <div class="company-name">${companyName}</div>
         </div>
         <div class="invoice-title">Invoice</div>
       </div>
-      
       <div class="invoice-meta">
         <div class="supplier-info">
           <div class="section-title">Supplier Information</div>
-          <div class="info-row">
-            <span class="info-label">Company:</span>
-            <span class="info-value">${companyName}</span>
-          </div>
+          <div class="info-row"><span class="info-label">Company:</span><span>${companyName}</span></div>
         </div>
-        
         <div class="invoice-info">
           <div class="section-title">Invoice Details</div>
-          <div class="info-row">
-            <span class="info-label">Invoice #:</span>
-            <span class="info-value">#${inv.id.slice(0, 8).toUpperCase()}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Date:</span>
-            <span class="info-value">${inv.issueDate}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Due Date:</span>
-            <span class="info-value">${inv.dueDate}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Bill To:</span>
-            <span class="info-value">${inv.customer}</span>
-          </div>
+          <div class="info-row"><span class="info-label">Invoice #:</span><span class="font-bold">#${inv.id.slice(0, 8).toUpperCase()}</span></div>
+          <div class="info-row"><span class="info-label">Date:</span><span>${inv.issueDate}</span></div>
+          <div class="info-row"><span class="info-label">Due:</span><span>${inv.dueDate}</span></div>
+          <div class="info-row"><span class="info-label">Bill To:</span><span>${inv.customer}</span></div>
         </div>
       </div>
-      
+
       <div class="product-section">
-        <div class="product-title">Product Information</div>
         <table>
           <thead>
             <tr>
-              <th style="width: 40%;">Description</th>
-              <th class="text-center" style="width: 15%;">Ordered Qty</th>
-              <th class="text-center" style="width: 15%;">Received Qty</th>
-              <th class="text-right" style="width: 15%;">Rate</th>
-              <th class="text-right" style="width: 15%;">Amount</th>
+              <th style="width:50%">Description</th>
+              <th class="text-center" style="width:12%">Qty</th>
+              <th class="text-right" style="width:19%">Rate</th>
+              <th class="text-right" style="width:19%">Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -345,30 +214,47 @@ const Invoices = () => {
           </tbody>
         </table>
       </div>
-      
+
       <div class="payment-summary">
-        <div class="payment-grid">
-          <div class="payment-info">
-            <div><strong>Payment Information</strong></div>
-            <div style="margin-top: 10px;">
-              <div>Amount Paid: $0.00</div>
-              <div>Amount Due: $${inv.total.toFixed(2)}</div>
-            </div>
-            <div class="footer-info">
-              <div><strong>Order Summary</strong></div>
-              <div>Order Date: ${inv.issueDate}</div>
-              <div>Received Date: N/A</div>
-            </div>
-          </div>
-          
-          <div class="total-amount">
-            <div class="total-label">Total Amount:</div>
-            <div class="total-value">$${inv.total.toFixed(2)}</div>
-          </div>
+        <div>
+          <div><strong>Payment Information</strong></div>
+          <div style="margin-top:6px;">Amount Due: $${inv.total.toFixed(2)}</div>
         </div>
+        <div class="total-value">$${inv.total.toFixed(2)}</div>
       </div>
+
+      <div class="footer-info">Generated by QuickFlow • ${new Date().toLocaleDateString()}</div>
     </div>
-    <script>window.onload = () => { window.print(); }</script>
+
+    <script>
+      // Try to scale the content to fit a single page when necessary
+      function scaleToFit() {
+        try {
+          const container = document.querySelector('.invoice-container');
+          if (!container) return;
+          // Measure heights
+          const contentHeight = container.scrollHeight;
+          const pageHeight = window.innerHeight; // viewport height as an approximation
+          if (contentHeight > pageHeight) {
+            const scale = Math.max(0.45, pageHeight / contentHeight);
+            container.style.transform = 'scale(' + scale + ')';
+            container.style.transformOrigin = 'top left';
+            // Expand body height so print dialog captures the scaled size
+            document.body.style.height = Math.ceil(contentHeight * scale) + 'px';
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      window.onload = () => {
+        // Give layout a moment to settle, then scale and print
+        setTimeout(() => {
+          scaleToFit();
+          setTimeout(() => { window.print(); }, 300);
+        }, 120);
+      };
+    </script>
   </body>
 </html>`);
     newWin.document.close();
