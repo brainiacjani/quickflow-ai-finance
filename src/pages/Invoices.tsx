@@ -1,6 +1,5 @@
 import { Helmet } from "react-helmet-async";
 import { AppShell } from "@/components/layout/AppShell";
-import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { InvoiceItem, Invoice } from "@/store/demoData"; // keep types for UI
@@ -8,6 +7,8 @@ import DataTable from "@/components/dashboard/DataTable";
 import { useCompany } from "@/hooks/useCompany";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
+import useClientPagination from "@/hooks/useClientPagination";
+import { Button } from "@/components/ui/button";
 
 const Invoices = () => {
   const { user } = useAuth();
@@ -23,6 +24,9 @@ const Invoices = () => {
   const [saving, setSaving] = useState(false);
 
   const total = items.reduce((s, it) => s + it.quantity * it.unitPrice, 0);
+
+  // client side pagination
+  const { paginatedItems: paginatedInvoices, currentPage: invoicePage, totalPages: invoiceTotalPages, setPage: setInvoicePage } = useClientPagination(invoices, 10);
 
   const addItem = () => setItems([...items, { description: "", quantity: 1, unitPrice: 0 }]);
   const updateItem = (idx: number, patch: Partial<InvoiceItem>) => {
@@ -359,7 +363,7 @@ const Invoices = () => {
               { key: 'status', label: 'Status' },
               { key: 'issueDate', label: 'Date' },
             ]}
-            data={invoices.map(i => ({
+            data={paginatedInvoices.map(i => ({
               id: i.id,
               invoiceNumber: (i.id || '').toString().slice(0,8).toUpperCase(),
               customer: i.customer,
@@ -376,6 +380,22 @@ const Invoices = () => {
               </>
             )}
           />
+
+          {/* pagination controls */}
+          <div className="flex items-center justify-end space-x-3 mt-4">
+            <Button size="sm" variant="ghost" onClick={() => setInvoicePage(invoicePage - 1)} disabled={invoicePage === 1}>Prev</Button>
+
+            <div className="flex items-center space-x-2">
+              {Array.from({ length: invoiceTotalPages }).map((_, idx) => {
+                const p = idx + 1;
+                return (
+                  <Button key={p} size="sm" variant={p === invoicePage ? 'default' : 'ghost'} onClick={() => setInvoicePage(p)}>{p}</Button>
+                );
+              })}
+            </div>
+
+            <Button size="sm" onClick={() => setInvoicePage(invoicePage + 1)} disabled={invoicePage === invoiceTotalPages}>Next</Button>
+          </div>
         </section>
       </div>
     </AppShell>

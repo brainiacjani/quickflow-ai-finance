@@ -12,6 +12,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import DataTable from "@/components/dashboard/DataTable";
+import useClientPagination from "@/hooks/useClientPagination";
 
 
 const guessCategory = (vendor: string, amount: number): { category: string; confidence: number } => {
@@ -45,6 +46,9 @@ const Expenses = () => {
   const isAdmin = Boolean((profile as any)?.is_admin || user?.user_metadata?.role === 'admin');
 
   const suggestion = useMemo(() => guessCategory(vendor, amount), [vendor, amount]);
+
+  // client side pagination
+  const { paginatedItems: paginatedExpenses, currentPage: expensePage, totalPages: expenseTotalPages, setPage: setExpensePage } = useClientPagination(expenses, 10);
 
   const addExpense = async () => {
     if (!user?.id) {
@@ -256,7 +260,7 @@ const Expenses = () => {
               { key: 'category', label: 'Category' },
               { key: 'amount', label: 'Amount' },
             ]}
-            data={expenses.map(e => ({
+            data={paginatedExpenses.map(e => ({
               id: e.id,
               date: e.date,
               vendor: e.vendor,
@@ -271,6 +275,22 @@ const Expenses = () => {
               </>
             )}
           />
+
+          {/* pagination controls */}
+          <div className="flex items-center justify-end space-x-3 mt-4">
+            <Button size="sm" variant="ghost" onClick={() => setExpensePage(expensePage - 1)} disabled={expensePage === 1}>Prev</Button>
+
+            <div className="flex items-center space-x-2">
+              {Array.from({ length: expenseTotalPages }).map((_, idx) => {
+                const p = idx + 1;
+                return (
+                  <Button key={p} size="sm" variant={p === expensePage ? 'default' : 'ghost'} onClick={() => setExpensePage(p)}>{p}</Button>
+                );
+              })}
+            </div>
+
+            <Button size="sm" onClick={() => setExpensePage(expensePage + 1)} disabled={expensePage === expenseTotalPages}>Next</Button>
+          </div>
         </section>
 
         {/* Expense view modal */}
