@@ -9,7 +9,7 @@ import { Upload, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import DataTable from "@/components/dashboard/DataTable";
 import useClientPagination from "@/hooks/useClientPagination";
@@ -42,13 +42,22 @@ const Expenses = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [expenses, setExpenses] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const { data: profile } = useProfile();
   const isAdmin = Boolean((profile as any)?.is_admin || user?.user_metadata?.role === 'admin');
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const suggestion = useMemo(() => guessCategory(vendor, amount), [vendor, amount]);
 
   // client side pagination
   const { paginatedItems: paginatedExpenses, currentPage: expensePage, totalPages: expenseTotalPages, setPage: setExpensePage } = useClientPagination(expenses, 10);
+  
+  const filteredExpenses = (expenses || []).filter(e => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    if (!q) return true;
+    const vendorName = (e.vendor || '').toString().toLowerCase();
+    return vendorName.includes(q);
+  });
 
   const addExpense = async () => {
     if (!user?.id) {
@@ -195,60 +204,53 @@ const Expenses = () => {
       </Helmet>
 
       <div className="max-w-full px-4 sm:px-6 lg:px-8 py-8 grid gap-8">
-        <section className="grid gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h1 className="text-2xl font-semibold">Add expense</h1>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={downloadTemplate} className="flex items-center gap-2">
-                <Download className="h-4 w-4" />
-                <span className="hidden sm:inline">Download Template</span>
-                <span className="sm:hidden">Template</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                <span className="hidden sm:inline">Import CSV</span>
-                <span className="sm:hidden">Import</span>
-              </Button>
-              <Input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
+        <section className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">Expenses</h1>
+          <div className="flex items-center gap-3">
+            <div className="w-56">
+              <input className="w-full rounded-md border bg-background px-3 py-2" placeholder="Search by vendor" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
             </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="grid gap-2">
-              <label className="text-sm">Date</label>
-              <input type="date" className="rounded-md border bg-background px-3 py-2 w-full" value={date} onChange={e=>setDate(e.target.value)} />
+            <div>
+              <Button variant="hero" onClick={() => { setVendor(''); setAmount(0); setCategory(''); setNote(''); setCreateDialogOpen(true); }}>Create New Expense</Button>
             </div>
-            <div className="grid gap-2">
-              <label className="text-sm">Vendor</label>
-              <input className="rounded-md border bg-background px-3 py-2 w-full" value={vendor} onChange={e=>setVendor(e.target.value)} placeholder="Amazon" />
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm">Amount</label>
-              <input type="number" className="rounded-md border bg-background px-3 py-2 w-full" value={amount} onChange={e=>setAmount(Number(e.target.value))} />
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm">Category</label>
-              <input className="rounded-md border bg-background px-3 py-2 w-full" value={category} onChange={e=>setCategory(e.target.value)} placeholder="e.g. Office Supplies" />
-              <p className="text-xs text-muted-foreground">AI suggests: <span className="font-medium">{suggestion.category}</span> ({Math.round(suggestion.confidence*100)}% confidence)</p>
-            </div>
-            <div className="sm:col-span-2 grid gap-2">
-              <label className="text-sm">Note</label>
-              <textarea className="rounded-md border bg-background px-3 py-2 w-full" value={note} onChange={e=>setNote(e.target.value)} placeholder="Optional" />
-            </div>
-          </div>
-          <div>
-            <Button variant="hero" onClick={addExpense} className="w-full sm:w-auto">Save expense</Button>
           </div>
         </section>
+
+        {/* Create expense dialog */}
+        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create expense</DialogTitle>
+              <DialogDescription>Fill out the expense details and save.</DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid gap-2">
+                <label className="text-sm">Date</label>
+                <input type="date" className="rounded-md border bg-background px-3 py-2 w-full" value={date} onChange={e=>setDate(e.target.value)} />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm">Vendor</label>
+                <input className="rounded-md border bg-background px-3 py-2 w-full" value={vendor} onChange={e=>setVendor(e.target.value)} placeholder="Amazon" />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm">Amount</label>
+                <input type="number" className="rounded-md border bg-background px-3 py-2 w-full" value={amount} onChange={e=>setAmount(Number(e.target.value))} />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm">Category</label>
+                <input className="rounded-md border bg-background px-3 py-2 w-full" value={category} onChange={e=>setCategory(e.target.value)} placeholder="e.g. Office Supplies" />
+                <p className="text-xs text-muted-foreground">AI suggests: <span className="font-medium">{suggestion.category}</span> ({Math.round(suggestion.confidence*100)}% confidence)</p>
+              </div>
+              <div className="sm:col-span-2 grid gap-2">
+                <label className="text-sm">Note</label>
+                <textarea className="rounded-md border bg-background px-3 py-2 w-full" value={note} onChange={e=>setNote(e.target.value)} placeholder="Optional" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <Button variant="hero" onClick={async () => { await addExpense(); setCreateDialogOpen(false); }}>Save expense</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <section className="grid gap-4">
           <h2 className="text-xl font-semibold">Recent expenses</h2>
@@ -260,14 +262,16 @@ const Expenses = () => {
               { key: 'category', label: 'Category' },
               { key: 'amount', label: 'Amount' },
             ]}
-            data={paginatedExpenses.map(e => ({
-              id: e.id,
-              date: e.date,
-              vendor: e.vendor,
-              category: e.category,
-              amount: `$${Number(e.amount ?? 0).toFixed(2)}`,
-              created_by: e.created_by,
-            }))}
+            data={
+              // use client-side filtered + paginated results
+              paginatedExpenses.filter(e => filteredExpenses.includes(e)).map(e => ({
+               id: e.id,
+               date: e.date,
+               vendor: e.vendor,
+               category: e.category,
+               amount: `$${Number(e.amount ?? 0).toFixed(2)}`,
+               created_by: e.created_by,
+             }))}
             renderActions={(row) => (
               <>
                 {/* Pass original expense object to openView to preserve numeric amount and metadata */}
@@ -278,10 +282,10 @@ const Expenses = () => {
 
           {/* pagination controls */}
           <div className="flex items-center justify-end space-x-3 mt-4">
-            <Button size="sm" variant="ghost" onClick={() => setExpensePage(expensePage - 1)} disabled={expensePage === 1}>Prev</Button>
+            <Button size="sm" variant="ghost" onClick={() => setExpensePage(Math.max(1, expensePage - 1))} disabled={expensePage === 1}>Prev</Button>
 
             <div className="flex items-center space-x-2">
-              {Array.from({ length: expenseTotalPages }).map((_, idx) => {
+              {Array.from({ length: Math.max(1, Math.ceil(filteredExpenses.length / 10)) }).map((_, idx) => {
                 const p = idx + 1;
                 return (
                   <Button key={p} size="sm" variant={p === expensePage ? 'default' : 'ghost'} onClick={() => setExpensePage(p)}>{p}</Button>
@@ -289,7 +293,7 @@ const Expenses = () => {
               })}
             </div>
 
-            <Button size="sm" onClick={() => setExpensePage(expensePage + 1)} disabled={expensePage === expenseTotalPages}>Next</Button>
+            <Button size="sm" onClick={() => setExpensePage(Math.min(Math.max(1, Math.ceil(filteredExpenses.length / 10)), expensePage + 1))} disabled={expensePage === Math.max(1, Math.ceil(filteredExpenses.length / 10))}>Next</Button>
           </div>
         </section>
 

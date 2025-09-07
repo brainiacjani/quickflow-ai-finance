@@ -9,6 +9,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import useClientPagination from "@/hooks/useClientPagination";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const Invoices = () => {
   const { user } = useAuth();
@@ -21,7 +22,9 @@ const Invoices = () => {
   const { data: profile } = useProfile();
   const isAdmin = Boolean((profile as any)?.is_admin || user?.user_metadata?.role === 'admin');
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [invoiceSearch, setInvoiceSearch] = useState('');
   const [saving, setSaving] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   // customers for dropdown
   const [customersList, setCustomersList] = useState<any[]>([]);
@@ -36,7 +39,14 @@ const Invoices = () => {
   const total = items.reduce((s, it) => s + it.quantity * it.unitPrice, 0);
 
   // client side pagination
-  const { paginatedItems: paginatedInvoices, currentPage: invoicePage, totalPages: invoiceTotalPages, setPage: setInvoicePage } = useClientPagination(invoices, 10);
+  const filteredInvoices = (invoices || []).filter(i => {
+    const q = (invoiceSearch || '').trim().toLowerCase();
+    if (!q) return true;
+    const invNumber = (i.id || '').toString().slice(0,8).toLowerCase();
+    const customerName = (i.customer || '').toString().toLowerCase();
+    return invNumber.includes(q) || customerName.includes(q);
+  });
+  const { paginatedItems: paginatedInvoices, currentPage: invoicePage, totalPages: invoiceTotalPages, setPage: setInvoicePage } = useClientPagination(filteredInvoices, 10);
 
   const addItem = () => setItems([...items, { description: "", quantity: 1, unitPrice: 0 }]);
   const updateItem = (idx: number, patch: Partial<InvoiceItem>) => {
@@ -383,7 +393,7 @@ const Invoices = () => {
     // fetch customers for dropdown
     const fetchCustomers = async () => {
       try {
-        let q = supabase.from('customers').select('id,name,email,phone,created_by').order('created_at', { ascending: false });
+        let q = supabase.from('customers').select('id,name,email,created_by').order('created_at', { ascending: false });
         if (!isAdmin) q = q.eq('created_by', user?.id);
         const { data, error } = await q;
         if (error) throw error;
@@ -418,133 +428,141 @@ const Invoices = () => {
       </Helmet>
 
       <div className="container py-8 grid gap-8">
-        <section className="grid gap-4">
-          <h1 className="text-2xl font-semibold">Create invoice</h1>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="grid gap-2 relative overflow-visible">
-              <label className="text-sm">Customer</label>
-              <input
-                className="rounded-md border bg-background px-3 py-2"
-                placeholder="Search customers or type a name"
-                value={customerQuery || customer}
-                onFocus={() => { setShowCustomerDropdown(true); setCustomerQuery(''); }}
-                onChange={(e) => { setCustomerQuery(e.target.value); setShowCustomerDropdown(true); }}
-                onBlur={() => { setTimeout(() => setShowCustomerDropdown(false), 150); }}
-                aria-autocomplete="list"
-                autoComplete="off"
-              />
-
-              {showCustomerDropdown && (
-                <div className="absolute z-50 top-full left-0 mt-2 w-full max-h-48 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-lg">
-                  {(() => {
-                    const q = (customerQuery || '').trim().toLowerCase();
-                    const filtered = customersList.filter((c: any) => {
-                      if (!c) return false;
-                      const name = (c.name || '').toString().toLowerCase();
-                      const email = (c.email || '').toString().toLowerCase();
-                      const phone = (c.phone || '').toString().toLowerCase();
-                      return !q || name.includes(q) || email.includes(q) || phone.includes(q);
-                    }).slice(0, 10);
-
-                    if (filtered.length === 0) {
-                      return (
-                        <div className="p-3 text-sm text-muted-foreground">
-                          No customers found. Press Save to use "<span className='font-mono'>{customerQuery}</span>" as a new customer.
-                        </div>
-                      );
-                    }
-
-                    return filtered.map((c: any) => (
-                      <div key={c.id} className="px-3 py-2 hover:bg-accent/10 cursor-pointer" onMouseDown={(ev)=>{ ev.preventDefault(); }} onClick={() => { setCustomer(c.name); setCustomerQuery(''); setShowCustomerDropdown(false); }}>
-                        <div className="font-medium">{c.name}</div>
-                        <div className="text-xs text-muted-foreground">{[c.email, c.phone].filter(Boolean).join(' • ')}</div>
-                      </div>
-                    ));
-                  })()}
-                </div>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-2">
-                <label className="text-sm">Issue date</label>
-                <input type="date" className="rounded-md border bg-background px-3 py-2" value={issueDate} onChange={e=>setIssueDate(e.target.value)} />
-              </div>
-              <div className="grid gap-2">
-                <label className="text-sm">Due date</label>
-                <input type="date" className="rounded-md border bg-background px-3 py-2" value={dueDate} onChange={e=>setDueDate(e.target.value)} />
-              </div>
-            </div>
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm">Items</label>
-            <div className="grid gap-2">
-              {/* column labels */}
-              <div className="grid grid-cols-6 gap-2 text-sm text-muted-foreground">
-                <div className="col-span-3">Description</div>
-                <div className="col-span-1">Qty</div>
-                <div className="col-span-1">Unit price</div>
-                <div className="col-span-1 text-center">Total</div>
-              </div>
-
-              {items.map((it, idx) => (
-                <div key={idx} className="grid grid-cols-6 gap-2 relative">
-                  {/* Description with inventory searchable dropdown */}
-                  <div className="col-span-3 relative">
-                    <input
-                      className="w-full rounded-md border bg-background px-3 py-2"
-                      placeholder="Search inventory or type a description"
-                      value={inventoryDropdownIndex === idx ? inventoryQuery : it.description}
-                      onFocus={() => { setInventoryDropdownIndex(idx); setInventoryQuery(it.description || ''); }}
-                      onChange={(e) => { updateItem(idx, { description: e.target.value }); setInventoryQuery(e.target.value); setInventoryDropdownIndex(idx); }}
-                      onBlur={() => { setTimeout(() => { if (inventoryDropdownIndex === idx) setInventoryDropdownIndex(null); }, 150); }}
-                    />
-
-                    {inventoryDropdownIndex === idx && (
-                      <div className="absolute z-40 top-full left-0 mt-2 w-full max-h-48 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-lg">
-                        {(() => {
-                          const q = (inventoryQuery || '').trim().toLowerCase();
-                          const filtered = inventoryList.filter((inv: any) => {
-                            const name = (inv.name || '').toString().toLowerCase();
-                            const sku = (inv.sku || '').toString().toLowerCase();
-                            return !q || name.includes(q) || sku.includes(q);
-                          }).slice(0, 10);
-
-                          if (filtered.length === 0) {
-                            return <div className="p-3 text-sm text-muted-foreground">No inventory found</div>;
-                          }
-
-                          return filtered.map((inv: any) => (
-                            <div key={inv.id} className="px-3 py-2 hover:bg-accent/10 cursor-pointer" onMouseDown={(ev) => { ev.preventDefault(); }} onClick={() => {
-                              // Fill description and unitPrice from inventory
-                              updateItem(idx, { description: inv.name, unitPrice: Number(inv.price ?? 0) });
-                              setInventoryDropdownIndex(null);
-                              setInventoryQuery('');
-                            }}>
-                              <div className="font-medium">{inv.name}</div>
-                              <div className="text-xs text-muted-foreground">{inv.sku || ''} {inv.price ? `• $${Number(inv.price).toFixed(2)}` : ''}</div>
-                            </div>
-                          ));
-                        })()}
-                      </div>
-                    )}
-                  </div>
-
-                  <input type="number" className="col-span-1 rounded-md border bg-background px-3 py-2" value={it.quantity} onChange={e=>updateItem(idx,{ quantity: Number(e.target.value) })} />
-                  <input type="number" className="col-span-1 rounded-md border bg-background px-3 py-2" value={it.unitPrice} onChange={e=>updateItem(idx,{ unitPrice: Number(e.target.value) })} />
-                  <div className="col-span-1 flex items-center justify-center">${(it.quantity*it.unitPrice).toFixed(2)}</div>
-                </div>
-              ))}
-            </div>
-            <div><Button variant="ghost" size="sm" onClick={addItem}>Add item</Button></div>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="text-lg font-semibold">Total: ${total.toFixed(2)}</div>
-            <Button variant="hero" onClick={createInvoice} disabled={saving}>{saving ? 'Saving...' : 'Save invoice'}</Button>
+        <section className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">Invoices</h1>
+          <div>
+            <Button variant="hero" onClick={() => { setCustomer(''); setCustomerQuery(''); setItems([{ description: "", quantity: 1, unitPrice: 0 }]); setCreateDialogOpen(true); }}>Create New Invoice</Button>
           </div>
         </section>
 
+        {/* Create invoice dialog (moves the original inline form into a modal) */}
+        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create invoice</DialogTitle>
+              <DialogDescription>Fill out the invoice details and save.</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-3 md:grid-cols-2">
+              {/* Reuse the existing form controls (customer, dates, items) */}
+              <div className="grid gap-2 relative overflow-visible">
+                <label className="text-sm">Customer</label>
+                <input
+                  className="rounded-md border bg-background px-3 py-2"
+                  placeholder="Search customers or type a name"
+                  value={customerQuery || customer}
+                  onFocus={() => { setShowCustomerDropdown(true); setCustomerQuery(''); }}
+                  onChange={(e) => { setCustomerQuery(e.target.value); setShowCustomerDropdown(true); }}
+                  onBlur={() => { setTimeout(() => setShowCustomerDropdown(false), 150); }}
+                  aria-autocomplete="list"
+                  autoComplete="off"
+                />
+                {showCustomerDropdown && (
+                  <div className="absolute z-50 top-full left-0 mt-2 w-full max-h-48 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-lg">
+                    {(() => {
+                      const q = (customerQuery || '').trim().toLowerCase();
+                      const filtered = customersList.filter((c: any) => {
+                        if (!c) return false;
+                        const name = (c.name || '').toString().toLowerCase();
+                        const email = (c.email || '').toString().toLowerCase();
+                        return !q || name.includes(q) || email.includes(q);
+                      }).slice(0, 10);
+
+                      if (filtered.length === 0) {
+                        return (
+                          <div className="p-3 text-sm text-muted-foreground">
+                            No customers found. Press Save to use "<span className='font-mono'>{customerQuery}</span>" as a new customer.
+                          </div>
+                        );
+                      }
+
+                      return filtered.map((c: any) => (
+                        <div key={c.id} className="px-3 py-2 hover:bg-accent/10 cursor-pointer" onMouseDown={(ev)=>{ ev.preventDefault(); }} onClick={() => { setCustomer(c.name); setCustomerQuery(''); setShowCustomerDropdown(false); }}>
+                          <div className="font-medium">{c.name}</div>
+                          {c.email && <div className="text-xs text-muted-foreground">{c.email}</div>}
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-2">
+                  <label className="text-sm">Issue date</label>
+                  <input type="date" className="rounded-md border bg-background px-3 py-2" value={issueDate} onChange={e=>setIssueDate(e.target.value)} />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm">Due date</label>
+                  <input type="date" className="rounded-md border bg-background px-3 py-2" value={dueDate} onChange={e=>setDueDate(e.target.value)} />
+                </div>
+              </div>
+            </div>
+            <div className="grid gap-2 mt-4">
+              <label className="text-sm">Items</label>
+              <div className="grid gap-2">
+                <div className="grid grid-cols-6 gap-2 text-sm text-muted-foreground">
+                  <div className="col-span-3">Description</div>
+                  <div className="col-span-1">Qty</div>
+                  <div className="col-span-1">Unit price</div>
+                  <div className="col-span-1 text-center">Total</div>
+                </div>
+                {items.map((it, idx) => (
+                  <div key={idx} className="grid grid-cols-6 gap-2 relative">
+                    <div className="col-span-3 relative">
+                      <input
+                        className="w-full rounded-md border bg-background px-3 py-2"
+                        placeholder="Search inventory or type a description"
+                        value={inventoryDropdownIndex === idx ? inventoryQuery : it.description}
+                        onFocus={() => { setInventoryDropdownIndex(idx); setInventoryQuery(it.description || ''); }}
+                        onChange={(e) => { updateItem(idx, { description: e.target.value }); setInventoryQuery(e.target.value); setInventoryDropdownIndex(idx); }}
+                        onBlur={() => { setTimeout(() => { if (inventoryDropdownIndex === idx) setInventoryDropdownIndex(null); }, 150); }}
+                      />
+                      {inventoryDropdownIndex === idx && (
+                        <div className="absolute z-40 top-full left-0 mt-2 w-full max-h-48 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-lg">
+                          {(() => {
+                            const q = (inventoryQuery || '').trim().toLowerCase();
+                            const filtered = inventoryList.filter((inv: any) => {
+                              const name = (inv.name || '').toString().toLowerCase();
+                              const sku = (inv.sku || '').toString().toLowerCase();
+                              return !q || name.includes(q) || sku.includes(q);
+                            }).slice(0, 10);
+                            if (filtered.length === 0) {
+                              return <div className="p-3 text-sm text-muted-foreground">No inventory found</div>;
+                            }
+                            return filtered.map((inv: any) => (
+                              <div key={inv.id} className="px-3 py-2 hover:bg-accent/10 cursor-pointer" onMouseDown={(ev) => { ev.preventDefault(); }} onClick={() => {
+                                updateItem(idx, { description: inv.name, unitPrice: Number(inv.price ?? 0) });
+                                setInventoryDropdownIndex(null);
+                                setInventoryQuery('');
+                              }}>
+                                <div className="font-medium">{inv.name}</div>
+                                <div className="text-xs text-muted-foreground">{inv.sku || ''} {inv.price ? `• $${Number(inv.price).toFixed(2)}` : ''}</div>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                    <input type="number" className="col-span-1 rounded-md border bg-background px-3 py-2" value={it.quantity} onChange={e=>updateItem(idx,{ quantity: Number(e.target.value) })} />
+                    <input type="number" className="col-span-1 rounded-md border bg-background px-3 py-2" value={it.unitPrice} onChange={e=>updateItem(idx,{ unitPrice: Number(e.target.value) })} />
+                    <div className="col-span-1 flex items-center justify-center">${(it.quantity*it.unitPrice).toFixed(2)}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-2"><Button variant="ghost" size="sm" onClick={addItem}>Add item</Button></div>
+            </div>
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-lg font-semibold">Total: ${total.toFixed(2)}</div>
+              <Button variant="hero" onClick={async () => { await createInvoice(); setCreateDialogOpen(false); }} disabled={saving}>{saving ? 'Saving...' : 'Save invoice'}</Button>
+            </div>
+           </DialogContent>
+         </Dialog>
+        
         <section className="grid gap-4">
-          <h2 className="text-xl font-semibold">Your invoices</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Your invoices</h2>
+            <div className="w-72"><input className="w-full rounded-md border bg-background px-3 py-2" placeholder="Search invoice # or customer" value={invoiceSearch} onChange={(e) => setInvoiceSearch(e.target.value)} /></div>
+          </div>
+
           <DataTable
             title="Invoices"
             columns={[

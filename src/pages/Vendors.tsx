@@ -1,7 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import DataTable from "@/components/dashboard/DataTable";
@@ -9,10 +8,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
-const Customers = () => {
+const Vendors = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [vendors, setVendors] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [name, setName] = useState("");
@@ -22,96 +21,88 @@ const Customers = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  // pagination for customers
+  // pagination for vendors
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  const filteredCustomers = (customers || []).filter(c => {
+  const filteredVendors = (vendors || []).filter(v => {
     const q = (searchQuery || '').trim().toLowerCase();
     if (!q) return true;
-    const name = (c.name || '').toString().toLowerCase();
-    const phone = (c.phone || '').toString().toLowerCase();
+    const name = (v.name || '').toString().toLowerCase();
+    const phone = (v.phone || '').toString().toLowerCase();
     return name.includes(q) || phone.includes(q);
   });
 
-  // paginated view of filtered customers
-  const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize));
-  const paginatedCustomers = filteredCustomers.slice((currentPage - 1) * pageSize, (currentPage - 1) * pageSize + pageSize);
+  const totalPages = Math.max(1, Math.ceil(filteredVendors.length / pageSize));
+  const paginatedVendors = filteredVendors.slice((currentPage - 1) * pageSize, (currentPage - 1) * pageSize + pageSize);
 
-  // reset page when search or data changes
-  useEffect(() => { setCurrentPage(1); }, [searchQuery, customers.length]);
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, vendors.length]);
 
-  const fetchCustomers = async () => {
+  const fetchVendors = async () => {
     try {
       setLoading(true);
-      let q = supabase.from('customers').select('*').order('created_at', { ascending: false });
-      // If not admin, only show customers created by the current user
+      if (!user?.id) { setVendors([]); return; }
+      let q = supabase.from('vendors').select('*').order('created_at', { ascending: false });
       const isAdmin = Boolean((profile as any)?.is_admin || user?.user_metadata?.role === 'admin');
       if (!isAdmin) q = q.eq('created_by', user?.id);
       const { data, error } = await q;
       if (error) throw error;
-      setCustomers(data ?? []);
+      setVendors(data ?? []);
     } catch (e) {
-      console.error('fetchCustomers error', e);
-    } finally {
-      setLoading(false);
-    }
+      console.error('fetchVendors error', e);
+    } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchCustomers(); }, [user?.id]);
+  useEffect(() => { fetchVendors(); }, [user?.id, profile]);
 
-  const saveCustomer = async () => {
+  const saveVendor = async () => {
     try {
       if (editingId) {
-        // update existing
         const payload = { name, email: email || null, phone: phone || null, address: address || null };
-        const { error } = await supabase.from('customers').update(payload).eq('id', editingId);
+        const { error } = await supabase.from('vendors').update(payload).eq('id', editingId);
         if (error) throw error;
       } else {
         const payload = { name, email: email || null, phone: phone || null, address: address || null, created_by: user?.id ?? null };
-        const { error } = await supabase.from('customers').insert(payload);
+        const { error } = await supabase.from('vendors').insert(payload);
         if (error) throw error;
       }
       setName(''); setEmail(''); setPhone(''); setAddress(''); setEditingId(null);
-      fetchCustomers();
+      fetchVendors();
     } catch (e) {
-      console.error('saveCustomer error', e);
-      alert('Failed to save customer');
+      console.error('saveVendor error', e);
+      alert('Failed to save vendor');
     }
   };
 
-  const deleteCustomer = async (id: string) => {
-    if (!confirm('Delete this customer?')) return;
+  const deleteVendor = async (id: string) => {
+    if (!confirm('Delete this vendor?')) return;
     try {
-      const { error } = await supabase.from('customers').delete().eq('id', id);
+      const { error } = await supabase.from('vendors').delete().eq('id', id);
       if (error) throw error;
-      fetchCustomers();
+      fetchVendors();
     } catch (e) {
-      console.error('deleteCustomer error', e);
-      alert('Failed to delete customer');
+      console.error('deleteVendor error', e);
+      alert('Failed to delete vendor');
     }
   };
 
-  const editCustomer = (id: string) => {
-    const c = customers.find((x) => x.id === id);
-    if (!c) return;
+  const editVendor = (id: string) => {
+    const v = vendors.find((x) => x.id === id);
+    if (!v) return;
     setEditingId(id);
-    setName(c.name || '');
-    setEmail(c.email || '');
-    setPhone(c.phone || '');
-    setAddress(c.address || '');
-    // scroll to top of form for convenience
-    const el = document.querySelector('.container');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    setName(v.name || '');
+    setEmail(v.email || '');
+    setPhone(v.phone || '');
+    setAddress(v.address || '');
     setEditDialogOpen(true);
   };
 
   return (
     <AppShell>
-      <Helmet><title>Customers | QuickFlow</title></Helmet>
+      <Helmet><title>Vendors | QuickFlow</title></Helmet>
       <div className="container py-8 grid gap-8">
         <section className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Customers</h1>
+          <h1 className="text-2xl font-semibold">Vendors</h1>
           <div>
             <Button variant="hero" onClick={() => { setEditingId(null); setName(''); setEmail(''); setPhone(''); setAddress(''); setEditDialogOpen(true); }}>Add New</Button>
           </div>
@@ -121,24 +112,24 @@ const Customers = () => {
           <div className="pt-2">
             <input
               className="w-full rounded-md border bg-background px-3 py-2 mb-3"
-              placeholder="Search customers by name or phone"
+              placeholder="Search vendors by name or phone"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <DataTable
-              title="Customers"
+              title="Vendors"
               columns={[
                 { key: 'name', label: 'Name', bold: true },
                 { key: 'email', label: 'Email' },
                 { key: 'phone', label: 'Phone' },
                 { key: 'address', label: 'Address' },
               ]}
-            data={paginatedCustomers.map(c => ({ id: c.id, name: c.name, email: c.email, phone: c.phone, address: c.address }))}
+            data={paginatedVendors.map(c => ({ id: c.id, name: c.name, email: c.email, phone: c.phone, address: c.address }))}
               renderActions={(row) => (
                 <>
-                  <Button size="sm" variant="secondary" onClick={() => editCustomer(row.id)}>Edit</Button>
-                  <Button size="sm" variant="destructive" onClick={() => deleteCustomer(row.id)}>Delete</Button>
+                  <Button size="sm" variant="secondary" onClick={() => editVendor(row.id)}>Edit</Button>
+                  <Button size="sm" variant="destructive" onClick={() => deleteVendor(row.id)}>Delete</Button>
                 </>
               )}
             />
@@ -146,8 +137,8 @@ const Customers = () => {
           <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{editingId ? 'Edit customer' : 'Add New customer'}</DialogTitle>
-                <DialogDescription>{editingId ? 'Update the customer details and click Update to save changes.' : 'Enter the new customer details and click Save to add the customer.'}</DialogDescription>
+                <DialogTitle>{editingId ? 'Edit vendor' : 'Add New vendor'}</DialogTitle>
+                <DialogDescription>{editingId ? 'Update the vendor details and click Update to save changes.' : 'Enter the new vendor details and click Save to add the vendor.'}</DialogDescription>
               </DialogHeader>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                 <div className="grid gap-2">
@@ -169,7 +160,7 @@ const Customers = () => {
               </div>
               <DialogFooter>
                 <div className="flex gap-2">
-                  <Button variant="hero" onClick={async () => { await saveCustomer(); setEditDialogOpen(false); }}>{editingId ? 'Update' : 'Save'}</Button>
+                  <Button variant="hero" onClick={async () => { await saveVendor(); setEditDialogOpen(false); }}>{editingId ? 'Update' : 'Save'}</Button>
                   <Button variant="ghost" onClick={() => { setEditDialogOpen(false); }}>Cancel</Button>
                 </div>
               </DialogFooter>
@@ -178,7 +169,7 @@ const Customers = () => {
          </section>
        </div>
      </AppShell>
-   );
- };
- 
- export default Customers;
+  );
+};
+
+export default Vendors;
