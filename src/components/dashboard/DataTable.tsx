@@ -15,6 +15,7 @@ type DataTableProps = {
   primaryKey?: string
   onAdd?: () => void
   renderActions?: (row: any) => React.ReactNode
+  isLoading?: boolean
 }
 
 export default function DataTable({
@@ -24,6 +25,7 @@ export default function DataTable({
   primaryKey = "id",
   onAdd,
   renderActions,
+  isLoading = false,
 }: DataTableProps) {
   return (
     <Card className="rounded-xl bg-white shadow-md">
@@ -60,71 +62,95 @@ export default function DataTable({
               </tr>
             </thead>
 
-            <tbody>
-              {data.length === 0 && (
+            {isLoading ? (
+              <tbody>
                 <tr>
-                  <td colSpan={columns.length + (renderActions ? 1 : 0)} className="px-4 py-6 text-center text-sm text-muted-foreground">
-                    No records found.
+                  <td colSpan={columns.length + (renderActions ? 1 : 0)} className="px-4 py-12">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <svg className="animate-spin h-6 w-6 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                      </svg>
+                      <div className="text-sm text-muted-foreground">Loading…</div>
+                    </div>
                   </td>
                 </tr>
-              )}
-
-              {data.map((row, idx) => (
-                <tr
-                  key={row[primaryKey] ?? idx}
-                  className={`border-b border-gray-200 bg-white even:bg-[#f9fafb] hover:bg-gray-100`}
-                >
-                  {columns.map((c) => (
-                    <td
-                      key={c.key}
-                      className={`px-4 py-3 text-sm ${c.bold ? "font-semibold whitespace-nowrap" : ""}`}
-                    >
-                      {c.key === "status" ? (
-                        <StatusBadge status={row[c.key]} />
-                      ) : (
-                        row[c.key]
-                      )}
+              </tbody>
+            ) : (
+              <tbody>
+                {data.length === 0 && (
+                  <tr>
+                    <td colSpan={columns.length + (renderActions ? 1 : 0)} className="px-4 py-6 text-center text-sm text-muted-foreground">
+                      No records found.
                     </td>
-                  ))}
+                  </tr>
+                )}
 
-                  {renderActions && (
-                    <td className="px-4 py-3 text-sm">
-                      <div className="flex items-center gap-2 justify-end">
-                        {renderActions(row)}
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
+                {data.map((row, idx) => (
+                  <tr
+                    key={row[primaryKey] ?? idx}
+                    className={`border-b border-gray-200 bg-white even:bg-[#f9fafb] hover:bg-gray-100`}
+                  >
+                    {columns.map((c) => (
+                      <td
+                        key={c.key}
+                        className={`px-4 py-3 text-sm ${c.bold ? "font-semibold whitespace-nowrap" : ""}`}
+                      >
+                        {c.key === "status" ? (
+                          <StatusBadge status={row[c.key]} />
+                        ) : (
+                          row[c.key]
+                        )}
+                      </td>
+                    ))}
+
+                    {renderActions && (
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex items-center gap-2 justify-end">
+                          {renderActions(row)}
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            )}
           </table>
         </div>
 
         {/* Mobile: stacked cards view */}
         <div className="md:hidden p-2">
-          {data.length === 0 && (
-            <div className="px-4 py-6 text-center text-sm text-muted-foreground">No records found.</div>
-          )}
-
-          {data.map((row, idx) => (
-            <div key={row[primaryKey] ?? idx} className="mb-3 rounded-lg border bg-white p-3 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  {columns.map((c) => (
-                    <div key={c.key} className="mb-1">
-                      <div className="text-xs text-muted-foreground">{c.label}</div>
-                      <div className={`text-sm ${c.bold ? 'font-semibold' : ''} truncate`}>{row[c.key]}</div>
-                    </div>
-                  ))}
-                </div>
-                {renderActions && (
-                  <div className="flex flex-col items-end gap-2">
-                    {renderActions(row)}
-                  </div>
-                )}
-              </div>
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <svg className="animate-spin h-6 w-6 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+              <div className="text-sm text-muted-foreground mt-2">Loading…</div>
             </div>
-          ))}
+          ) : data.length === 0 ? (
+            <div className="px-4 py-6 text-center text-sm text-muted-foreground">No records found.</div>
+          ) : (
+            data.map((row, idx) => (
+              <div key={row[primaryKey] ?? idx} className="mb-3 rounded-lg border bg-white p-3 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    {columns.map((c) => (
+                      <div key={c.key} className="mb-1">
+                        <div className="text-xs text-muted-foreground">{c.label}</div>
+                        <div className={`text-sm ${c.bold ? 'font-semibold' : ''} truncate`}>{row[c.key]}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {renderActions && (
+                    <div className="flex flex-col items-end gap-2">
+                      {renderActions(row)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </CardContent>
     </Card>

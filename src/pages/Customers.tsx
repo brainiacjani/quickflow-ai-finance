@@ -128,6 +128,7 @@ const Customers = () => {
           </div>
           <DataTable
               title="Customers"
+              isLoading={loading}
               columns={[
                 { key: 'name', label: 'Name', bold: true },
                 { key: 'email', label: 'Email' },

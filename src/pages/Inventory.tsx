@@ -120,6 +120,7 @@ const Inventory = () => {
           </div>
           <DataTable
               title="Inventory"
+              isLoading={loading}
               columns={[
                 { key: 'name', label: 'Name', bold: true },
                 { key: 'sku', label: 'SKU' },

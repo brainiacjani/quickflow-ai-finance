@@ -288,6 +288,7 @@ const Reports = () => {
         <div className="mt-4">
           <DataTable
             title="Report results"
+            isLoading={loading}
             columns={[
               { key: 'type', label: 'Type', bold: true },
               { key: 'date', label: 'Date' },

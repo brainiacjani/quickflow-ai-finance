@@ -119,6 +119,7 @@ const Vendors = () => {
           </div>
           <DataTable
               title="Vendors"
+              isLoading={loading}
               columns={[
                 { key: 'name', label: 'Name', bold: true },
                 { key: 'email', label: 'Email' },
