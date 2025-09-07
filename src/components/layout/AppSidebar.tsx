@@ -7,7 +7,8 @@ import {
   CreditCard,
   Settings,
   UserPlus,
-  Package
+  Package,
+  Truck
 } from "lucide-react";
 import { Users } from "lucide-react";
 import {
@@ -42,6 +43,7 @@ const navItems = [
   { title: "Expenses", url: "/expenses", icon: Receipt },
   { title: "Inventory", url: "/inventory", icon: Package },
   { title: "Customers", url: "/customers", icon: UserPlus },
+  { title: "Vendors", url: "/vendors", icon: Truck },
   { title: "Reports", url: "/reports", icon: BarChart3 },
   { title: "Admin", url: "/admin", icon: Users },
   { title: "Pricing", url: "/pricing", icon: CreditCard },

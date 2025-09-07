@@ -29,6 +29,7 @@ import RequireRole from "./components/auth/RequireRole";
 import Contact from "./pages/Contact";
 import Customers from "./pages/Customers";
 import Inventory from "./pages/Inventory";
+import Vendors from "./pages/Vendors";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
                   <Route path="/expenses" element={<RequireAuth><Expenses /></RequireAuth>} />
                   <Route path="/customers" element={<RequireAuth><Customers /></RequireAuth>} />
                   <Route path="/inventory" element={<RequireAuth><Inventory /></RequireAuth>} />
+                  <Route path="/vendors" element={<RequireAuth><Vendors /></RequireAuth>} />
                   <Route path="/reports" element={<RequireAuth><Reports /></RequireAuth>} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
