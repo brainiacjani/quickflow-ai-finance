@@ -431,22 +431,22 @@ const Invoices = () => {
         <link rel="canonical" href="https://quickflow.app/invoices" />
       </Helmet>
 
-      <div className="container py-8 grid gap-8">
-        <section className="flex items-center justify-between">
+      <div className="max-w-full px-4 sm:px-6 lg:px-8 py-8 grid gap-8">
+        <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h1 className="text-2xl font-semibold">Invoices</h1>
-          <div>
+          <div className="w-full sm:w-auto flex justify-end">
             <Button variant="hero" onClick={() => { setCustomer(''); setCustomerQuery(''); setItems([{ description: "", quantity: 1, unitPrice: 0 }]); setCreateDialogOpen(true); }}>Create New Invoice</Button>
           </div>
         </section>
 
         {/* Create invoice dialog (moves the original inline form into a modal) */}
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-full overflow-auto">
             <DialogHeader>
               <DialogTitle>Create invoice</DialogTitle>
               <DialogDescription>Fill out the invoice details and save.</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
               {/* Reuse the existing form controls (customer, dates, items) */}
               <div className="grid gap-2 relative overflow-visible">
                 <label className="text-sm">Customer</label>
@@ -503,15 +503,16 @@ const Invoices = () => {
             <div className="grid gap-2 mt-4">
               <label className="text-sm">Items</label>
               <div className="grid gap-2">
-                <div className="grid grid-cols-6 gap-2 text-sm text-muted-foreground">
+                {/* header visible only on md+ */}
+                <div className="hidden md:grid grid-cols-6 gap-2 text-sm text-muted-foreground">
                   <div className="col-span-3">Description</div>
                   <div className="col-span-1">Qty</div>
                   <div className="col-span-1">Unit price</div>
                   <div className="col-span-1 text-center">Total</div>
                 </div>
                 {items.map((it, idx) => (
-                  <div key={idx} className="grid grid-cols-6 gap-2 relative">
-                    <div className="col-span-3 relative">
+                  <div key={idx} className="grid grid-cols-1 md:grid-cols-6 gap-2 relative items-center">
+                    <div className="md:col-span-3 relative">
                       <input
                         className="w-full rounded-md border bg-background px-3 py-2"
                         placeholder="Search inventory or type a description"
@@ -546,9 +547,13 @@ const Invoices = () => {
                         </div>
                       )}
                     </div>
-                    <input type="number" className="col-span-1 rounded-md border bg-background px-3 py-2" value={it.quantity} onChange={e=>updateItem(idx,{ quantity: Number(e.target.value) })} />
-                    <input type="number" className="col-span-1 rounded-md border bg-background px-3 py-2" value={it.unitPrice} onChange={e=>updateItem(idx,{ unitPrice: Number(e.target.value) })} />
-                    <div className="col-span-1 flex items-center justify-center">${(it.quantity*it.unitPrice).toFixed(2)}</div>
+                    <div className="md:col-span-1 grid grid-cols-3 gap-2 md:block">
+                      <input type="number" className="rounded-md border bg-background px-3 py-2 w-full" value={it.quantity} onChange={e=>updateItem(idx,{ quantity: Number(e.target.value) })} />
+                    </div>
+                    <div className="md:col-span-1 grid grid-cols-1">
+                      <input type="number" className="rounded-md border bg-background px-3 py-2 w-full" value={it.unitPrice} onChange={e=>updateItem(idx,{ unitPrice: Number(e.target.value) })} />
+                    </div>
+                    <div className="md:col-span-1 flex items-center justify-center text-sm font-medium">${(it.quantity*it.unitPrice).toFixed(2)}</div>
                   </div>
                 ))}
               </div>
@@ -564,7 +569,7 @@ const Invoices = () => {
         <section className="grid gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Your invoices</h2>
-            <div className="w-72"><input className="w-full rounded-md border bg-background px-3 py-2" placeholder="Search invoice # or customer" value={invoiceSearch} onChange={(e) => setInvoiceSearch(e.target.value)} /></div>
+            <div className="w-full sm:w-72"><input className="w-full rounded-md border bg-background px-3 py-2" placeholder="Search invoice # or customer" value={invoiceSearch} onChange={(e) => setInvoiceSearch(e.target.value)} /></div>
           </div>
 
           <DataTable
@@ -596,20 +601,20 @@ const Invoices = () => {
           />
 
           {/* pagination controls */}
-          <div className="flex items-center justify-end space-x-3 mt-4">
-            <Button size="sm" variant="ghost" onClick={() => setInvoicePage(invoicePage - 1)} disabled={invoicePage === 1}>Prev</Button>
+          <div className="flex flex-wrap items-center justify-between sm:justify-end space-x-3 mt-4 gap-2">
+             <Button size="sm" variant="ghost" onClick={() => setInvoicePage(invoicePage - 1)} disabled={invoicePage === 1}>Prev</Button>
 
-            <div className="flex items-center space-x-2">
-              {Array.from({ length: invoiceTotalPages }).map((_, idx) => {
-                const p = idx + 1;
-                return (
-                  <Button key={p} size="sm" variant={p === invoicePage ? 'default' : 'ghost'} onClick={() => setInvoicePage(p)}>{p}</Button>
-                );
-              })}
-            </div>
+             <div className="flex items-center space-x-2">
+               {Array.from({ length: invoiceTotalPages }).map((_, idx) => {
+                 const p = idx + 1;
+                 return (
+                   <Button key={p} size="sm" variant={p === invoicePage ? 'default' : 'ghost'} onClick={() => setInvoicePage(p)}>{p}</Button>
+                 );
+               })}
+             </div>
 
-            <Button size="sm" onClick={() => setInvoicePage(invoicePage + 1)} disabled={invoicePage === invoiceTotalPages}>Next</Button>
-          </div>
+             <Button size="sm" onClick={() => setInvoicePage(invoicePage + 1)} disabled={invoicePage === invoiceTotalPages}>Next</Button>
+           </div>
         </section>
       </div>
     </AppShell>

@@ -234,10 +234,10 @@ const Expenses = () => {
       </Helmet>
 
       <div className="max-w-full px-4 sm:px-6 lg:px-8 py-8 grid gap-8">
-        <section className="flex items-center justify-between">
+        <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h1 className="text-2xl font-semibold">Expenses</h1>
-          <div className="flex items-center gap-3">
-            <div className="w-56">
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <div className="w-full sm:w-56">
               <input className="w-full rounded-md border bg-background px-3 py-2" placeholder="Search by vendor" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
             </div>
             <div>
@@ -248,7 +248,7 @@ const Expenses = () => {
 
         {/* Create expense dialog */}
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-full overflow-auto">
             <DialogHeader>
               <DialogTitle>Create expense</DialogTitle>
               <DialogDescription>Fill out the expense details and save.</DialogDescription>
@@ -315,7 +315,7 @@ const Expenses = () => {
               <Button variant="hero" onClick={async () => { await addExpense(); setCreateDialogOpen(false); }}>Save expense</Button>
             </div>
           </DialogContent>
-        </Dialog>
+         </Dialog>
 
         <section className="grid gap-4">
           <h2 className="text-xl font-semibold">Recent expenses</h2>
@@ -347,7 +347,7 @@ const Expenses = () => {
           />
 
           {/* pagination controls */}
-          <div className="flex items-center justify-end space-x-3 mt-4">
+          <div className="flex flex-wrap items-center justify-between sm:justify-end space-x-3 mt-4 gap-2">
             <Button size="sm" variant="ghost" onClick={() => setExpensePage(Math.max(1, expensePage - 1))} disabled={expensePage === 1}>Prev</Button>
 
             <div className="flex items-center space-x-2">
