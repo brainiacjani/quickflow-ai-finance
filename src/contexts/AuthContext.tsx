@@ -19,11 +19,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // If the URL contains an access_token or type=signup (Supabase redirect), parse and store the session
-    const handleRedirect = async () => {
+    // Initialize auth state and keep subscription reference for cleanup
+    let subscription: any = null;
+
+    const initAuth = async () => {
       try {
+        // Handle Supabase redirect fragments if present
         if (typeof window !== 'undefined' && (window.location.hash.includes('access_token') || window.location.search.includes('access_token') || window.location.hash.includes('type=signup'))) {
-          // Supabase JS v2 may not expose getSessionFromUrl in this environment; parse the fragment manually
           const fragment = window.location.hash || window.location.search;
           const params = new URLSearchParams(fragment.replace(/^#/, '?'));
           const access_token = params.get('access_token');
@@ -36,56 +38,73 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               console.error('Error setting Supabase session from URL:', e);
             }
           }
-           // Remove token fragment from URL to avoid leaking it
-           try {
-             const cleanUrl = window.location.origin + window.location.pathname + window.location.search;
-             window.history.replaceState({}, document.title, cleanUrl);
-           } catch (e) {
-             // ignore
-           }
-         }
-       } catch (e) {
-         console.error('Error parsing Supabase redirect:', e);
-       }
-
-      // Existing onAuthStateChange and initial session fetch
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        const u = session?.user ?? null;
-        setUser(u);
-        // If we have a stored unconfirmed email, clear it when Supabase reports the email as confirmed
-        try {
-          const stored = typeof window !== 'undefined' ? localStorage.getItem('qf_unconfirmed_email') : null;
-          const confirmed = !!(u && ((u as any).email_confirmed_at || (u as any).confirmed_at || (u as any).email_confirmed));
-          if (stored && confirmed) {
-            try { localStorage.removeItem('qf_unconfirmed_email'); } catch (e) { /* ignore */ }
+          try {
+            const cleanUrl = window.location.origin + window.location.pathname + window.location.search;
+            window.history.replaceState({}, document.title, cleanUrl);
+          } catch (e) {
+            // ignore
           }
-        } catch (e) {
-          // ignore
         }
-      });
+      } catch (e) {
+        console.error('Error parsing Supabase redirect:', e);
+      }
 
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-        // Also attempt to clear the stored flag if already confirmed
-        try {
+      try {
+        // Subscribe to auth state changes
+        const res = supabase.auth.onAuthStateChange((_event, session) => {
           const u = session?.user ?? null;
-          const stored = typeof window !== 'undefined' ? localStorage.getItem('qf_unconfirmed_email') : null;
-          const confirmed = !!(u && ((u as any).email_confirmed_at || (u as any).confirmed_at || (u as any).email_confirmed));
-          if (stored && confirmed) {
-            try { localStorage.removeItem('qf_unconfirmed_email'); } catch (e) { /* ignore */ }
+          setUser(u);
+          // Clear stored unconfirmed email when confirmation appears
+          try {
+            const stored = typeof window !== 'undefined' ? localStorage.getItem('qf_unconfirmed_email') : null;
+            const confirmed = !!(u && ((u as any).email_confirmed_at || (u as any).confirmed_at || (u as any).email_confirmed));
+            if (stored && confirmed) {
+              try { localStorage.removeItem('qf_unconfirmed_email'); } catch (e) { /* ignore */ }
+            }
+          } catch (e) {
+            // ignore
           }
-        } catch (e) {
-          // ignore
-        }
-      });
+        });
+        // Cast to any to avoid typing mismatch across Supabase client versions
+        subscription = (res as any)?.data?.subscription ?? (res as any)?.subscription ?? null;
+      } catch (e) {
+        console.error('onAuthStateChange subscription failed', e);
+        subscription = null;
+      }
 
-      return () => {
-        subscription.unsubscribe();
-      };
+      try {
+        // Load initial session (await to ensure we set loading false reliably)
+        const getSess = await supabase.auth.getSession();
+        const session = (getSess as any)?.data?.session ?? null;
+        setUser(session?.user ?? null);
+      } catch (e) {
+        console.error('supabase.getSession() error', e);
+      } finally {
+        // Ensure loading is cleared regardless of errors
+        try { setLoading(false); } catch (e) { /* ignore */ }
+      }
     };
 
-    handleRedirect();
+    initAuth();
+
+    // Safety fallback: ensure loading doesn't remain stuck indefinitely
+    const safety = setTimeout(() => {
+      try {
+        if (loading) {
+          console.debug('AuthProvider: safety timeout clearing loading state');
+          setLoading(false);
+        }
+      } catch (e) { /* ignore */ }
+    }, 8000);
+
+    return () => {
+      try {
+        clearTimeout(safety);
+        if (subscription && typeof subscription.unsubscribe === 'function') subscription.unsubscribe();
+      } catch (e) {
+        // ignore
+      }
+    };
   }, []);
 
   // Re-check confirmation when `user` changes (handles cases where confirmation occurs in another tab)

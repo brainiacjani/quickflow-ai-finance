@@ -56,11 +56,11 @@ const Dashboard = () => {
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('first_name,display_name,full_name')
+          .select('first_name,display_name')
           .eq('id', user.id)
           .maybeSingle();
         if (!mounted) return;
-        setLocalProfileName(data?.first_name ?? data?.display_name ?? data?.full_name ?? null);
+        setLocalProfileName(data?.first_name ?? data?.display_name ?? null);
       } catch (e) {
         console.error('profile fallback fetch failed', e);
       }
@@ -93,6 +93,8 @@ const Dashboard = () => {
           supabase.from('expenses').select('*')
         ]);
         
+        // Debug: log counts to help diagnose empty metrics
+        console.debug('Dashboard: fetched invoices count', invoicesData?.data?.length ?? 0, 'expenses count', expensesData?.data?.length ?? 0);
         if (invoicesData.data) setInvoices(invoicesData.data);
         if (expensesData.data) setExpenses(expensesData.data);
       } catch (error) {
@@ -170,6 +172,10 @@ const Dashboard = () => {
     };
     
     // Build comprehensive dataset
+    // Helper to robustly extract invoice issue date and total across varying field names
+    const getInvoiceDate = (inv: any) => inv?.issueDate ?? inv?.issuedate ?? inv?.issuedAt ?? inv?.created_at ?? null;
+    const getInvoiceTotal = (inv: any) => Number(inv?.total ?? inv?.amount ?? 0) || 0;
+    
     const months = Array.from({ length: 12 }).map((_, i) => {
       const d = new Date();
       d.setMonth(d.getMonth() - (11 - i));
@@ -181,12 +187,15 @@ const Dashboard = () => {
     const chartData = months.map((m) => {
       const mk = monthKey(m);
       const earned = invoices
-        .filter(i => i.status !== 'draft')
-        .filter(i => monthKey(new Date(i.issuedate)) === mk)
-        .reduce((s, i) => s + Number(i.total), 0);
+        .filter((i: any) => i.status !== 'draft')
+        .filter((i: any) => {
+          const d = getInvoiceDate(i);
+          return d ? monthKey(new Date(d)) === mk : false;
+        })
+        .reduce((s: number, i: any) => s + getInvoiceTotal(i), 0);
       const spent = expenses
-        .filter(e => monthKey(new Date(e.date)) === mk)
-        .reduce((s, e) => s + Number(e.amount), 0);
+        .filter((e: any) => monthKey(new Date(e.date)) === mk)
+        .reduce((s: number, e: any) => s + Number(e.amount ?? 0), 0);
       return {
         name: m.toLocaleString(undefined, { month: 'short' }),
         earned,
@@ -213,8 +222,8 @@ const Dashboard = () => {
       ...invoices.slice(-3).map(invoice => ({
         type: 'invoice',
         description: `Invoice to ${invoice.customer} - ${invoice.status}`,
-        amount: Number(invoice.total),
-        time: new Date(invoice.created_at).toLocaleDateString(),
+        amount: getInvoiceTotal(invoice),
+        time: new Date(invoice.created_at || getInvoiceDate(invoice) || Date.now()).toLocaleDateString(),
         status: invoice.status === 'paid' ? 'success' : invoice.status === 'sent' ? 'pending' : 'neutral'
       })),
       ...expenses.slice(-2).map(expense => ({
@@ -268,6 +277,14 @@ const Dashboard = () => {
       expenseCategories
     };
   }, [invoices, expenses, loading]);
+
+  // Debug: log metrics and chartData whenever they update
+  useEffect(() => {
+    try {
+      console.debug('Dashboard: chartData', chartData);
+      console.debug('Dashboard: metrics', metrics);
+    } catch (e) { /* ignore */ }
+  }, [chartData, metrics]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

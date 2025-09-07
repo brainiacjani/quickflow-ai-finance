@@ -15,13 +15,23 @@ const Invoices = () => {
   const [customer, setCustomer] = useState("");
   const [issueDate, setIssueDate] = useState<string>(new Date().toISOString().slice(0,10));
   const [dueDate, setDueDate] = useState<string>(new Date(Date.now()+7*86400000).toISOString().slice(0,10));
-  const [items, setItems] = useState<InvoiceItem[]>([{ description: "Service", quantity: 1, unitPrice: 100 }]);
+  const [items, setItems] = useState<InvoiceItem[]>([{ description: "", quantity: 1, unitPrice: 0 }]);
   const [refresh, setRefresh] = useState(0);
   const { data: company } = useCompany();
   const { data: profile } = useProfile();
   const isAdmin = Boolean((profile as any)?.is_admin || user?.user_metadata?.role === 'admin');
   const [invoices, setInvoices] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
+
+  // customers for dropdown
+  const [customersList, setCustomersList] = useState<any[]>([]);
+  const [customerQuery, setCustomerQuery] = useState<string>('');
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+
+  // inventory for item-level dropdown
+  const [inventoryList, setInventoryList] = useState<any[]>([]);
+  const [inventoryQuery, setInventoryQuery] = useState<string>('');
+  const [inventoryDropdownIndex, setInventoryDropdownIndex] = useState<number | null>(null);
 
   const total = items.reduce((s, it) => s + it.quantity * it.unitPrice, 0);
 
@@ -39,9 +49,47 @@ const Invoices = () => {
     setSaving(true);
     try {
       if (!user?.id) throw new Error('You must be signed in to create invoices');
+
+      const customerName = (customer || customerQuery || '').trim();
+      if (!customerName) {
+        alert('Please select or enter a customer before saving the invoice.');
+        setSaving(false);
+        return;
+      }
+
+      // Pre-check inventory stock to prevent negative stock
+      const insufficient: Array<{ description: string; required: number; available: number | null }> = [];
+      for (const it of items) {
+        const qty = Number(it.quantity || 0);
+        if (qty <= 0) continue;
+        try {
+          let { data: inv, error: findErr } = await supabase.from('inventory').select('id,stock,name').eq('name', it.description).maybeSingle();
+          if (findErr) throw findErr;
+          if (!inv) {
+            const { data: ciData, error: ciErr } = await supabase.from('inventory').select('id,stock,name').ilike('name', it.description).maybeSingle();
+            if (ciErr) throw ciErr;
+            inv = ciData as any;
+          }
+          if (inv && typeof inv.stock === 'number') {
+            if (inv.stock < qty) insufficient.push({ description: it.description, required: qty, available: inv.stock });
+          }
+        } catch (e) {
+          // if lookup fails, treat as unknown availability (do not block)
+          console.debug('inventory lookup failed during pre-check for', it, e);
+        }
+      }
+
+      if (insufficient.length > 0) {
+        const list = insufficient.map(i => `${i.description} — required ${i.required}, available ${i.available}`).join('\n');
+        alert('Cannot create invoice because the following items have insufficient stock:\n' + list);
+        setSaving(false);
+        return;
+      }
+
+      // customerName already validated above
       const payload = {
         id: crypto.randomUUID(),
-        customer,
+        customer: customerName,
         issuedate: issueDate,
         duedate: dueDate,
         items: JSON.stringify(items),
@@ -51,8 +99,36 @@ const Invoices = () => {
       };
       const { error } = await supabase.from('invoices').insert(payload);
       if (error) throw error;
-      setCustomer("");
-      setItems([{ description: "Service", quantity: 1, unitPrice: 100 }]);
+
+      // Decrement inventory stock for matched items (best-effort)
+      try {
+        await Promise.all(items.map(async (it) => {
+          try {
+            let { data: inv, error: findErr } = await supabase.from('inventory').select('id,stock,name').eq('name', it.description).maybeSingle();
+            if (findErr) throw findErr;
+            if (!inv) {
+              const { data: ciData, error: ciErr } = await supabase.from('inventory').select('id,stock,name').ilike('name', it.description).maybeSingle();
+              if (ciErr) throw ciErr;
+              inv = ciData as any;
+            }
+            if (inv && typeof inv.stock === 'number') {
+              const newStock = Math.max(0, Number(inv.stock) - Number(it.quantity || 0));
+              const { error: updErr } = await supabase.from('inventory').update({ stock: newStock }).eq('id', inv.id);
+              if (updErr) throw updErr;
+              // update local list
+              setInventoryList(prev => prev.map(p => p.id === inv.id ? { ...p, stock: newStock } : p));
+            }
+          } catch (e) {
+            // non-fatal: log and continue
+            console.debug('inventory decrement error for item', it, e);
+          }
+        }));
+      } catch (e) {
+        console.debug('one or more inventory updates failed', e);
+      }
+
+      setCustomer(""); setCustomerQuery('');
+      setItems([{ description: "", quantity: 1, unitPrice: 0 }]);
       setRefresh(x => x+1);
     } catch (e) {
       console.error('createInvoice error', e);
@@ -303,6 +379,34 @@ const Invoices = () => {
        }
      };
      fetchInvoices();
+
+    // fetch customers for dropdown
+    const fetchCustomers = async () => {
+      try {
+        let q = supabase.from('customers').select('id,name,email,phone,created_by').order('created_at', { ascending: false });
+        if (!isAdmin) q = q.eq('created_by', user?.id);
+        const { data, error } = await q;
+        if (error) throw error;
+        setCustomersList(data ?? []);
+      } catch (e) {
+        console.error('fetchCustomers error', e);
+      }
+    };
+    fetchCustomers();
+
+    // fetch inventory for item selection
+    const fetchInventory = async () => {
+      try {
+        let iq = supabase.from('inventory').select('id,name,sku,price,stock,description,created_by').order('created_at', { ascending: false });
+        if (!isAdmin) iq = iq.eq('created_by', user?.id);
+        const { data, error } = await iq;
+        if (error) throw error;
+        setInventoryList(data ?? []);
+      } catch (e) {
+        console.error('fetchInventory error', e);
+      }
+    };
+    fetchInventory();
    }, [refresh, user?.id, isAdmin]);
 
   return (
@@ -317,9 +421,48 @@ const Invoices = () => {
         <section className="grid gap-4">
           <h1 className="text-2xl font-semibold">Create invoice</h1>
           <div className="grid gap-3 md:grid-cols-2">
-            <div className="grid gap-2">
+            <div className="grid gap-2 relative overflow-visible">
               <label className="text-sm">Customer</label>
-              <input className="rounded-md border bg-background px-3 py-2" placeholder="Acme Inc" value={customer} onChange={e=>setCustomer(e.target.value)} />
+              <input
+                className="rounded-md border bg-background px-3 py-2"
+                placeholder="Search customers or type a name"
+                value={customerQuery || customer}
+                onFocus={() => { setShowCustomerDropdown(true); setCustomerQuery(''); }}
+                onChange={(e) => { setCustomerQuery(e.target.value); setShowCustomerDropdown(true); }}
+                onBlur={() => { setTimeout(() => setShowCustomerDropdown(false), 150); }}
+                aria-autocomplete="list"
+                autoComplete="off"
+              />
+
+              {showCustomerDropdown && (
+                <div className="absolute z-50 top-full left-0 mt-2 w-full max-h-48 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-lg">
+                  {(() => {
+                    const q = (customerQuery || '').trim().toLowerCase();
+                    const filtered = customersList.filter((c: any) => {
+                      if (!c) return false;
+                      const name = (c.name || '').toString().toLowerCase();
+                      const email = (c.email || '').toString().toLowerCase();
+                      const phone = (c.phone || '').toString().toLowerCase();
+                      return !q || name.includes(q) || email.includes(q) || phone.includes(q);
+                    }).slice(0, 10);
+
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="p-3 text-sm text-muted-foreground">
+                          No customers found. Press Save to use "<span className='font-mono'>{customerQuery}</span>" as a new customer.
+                        </div>
+                      );
+                    }
+
+                    return filtered.map((c: any) => (
+                      <div key={c.id} className="px-3 py-2 hover:bg-accent/10 cursor-pointer" onMouseDown={(ev)=>{ ev.preventDefault(); }} onClick={() => { setCustomer(c.name); setCustomerQuery(''); setShowCustomerDropdown(false); }}>
+                        <div className="font-medium">{c.name}</div>
+                        <div className="text-xs text-muted-foreground">{[c.email, c.phone].filter(Boolean).join(' • ')}</div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
@@ -335,12 +478,60 @@ const Invoices = () => {
           <div className="grid gap-2">
             <label className="text-sm">Items</label>
             <div className="grid gap-2">
+              {/* column labels */}
+              <div className="grid grid-cols-6 gap-2 text-sm text-muted-foreground">
+                <div className="col-span-3">Description</div>
+                <div className="col-span-1">Qty</div>
+                <div className="col-span-1">Unit price</div>
+                <div className="col-span-1 text-center">Total</div>
+              </div>
+
               {items.map((it, idx) => (
-                <div key={idx} className="grid grid-cols-6 gap-2">
-                  <input className="col-span-3 rounded-md border bg-background px-3 py-2" placeholder="Description" value={it.description} onChange={e=>updateItem(idx,{ description: e.target.value })} />
+                <div key={idx} className="grid grid-cols-6 gap-2 relative">
+                  {/* Description with inventory searchable dropdown */}
+                  <div className="col-span-3 relative">
+                    <input
+                      className="w-full rounded-md border bg-background px-3 py-2"
+                      placeholder="Search inventory or type a description"
+                      value={inventoryDropdownIndex === idx ? inventoryQuery : it.description}
+                      onFocus={() => { setInventoryDropdownIndex(idx); setInventoryQuery(it.description || ''); }}
+                      onChange={(e) => { updateItem(idx, { description: e.target.value }); setInventoryQuery(e.target.value); setInventoryDropdownIndex(idx); }}
+                      onBlur={() => { setTimeout(() => { if (inventoryDropdownIndex === idx) setInventoryDropdownIndex(null); }, 150); }}
+                    />
+
+                    {inventoryDropdownIndex === idx && (
+                      <div className="absolute z-40 top-full left-0 mt-2 w-full max-h-48 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-lg">
+                        {(() => {
+                          const q = (inventoryQuery || '').trim().toLowerCase();
+                          const filtered = inventoryList.filter((inv: any) => {
+                            const name = (inv.name || '').toString().toLowerCase();
+                            const sku = (inv.sku || '').toString().toLowerCase();
+                            return !q || name.includes(q) || sku.includes(q);
+                          }).slice(0, 10);
+
+                          if (filtered.length === 0) {
+                            return <div className="p-3 text-sm text-muted-foreground">No inventory found</div>;
+                          }
+
+                          return filtered.map((inv: any) => (
+                            <div key={inv.id} className="px-3 py-2 hover:bg-accent/10 cursor-pointer" onMouseDown={(ev) => { ev.preventDefault(); }} onClick={() => {
+                              // Fill description and unitPrice from inventory
+                              updateItem(idx, { description: inv.name, unitPrice: Number(inv.price ?? 0) });
+                              setInventoryDropdownIndex(null);
+                              setInventoryQuery('');
+                            }}>
+                              <div className="font-medium">{inv.name}</div>
+                              <div className="text-xs text-muted-foreground">{inv.sku || ''} {inv.price ? `• $${Number(inv.price).toFixed(2)}` : ''}</div>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
                   <input type="number" className="col-span-1 rounded-md border bg-background px-3 py-2" value={it.quantity} onChange={e=>updateItem(idx,{ quantity: Number(e.target.value) })} />
                   <input type="number" className="col-span-1 rounded-md border bg-background px-3 py-2" value={it.unitPrice} onChange={e=>updateItem(idx,{ unitPrice: Number(e.target.value) })} />
-                  <div className="col-span-1 flex items-center">${(it.quantity*it.unitPrice).toFixed(2)}</div>
+                  <div className="col-span-1 flex items-center justify-center">${(it.quantity*it.unitPrice).toFixed(2)}</div>
                 </div>
               ))}
             </div>
