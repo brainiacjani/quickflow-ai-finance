@@ -22,6 +22,7 @@ const Invoices = () => {
   const { data: profile } = useProfile();
   const isAdmin = Boolean((profile as any)?.is_admin || user?.user_metadata?.role === 'admin');
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [invoiceSearch, setInvoiceSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -354,6 +355,7 @@ const Invoices = () => {
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
+        setLoading(true);
         if (!user?.id) {
           setInvoices([]);
           return;
@@ -386,9 +388,11 @@ const Invoices = () => {
         setInvoices(normalized);
        } catch (e) {
          console.error('fetchInvoices error', e);
-       }
-     };
-     fetchInvoices();
+       } finally {
+         setLoading(false);
+        }
+      };
+      fetchInvoices();
 
     // fetch customers for dropdown
     const fetchCustomers = async () => {
@@ -572,14 +576,15 @@ const Invoices = () => {
               { key: 'status', label: 'Status' },
               { key: 'issueDate', label: 'Date' },
             ]}
+            isLoading={loading}
             data={paginatedInvoices.map(i => ({
-              id: i.id,
-              invoiceNumber: (i.id || '').toString().slice(0,8).toUpperCase(),
-              customer: i.customer,
-              total: `$${Number(i.total ?? 0).toFixed(2)}`,
-              status: i.status,
-              issueDate: i.issueDate ?? i.created_at ?? null,
-            }))}
+               id: i.id,
+               invoiceNumber: (i.id || '').toString().slice(0,8).toUpperCase(),
+               customer: i.customer,
+               total: `$${Number(i.total ?? 0).toFixed(2)}`,
+               status: i.status,
+               issueDate: i.issueDate ?? i.created_at ?? null,
+             }))}
             renderActions={(row) => (
               <>
                 <Button size="sm" variant="outline" onClick={() => printInvoice(row.id)}>Print</Button>

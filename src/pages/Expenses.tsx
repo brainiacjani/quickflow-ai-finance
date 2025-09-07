@@ -43,11 +43,17 @@ const Expenses = () => {
   const { toast } = useToast();
   const [expenses, setExpenses] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
   const { data: profile } = useProfile();
   const isAdmin = Boolean((profile as any)?.is_admin || user?.user_metadata?.role === 'admin');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  const suggestion = useMemo(() => guessCategory(vendor, amount), [vendor, amount]);
+  // vendor dropdown state
+  const [vendorsList, setVendorsList] = useState<any[]>([]);
+  const [vendorQueryLocal, setVendorQueryLocal] = useState<string>('');
+  const [showVendorDropdown, setShowVendorDropdown] = useState(false);
+
+  const suggestion = useMemo(() => guessCategory((vendor || vendorQueryLocal || ''), amount), [vendor, vendorQueryLocal, amount]);
 
   // client side pagination
   const { paginatedItems: paginatedExpenses, currentPage: expensePage, totalPages: expenseTotalPages, setPage: setExpensePage } = useClientPagination(expenses, 10);
@@ -64,13 +70,19 @@ const Expenses = () => {
       toast({ title: 'Not signed in', description: 'Please sign in to add expenses.' });
       return;
     }
-    const exp: Expense = { id: crypto.randomUUID(), date, vendor, amount, category: category || suggestion.category, note };
+    const vendorName = (vendor || vendorQueryLocal || '').trim();
+    if (!vendorName) {
+      toast({ title: 'Missing vendor', description: 'Please select or enter a vendor.' });
+      return;
+    }
+
+    const exp: Expense = { id: crypto.randomUUID(), date, vendor: vendorName, amount, category: category || suggestion.category, note };
     try {
       const payload = { id: exp.id, date: exp.date, vendor: exp.vendor, amount: exp.amount, category: exp.category, note: exp.note, created_by: user.id };
       const { error } = await supabase.from('expenses').insert(payload);
       if (error) throw error;
       await fetchExpenses();
-      setVendor(""); setAmount(0); setCategory(""); setNote("");
+      setVendor(""); setVendorQueryLocal(''); setAmount(0); setCategory(""); setNote("");
     } catch (e) {
       console.error('addExpense error', e);
       toast({ title: 'Save failed', description: 'Unable to save expense.' });
@@ -152,6 +164,7 @@ const Expenses = () => {
 
   const fetchExpenses = async () => {
     try {
+      setLoading(true);
       if (!user?.id) { setExpenses([]); return; }
       let q = supabase.from('expenses').select('*').order('date', { ascending: false });
       if (!isAdmin) q = q.eq('created_by', user.id);
@@ -160,10 +173,27 @@ const Expenses = () => {
       setExpenses(data ?? []);
     } catch (e) {
       console.error('fetchExpenses error', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // fetch vendors for dropdown
+  const fetchVendors = async () => {
+    try {
+      if (!user?.id) return;
+      let q = supabase.from('vendors').select('id,name,email,created_by').order('name', { ascending: true });
+      if (!isAdmin) q = q.eq('created_by', user.id);
+      const { data, error } = await q;
+      if (error) throw error;
+      setVendorsList(data ?? []);
+    } catch (e) {
+      console.error('fetchVendors error', e);
     }
   };
 
   useEffect(() => { fetchExpenses(); }, [user?.id, isAdmin]);
+  useEffect(() => { fetchVendors(); }, [user?.id, isAdmin]);
 
   // View modal state
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -230,7 +260,42 @@ const Expenses = () => {
               </div>
               <div className="grid gap-2">
                 <label className="text-sm">Vendor</label>
-                <input className="rounded-md border bg-background px-3 py-2 w-full" value={vendor} onChange={e=>setVendor(e.target.value)} placeholder="Amazon" />
+                <div className="relative">
+                  <input
+                    className="rounded-md border bg-background px-3 py-2 w-full"
+                    placeholder="Search vendors or type a name"
+                    value={vendorQueryLocal || vendor}
+                    onFocus={() => { setShowVendorDropdown(true); setVendorQueryLocal(''); }}
+                    onChange={(e) => { setVendorQueryLocal(e.target.value); setShowVendorDropdown(true); }}
+                    onBlur={() => { setTimeout(() => setShowVendorDropdown(false), 150); }}
+                    autoComplete="off"
+                  />
+                  {showVendorDropdown && (
+                    <div className="absolute z-50 top-full left-0 mt-2 w-full max-h-48 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-lg">
+                      {(() => {
+                        const q = (vendorQueryLocal || '').trim().toLowerCase();
+                        const filtered = (vendorsList || []).filter((v: any) => {
+                          const name = (v.name || '').toString().toLowerCase();
+                          const email = (v.email || '').toString().toLowerCase();
+                          return !q || name.includes(q) || email.includes(q);
+                        }).slice(0, 20);
+
+                        if (filtered.length === 0) {
+                          return (
+                            <div className="p-3 text-sm text-muted-foreground">No vendors found. Type a new name and save to create a vendor inline.</div>
+                          );
+                        }
+
+                        return filtered.map((v: any) => (
+                          <div key={v.id} className="px-3 py-2 hover:bg-accent/10 cursor-pointer" onMouseDown={(ev) => ev.preventDefault()} onClick={() => { setVendor(v.name); setVendorQueryLocal(''); setShowVendorDropdown(false); }}>
+                            <div className="font-medium">{v.name}</div>
+                            {v.email && <div className="text-xs text-muted-foreground">{v.email}</div>}
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="grid gap-2">
                 <label className="text-sm">Amount</label>
@@ -262,6 +327,7 @@ const Expenses = () => {
               { key: 'category', label: 'Category' },
               { key: 'amount', label: 'Amount' },
             ]}
+            isLoading={loading}
             data={
               // use client-side filtered + paginated results
               paginatedExpenses.filter(e => filteredExpenses.includes(e)).map(e => ({
