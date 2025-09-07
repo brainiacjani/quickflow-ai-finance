@@ -5,7 +5,9 @@ import {
   Receipt, 
   BarChart3, 
   CreditCard,
-  Settings 
+  Settings,
+  UserPlus,
+  Package
 } from "lucide-react";
 import { Users } from "lucide-react";
 import {
@@ -38,6 +40,8 @@ const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Invoices", url: "/invoices", icon: FileText },
   { title: "Expenses", url: "/expenses", icon: Receipt },
+  { title: "Inventory", url: "/inventory", icon: Package },
+  { title: "Customers", url: "/customers", icon: UserPlus },
   { title: "Reports", url: "/reports", icon: BarChart3 },
   { title: "Admin", url: "/admin", icon: Users },
   { title: "Pricing", url: "/pricing", icon: CreditCard },
