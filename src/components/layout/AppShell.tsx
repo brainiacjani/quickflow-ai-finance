@@ -1,5 +1,5 @@
 import { PropsWithChildren, useEffect, useState, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
@@ -45,28 +45,27 @@ export const AppShell = ({ children }: PropsWithChildren) => {
   const { user } = useAuth();
   const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [isNavigating, setIsNavigating] = useState(false);
+  const location = useLocation();
 
-  // UI state for public header behavior
+  // landing header state
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('home');
   const headerRef = useRef<HTMLElement | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false); // used to hide header on auth navigation
+
+  // authenticated route transition
+  const [routeChanging, setRouteChanging] = useState(false);
 
   useEffect(() => {
-    try {
-      const e = localStorage.getItem('qf_unconfirmed_email');
-      setUnconfirmedEmail(e);
-    } catch (err) {
-      setUnconfirmedEmail(null);
-    }
+    try { const e = localStorage.getItem('qf_unconfirmed_email'); setUnconfirmedEmail(e); } catch (e) { setUnconfirmedEmail(null); }
   }, []);
 
-  // enable smooth scroll site-wide (native browser smooth) for anchor navigation
+  // enable smooth native scrolling
   useEffect(() => {
     try { document.documentElement.style.scrollBehavior = 'smooth'; } catch (e) {}
   }, []);
 
-  // Track which landing section is active using IntersectionObserver so we can highlight nav links
+  // active section watcher for landing
   useEffect(() => {
     const ids = ['home', 'services', 'about', 'contact'];
     const obs = new IntersectionObserver((entries) => {
@@ -83,6 +82,13 @@ export const AppShell = ({ children }: PropsWithChildren) => {
     return () => obs.disconnect();
   }, []);
 
+  // route transition effect: when pathname changes, play a brief transition in authenticated area
+  useEffect(() => {
+    setRouteChanging(true);
+    const t = window.setTimeout(() => setRouteChanging(false), 300);
+    return () => window.clearTimeout(t);
+  }, [location.pathname]);
+
   const handleNavClick = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     setMobileNavOpen(false);
@@ -94,7 +100,7 @@ export const AppShell = ({ children }: PropsWithChildren) => {
     window.scrollTo({ top, behavior: 'smooth' });
   };
 
-  // Non-authenticated header (landing)
+  // If user is not authenticated: render public landing header
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-200 via-purple-100 to-pink-200 overflow-x-hidden">
@@ -152,7 +158,15 @@ export const AppShell = ({ children }: PropsWithChildren) => {
           )}
         </header>
 
-        <main className={`flex-1 pt-16 transition-opacity duration-300 ease-out ${isNavigating ? 'opacity-0' : 'opacity-100'}`}>
+        <main className={`flex-1 pt-16 ${isNavigating ? 'opacity-75' : 'opacity-100'}`}>
+          {unconfirmedEmail && (
+            <div className="mb-4">
+              <div className="rounded-md border-l-4 border-yellow-400 bg-yellow-50 px-4 py-3 text-sm">
+                <div className="font-medium">Please confirm your email</div>
+                <div className="text-sm text-muted-foreground">We sent a confirmation link to <strong>{unconfirmedEmail}</strong>. Check your inbox and click the link to confirm your address.</div>
+              </div>
+            </div>
+          )}
           {children}
         </main>
 
@@ -163,7 +177,7 @@ export const AppShell = ({ children }: PropsWithChildren) => {
     );
   }
 
-  // For authenticated users, show sidebar layout (desktop) but provide a mobile-app experience on small screens
+  // Authenticated layout
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-purple-200 via-purple-100 to-pink-200 overflow-x-hidden">
@@ -171,18 +185,14 @@ export const AppShell = ({ children }: PropsWithChildren) => {
         <div className="flex-1 flex flex-col">
           <header className="h-12 flex items-center border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm px-3 sm:px-0">
             <SidebarTrigger className="ml-4" />
-            {/* App title center-aligned on mobile, left on desktop */}
             <div className="flex-1 text-center md:text-left font-semibold">QuickFlow</div>
             <div className="hidden md:flex items-center pr-4 gap-3">
-              {/* Notifications bell moved to top-right */}
               <NotificationsTop />
-              {/* User profile dropdown (moved from sidebar footer) */}
               <ProfileMenu />
             </div>
           </header>
 
-          {/* Add extra bottom padding on small screens so content isn't hidden behind the fixed bottom nav */}
-          <main className="flex-1 p-4 sm:p-6 pb-24 sm:pb-6">
+          <main className={`flex-1 p-4 sm:p-6 pb-24 sm:pb-6 transition-transform transition-opacity duration-300 ease-in-out ${routeChanging ? 'opacity-0 -translate-y-2' : 'opacity-100 translate-y-0'}`}>
             {unconfirmedEmail && (
               <div className="mb-4">
                 <div className="rounded-md border-l-4 border-yellow-400 bg-yellow-50 px-4 py-3 text-sm">
@@ -191,10 +201,10 @@ export const AppShell = ({ children }: PropsWithChildren) => {
                 </div>
               </div>
             )}
+
             {children}
           </main>
 
-          {/* Mobile bottom nav - appears only on small screens and gives the app a native mobile feel */}
           <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="max-w-4xl mx-auto flex justify-between items-center px-4 py-2" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
               <Link to="/" className="flex flex-col items-center text-xs text-foreground/70 hover:text-foreground">
