@@ -286,6 +286,15 @@ const Dashboard = () => {
     } catch (e) { /* ignore */ }
   }, [chartData, metrics]);
 
+  // animate dashboard components on load (keeps layout, adds subtle fade/slide)
+  const [animateDashboard, setAnimateDashboard] = useState(false);
+  useEffect(() => {
+    // trigger animation after data is ready
+    if (loading) return;
+    const t = window.setTimeout(() => setAnimateDashboard(true), 80);
+    return () => window.clearTimeout(t);
+  }, [loading]);
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'success': return <CheckCircle className="h-4 w-4 text-green-500" />;
@@ -339,9 +348,9 @@ const Dashboard = () => {
           </div>
         </div>
       ) : (
-      <div className="space-y-8 animate-fade-in">
+      <div className={`space-y-8 ${animateDashboard ? 'opacity-100' : 'opacity-0'} transition-all duration-700 ease-out` }>
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${animateDashboard ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'} transition-all duration-700 delay-75` }>
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
               Welcome back{displayName ? `, ${displayName}` : ''}! 👋
@@ -366,7 +375,7 @@ const Dashboard = () => {
 
         {/* Key Metrics Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="hover-scale">
+          <Card className={`hover-scale ${animateDashboard ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'} transition-all duration-700 delay-150`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -382,7 +391,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover-scale">
+          <Card className={`hover-scale ${animateDashboard ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'} transition-all duration-700 delay-200`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Expenses</CardTitle>
               <Receipt className="h-4 w-4 text-muted-foreground" />
@@ -398,7 +407,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover-scale">
+          <Card className={`hover-scale ${animateDashboard ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'} transition-all duration-700 delay-250`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -414,7 +423,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover-scale">
+          <Card className={`hover-scale ${animateDashboard ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'} transition-all duration-700 delay-300`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Cash Runway</CardTitle>
               <Target className="h-4 w-4 text-muted-foreground" />
