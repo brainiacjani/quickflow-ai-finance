@@ -1,5 +1,5 @@
-import { PropsWithChildren, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { PropsWithChildren, useEffect, useState, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
@@ -20,7 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 function ProfileMenu() {
   const { user, signOut } = useAuth();
   const { data: profile } = useProfile();
-  const displayName = profile?.display_name || profile?.first_name || user?.email || 'Account';
+  const displayName = (profile as any)?.display_name || (profile as any)?.first_name || user?.email || 'Account';
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -41,11 +41,16 @@ function ProfileMenu() {
   );
 }
 
-// MainNav removed: we use only AppSidebar for authenticated layout
-
 export const AppShell = ({ children }: PropsWithChildren) => {
   const { user } = useAuth();
   const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // UI state for public header behavior
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('home');
+  const headerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     try {
@@ -56,25 +61,101 @@ export const AppShell = ({ children }: PropsWithChildren) => {
     }
   }, []);
 
-  // For non-authenticated users, show simple public header and content (no MainNav)
+  // enable smooth scroll site-wide (native browser smooth) for anchor navigation
+  useEffect(() => {
+    try { document.documentElement.style.scrollBehavior = 'smooth'; } catch (e) {}
+  }, []);
+
+  // Track which landing section is active using IntersectionObserver so we can highlight nav links
+  useEffect(() => {
+    const ids = ['home', 'services', 'about', 'contact'];
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) setActiveSection(entry.target.id);
+      });
+    }, { root: null, rootMargin: '-40% 0px -40% 0px', threshold: 0.1 });
+
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) obs.observe(el);
+    });
+
+    return () => obs.disconnect();
+  }, []);
+
+  const handleNavClick = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    setMobileNavOpen(false);
+    const el = document.getElementById(id);
+    const headerHeight = headerRef.current?.offsetHeight ?? 64;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const top = window.pageYOffset + rect.top - headerHeight - 8;
+    window.scrollTo({ top, behavior: 'smooth' });
+  };
+
+  // Non-authenticated header (landing)
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-200 via-purple-100 to-pink-200 overflow-x-hidden">
-        <header className="w-full border-b bg-background/90">
-          <div className="max-w-4xl mx-auto flex items-center justify-between p-4">
-            <a href="/" className="inline-flex items-center gap-2 font-semibold">
-              <div className="h-7 w-7 rounded-md" style={{ background: "radial-gradient(120% 120% at 0% 0%, hsl(var(--brand)) 0%, hsl(var(--brand-glow)) 60%, hsl(var(--brand)) 100%)", boxShadow: "var(--shadow-glow)" as any }} />
-              <span>QuickFlow</span>
-            </a>
-            <div className="flex items-center gap-3">
-              <Link to="/auth/login"><Button variant="ghost" size="sm">Log in</Button></Link>
-              <Link to="/auth/signup"><Button variant="hero" size="sm">Start free trial</Button></Link>
+        <header ref={headerRef as any} className={`w-full fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform transition-opacity duration-200 ease-out ${isNavigating ? 'opacity-0 -translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'}`}>
+          <div className="max-w-4xl mx-auto grid grid-cols-3 items-center p-4">
+            {/* left: brand (links to landing page) */}
+            <div className="flex items-center">
+              <a href="/" onClick={(e) => { e.preventDefault(); setMobileNavOpen(false); setIsNavigating(true); setTimeout(() => navigate('/'), 260); }} className="inline-flex items-center gap-2 font-semibold">
+                <div className="h-7 w-7 rounded-md" style={{ background: "radial-gradient(120% 120% at 0% 0%, hsl(var(--brand)) 0%, hsl(var(--brand-glow)) 60%, hsl(var(--brand)) 100%)", boxShadow: "var(--shadow-glow)" as any }} />
+                <span>QuickFlow</span>
+              </a>
+            </div>
+
+            {/* center: nav (centered) */}
+            <nav className="flex justify-center">
+              <div className="hidden sm:flex items-center gap-6">
+                <a href="#home" onClick={(e) => handleNavClick(e, 'home')} className={`text-sm ${activeSection === 'home' ? 'text-brand font-semibold' : 'text-foreground/80 hover:text-foreground'}`}>Home</a>
+                <a href="#services" onClick={(e) => handleNavClick(e, 'services')} className={`text-sm ${activeSection === 'services' ? 'text-brand font-semibold' : 'text-foreground/80 hover:text-foreground'}`}>Services</a>
+                <a href="#about" onClick={(e) => handleNavClick(e, 'about')} className={`text-sm ${activeSection === 'about' ? 'text-brand font-semibold' : 'text-foreground/80 hover:text-foreground'}`}>About</a>
+                <a href="#contact" onClick={(e) => handleNavClick(e, 'contact')} className={`text-sm ${activeSection === 'contact' ? 'text-brand font-semibold' : 'text-foreground/80 hover:text-foreground'}`}>Contact</a>
+              </div>
+              {/* mobile hamburger */}
+              <div className="sm:hidden">
+                <button aria-expanded={mobileNavOpen} aria-label="Toggle navigation" onClick={() => setMobileNavOpen(v => !v)} className="p-2 rounded-md hover:bg-accent/10">
+                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d={mobileNavOpen ? 'M6 18L18 6M6 6l12 12' : 'M3 12h18M3 6h18M3 18h18'} />
+                  </svg>
+                </button>
+              </div>
+            </nav>
+
+            {/* right: auth buttons - hidden on very small screens (mobile menu will surface them) */}
+            <div className="flex justify-end space-x-2">
+              <div className="hidden sm:flex items-center gap-2">
+                <a href="/auth/login" onClick={(e) => { e.preventDefault(); setIsNavigating(true); setTimeout(() => navigate('/auth/login'), 260); }}><Button variant="ghost" size="sm">Log in</Button></a>
+                <a href="/auth/signup" onClick={(e) => { e.preventDefault(); setIsNavigating(true); setTimeout(() => navigate('/auth/signup'), 260); }}><Button variant="hero" size="sm">Start free trial</Button></a>
+              </div>
             </div>
           </div>
+
+          {/* mobile dropdown menu */}
+          {mobileNavOpen && (
+            <div className="sm:hidden border-t bg-background/95">
+              <div className="max-w-4xl mx-auto flex flex-col p-4 gap-3">
+                <a href="#home" onClick={(e)=>handleNavClick(e,'home')} className={`text-sm ${activeSection === 'home' ? 'text-brand font-semibold' : 'text-foreground/80'}`}>Home</a>
+                <a href="#services" onClick={(e)=>handleNavClick(e,'services')} className={`text-sm ${activeSection === 'services' ? 'text-brand font-semibold' : 'text-foreground/80'}`}>Services</a>
+                <a href="#about" onClick={(e)=>handleNavClick(e,'about')} className={`text-sm ${activeSection === 'about' ? 'text-brand font-semibold' : 'text-foreground/80'}`}>About</a>
+                <a href="#contact" onClick={(e)=>handleNavClick(e,'contact')} className={`text-sm ${activeSection === 'contact' ? 'text-brand font-semibold' : 'text-foreground/80'}`}>Contact</a>
+                <div className="pt-2 border-t mt-2">
+                  <a href="/auth/login" onClick={(e) => { e.preventDefault(); setIsNavigating(true); setTimeout(() => navigate('/auth/login'), 260); }}><Button variant="ghost" size="sm" className="w-full">Log in</Button></a>
+                  <a href="/auth/signup" onClick={(e) => { e.preventDefault(); setIsNavigating(true); setTimeout(() => navigate('/auth/signup'), 260); }}><Button variant="hero" size="sm" className="w-full mt-2">Start free trial</Button></a>
+                </div>
+              </div>
+            </div>
+          )}
         </header>
-        <main className="flex-1">
+
+        <main className={`flex-1 pt-16 transition-opacity duration-300 ease-out ${isNavigating ? 'opacity-0' : 'opacity-100'}`}>
           {children}
         </main>
+
         <footer className="border-t py-8 text-center text-sm text-foreground/60">
           © {new Date().getFullYear()} QuickFlow. All rights reserved.
         </footer>
@@ -99,7 +180,7 @@ export const AppShell = ({ children }: PropsWithChildren) => {
               <ProfileMenu />
             </div>
           </header>
-          
+
           {/* Add extra bottom padding on small screens so content isn't hidden behind the fixed bottom nav */}
           <main className="flex-1 p-4 sm:p-6 pb-24 sm:pb-6">
             {unconfirmedEmail && (

@@ -38,7 +38,7 @@ const Landing = () => {
       navigate('/dashboard', { replace: true });
     }
   }, [user, loading, navigate]);
-
+  
   // While auth is being determined, don't render landing to avoid showing sidebar for authed users
   if (loading) return null;
   return (
@@ -54,7 +54,7 @@ const Landing = () => {
       </Helmet>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-background via-surface to-accent/5">
+      <section id="home" className="relative overflow-hidden bg-gradient-to-br from-background via-surface to-accent/5">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary))_0%,transparent_50%)] opacity-10"></div>
         <div className="container relative py-20 lg:py-32">
           <div className="grid gap-12 lg:grid-cols-2 items-center">
@@ -126,7 +126,7 @@ const Landing = () => {
       </section>
 
       {/* Features Showcase */}
-      <section className="py-20 lg:py-32 bg-surface/30">
+      <section id="services" className="py-20 lg:py-32 bg-surface/30">
         <div className="container">
           <div className="text-center space-y-4 mb-16">
             <Badge variant="outline" className="w-fit mx-auto">
