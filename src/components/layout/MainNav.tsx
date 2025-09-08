@@ -12,7 +12,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu } from 'lucide-react';
+import { Menu, Bell } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const links = [
   { to: "/dashboard", label: "Dashboard" },
@@ -25,6 +27,8 @@ const links = [
 export const MainNav = () => {
   const { user, signOut } = useAuth();
   const { data: profile } = useProfile();
+  const navigate = useNavigate();
+  const [notifications, setNotifications] = useState<Array<any>>([]);
 
   // Determine if current user is an admin: prefer explicit is_admin flag, then profile.role, then user metadata
   const profileAny = profile as any;
@@ -42,6 +46,34 @@ export const MainNav = () => {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  useEffect(() => {
+    const handlerAppNotify = (e: any) => {
+      const detail = e?.detail ?? null;
+      if (detail) setNotifications((n) => [detail, ...n]);
+    };
+
+    const handlerCustomersUpdated = (e?: any) => {
+      // if the event carries detail, prefer it, otherwise use a fallback notification
+      const d = e?.detail ?? { type: 'customer', title: 'Customer created', message: 'A customer was created. Click to view.' };
+      setNotifications((n) => [d, ...n]);
+    };
+
+    const handlerVendorsUpdated = (e?: any) => {
+      const d = e?.detail ?? { type: 'vendor', title: 'Vendor created', message: 'A vendor was created. Click to view.' };
+      setNotifications((n) => [d, ...n]);
+    };
+
+    window.addEventListener('app:notify', handlerAppNotify as EventListener);
+    window.addEventListener('customers:updated', handlerCustomersUpdated as EventListener);
+    window.addEventListener('vendors:updated', handlerVendorsUpdated as EventListener);
+
+    return () => {
+      window.removeEventListener('app:notify', handlerAppNotify as EventListener);
+      window.removeEventListener('customers:updated', handlerCustomersUpdated as EventListener);
+      window.removeEventListener('vendors:updated', handlerVendorsUpdated as EventListener);
+    };
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -174,6 +206,36 @@ export const MainNav = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
+          )}
+          {/* Notifications button */}
+          {user && (
+            <div className="relative">
+              <button className="p-2 rounded-md hover:bg-accent" onClick={(ev) => { /* toggle dropdown via focus or show inline */ }}>
+                <Bell className="h-5 w-5" />
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-600 text-white text-[11px] font-semibold px-1.5 py-0.5">{notifications.length}</span>
+                )}
+              </button>
+              {/* simple dropdown */}
+              {notifications.length > 0 && (
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg z-50 p-2">
+                  <div className="text-xs text-muted-foreground px-2 pb-2">Notifications</div>
+                  <div className="max-h-64 overflow-auto">
+                    {notifications.map((n, idx) => (
+                      <div key={idx} className="p-2 hover:bg-accent/10 cursor-pointer rounded" onClick={() => {
+                        // navigate based on type
+                        if (n.type === 'vendor') navigate('/vendors');
+                        else if (n.type === 'customer') navigate('/customers');
+                        setNotifications((prev) => prev.filter((_, i) => i !== idx));
+                      }}>
+                        <div className="font-medium text-sm">{n.title}</div>
+                        <div className="text-xs text-muted-foreground truncate">{n.message}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

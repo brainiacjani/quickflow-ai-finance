@@ -3,8 +3,45 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { useAuth } from "@/contexts/AuthContext";
-import { MainNav } from "./MainNav";
+import { NotificationsTop } from "@/components/notifications/NotificationsTop";
+import { useProfile } from '@/hooks/useProfile';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/AuthContext';
+
+// ProfileMenu component: moved to top-level to avoid declaring functions inside JSX
+function ProfileMenu() {
+  const { user, signOut } = useAuth();
+  const { data: profile } = useProfile();
+  const displayName = profile?.display_name || profile?.first_name || user?.email || 'Account';
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-accent transition">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={(profile as any)?.avatar_url ?? undefined} alt="Profile picture" />
+            <AvatarFallback>{(displayName || 'U').slice(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>{displayName}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <Link to="/settings"><DropdownMenuItem>Settings</DropdownMenuItem></Link>
+        <DropdownMenuItem onClick={() => signOut()} className="text-destructive">Log out</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// MainNav removed: we use only AppSidebar for authenticated layout
 
 export const AppShell = ({ children }: PropsWithChildren) => {
   const { user } = useAuth();
@@ -19,11 +56,22 @@ export const AppShell = ({ children }: PropsWithChildren) => {
     }
   }, []);
 
-  // For non-authenticated users, show simple layout without sidebar
+  // For non-authenticated users, show simple public header and content (no MainNav)
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-200 via-purple-100 to-pink-200 overflow-x-hidden">
-        <MainNav />
+        <header className="w-full border-b bg-background/90">
+          <div className="max-w-4xl mx-auto flex items-center justify-between p-4">
+            <a href="/" className="inline-flex items-center gap-2 font-semibold">
+              <div className="h-7 w-7 rounded-md" style={{ background: "radial-gradient(120% 120% at 0% 0%, hsl(var(--brand)) 0%, hsl(var(--brand-glow)) 60%, hsl(var(--brand)) 100%)", boxShadow: "var(--shadow-glow)" as any }} />
+              <span>QuickFlow</span>
+            </a>
+            <div className="flex items-center gap-3">
+              <Link to="/auth/login"><Button variant="ghost" size="sm">Log in</Button></Link>
+              <Link to="/auth/signup"><Button variant="hero" size="sm">Start free trial</Button></Link>
+            </div>
+          </div>
+        </header>
         <main className="flex-1">
           {children}
         </main>
@@ -44,8 +92,14 @@ export const AppShell = ({ children }: PropsWithChildren) => {
             <SidebarTrigger className="ml-4" />
             {/* App title center-aligned on mobile, left on desktop */}
             <div className="flex-1 text-center md:text-left font-semibold">QuickFlow</div>
+            <div className="hidden md:flex items-center pr-4 gap-3">
+              {/* Notifications bell moved to top-right */}
+              <NotificationsTop />
+              {/* User profile dropdown (moved from sidebar footer) */}
+              <ProfileMenu />
+            </div>
           </header>
-
+          
           {/* Add extra bottom padding on small screens so content isn't hidden behind the fixed bottom nav */}
           <main className="flex-1 p-4 sm:p-6 pb-24 sm:pb-6">
             {unconfirmedEmail && (

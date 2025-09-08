@@ -76,6 +76,40 @@ const Expenses = () => {
       return;
     }
 
+    // Ensure vendor exists: if not, create a minimal vendor record and notify sidebar to show pending profile count
+    try {
+      // try exact match first, then ilike
+      let { data: existing, error: existingErr } = await supabase.from('vendors').select('*').eq('name', vendorName).maybeSingle();
+      if (existingErr) throw existingErr;
+      if (!existing) {
+        const { data: ilikeMatch, error: ilikeErr } = await supabase.from('vendors').select('*').ilike('name', vendorName).maybeSingle();
+        if (ilikeErr) throw ilikeErr;
+        existing = ilikeMatch ?? null;
+      }
+
+      if (!existing) {
+        // create a minimal vendor record
+        const payloadVendor: any = { name: vendorName, created_by: user.id };
+        const { data: newV, error: insertErr } = await supabase.from('vendors').insert(payloadVendor).select().maybeSingle();
+        if (insertErr) throw insertErr;
+        // refresh vendor dropdown list
+        try { await fetchVendors(); } catch (e) { /* non-fatal */ }
+        // insert persistent notification (best-effort)
+        try {
+          await supabase.from('notifications').insert({ id: crypto.randomUUID(), user_id: user.id, type: 'vendor', title: 'Vendor created', message: `Created vendor "${vendorName}" — please complete the vendor profile.`, is_read: false, created_by: user.id });
+          try { window.dispatchEvent(new CustomEvent('notifications:updated')); } catch (e) {}
+        } catch (err) {
+          // fallback: emit the lightweight event
+          try { window.dispatchEvent(new CustomEvent('vendors:updated')); } catch (e) { /* ignore */ }
+        }
+        // show top notification to complete vendor profile
+        toast({ title: 'Vendor created', description: `Created vendor "${vendorName}" — please complete the vendor profile.` });
+      }
+    } catch (e) {
+      console.error('ensureVendor error', e);
+      // continue: expense can still be saved even if vendor creation failed
+    }
+
     const exp: Expense = { id: crypto.randomUUID(), date, vendor: vendorName, amount, category: category || suggestion.category, note };
     try {
       const payload = { id: exp.id, date: exp.date, vendor: exp.vendor, amount: exp.amount, category: exp.category, note: exp.note, created_by: user.id };
