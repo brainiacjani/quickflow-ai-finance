@@ -26,6 +26,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from '@/integrations/supabase/client';
 import { useProfile } from "@/hooks/useProfile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -36,6 +37,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useState, useEffect } from 'react';
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -76,6 +78,67 @@ export function AppSidebar() {
 
   const isActive = (path: string) => currentPath === path;
 
+  const [vendorNotifications, setVendorNotifications] = useState<number>(0);
+  const [customerNotifications, setCustomerNotifications] = useState<number>(0);
+  const [notifications, setNotifications] = useState<Array<any>>([]);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+
+  // listen for vendor/customer notifications from other parts of the app
+  useEffect(() => {
+    const handlerVendors = () => setVendorNotifications((n) => n + 1);
+    const handlerCustomers = () => setCustomerNotifications((n) => n + 1);
+    const handlerAppNotify = (e: any) => {
+      try {
+        const d = e?.detail;
+        if (!d || !d.type) return;
+        if (d.type === 'vendor') setVendorNotifications((n) => n + 1);
+        if (d.type === 'customer') setCustomerNotifications((n) => n + 1);
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    window.addEventListener('vendors:updated', handlerVendors as EventListener);
+    window.addEventListener('customers:updated', handlerCustomers as EventListener);
+    window.addEventListener('app:notify', handlerAppNotify as EventListener);
+
+    // Also refresh notifications when a notification update event is emitted
+    const handlerNotificationsUpdated = () => fetchNotifications();
+    window.addEventListener('notifications:updated', handlerNotificationsUpdated as EventListener);
+
+    return () => {
+      window.removeEventListener('vendors:updated', handlerVendors as EventListener);
+      window.removeEventListener('customers:updated', handlerCustomers as EventListener);
+      window.removeEventListener('app:notify', handlerAppNotify as EventListener);
+      window.removeEventListener('notifications:updated', handlerNotificationsUpdated as EventListener);
+    };
+  }, []);
+
+  // fetch notifications from DB for the current user
+  const fetchNotifications = async () => {
+    try {
+      if (!user?.id) { setNotifications([]); setUnreadCount(0); return; }
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      const list = data ?? [];
+      setNotifications(list as any);
+      setUnreadCount((list as any).filter((n:any) => !n.is_read).length || 0);
+    } catch (err) {
+      // silently ignore if table doesn't exist or permission denied
+      console.debug('fetchNotifications failed', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    // refetch on login changes
+  }, [user?.id]);
+
   return (
     <Sidebar collapsible="icon" className="border-r bg-white">
       <SidebarHeader className="border-b pb-2">
@@ -108,7 +171,15 @@ export function AppSidebar() {
                   >
                     <NavLink to={item.url}>
                       <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span className="flex items-center gap-2">
+                        {item.title}
+                        {item.title === 'Vendors' && vendorNotifications > 0 && (
+                          <span className="inline-flex items-center justify-center rounded-full bg-red-600 text-white text-xs font-semibold px-2 py-0.5">{vendorNotifications}</span>
+                        )}
+                        {item.title === 'Customers' && customerNotifications > 0 && (
+                          <span className="inline-flex items-center justify-center rounded-full bg-red-600 text-white text-xs font-semibold px-2 py-0.5">{customerNotifications}</span>
+                        )}
+                      </span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

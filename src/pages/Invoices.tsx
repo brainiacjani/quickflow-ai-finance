@@ -10,9 +10,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import useClientPagination from "@/hooks/useClientPagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const Invoices = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [customer, setCustomer] = useState("");
   const [issueDate, setIssueDate] = useState<string>(new Date().toISOString().slice(0,10));
   const [dueDate, setDueDate] = useState<string>(new Date(Date.now()+7*86400000).toISOString().slice(0,10));
@@ -66,6 +68,49 @@ const Invoices = () => {
         alert('Please select or enter a customer before saving the invoice.');
         setSaving(false);
         return;
+      }
+
+      // Ensure customer exists: create minimal record if not found
+      try {
+        let { data: existing, error: existingErr } = await supabase.from('customers').select('*').eq('name', customerName).maybeSingle();
+        if (existingErr) throw existingErr;
+        if (!existing) {
+          const { data: ilikeMatch, error: ilikeErr } = await supabase.from('customers').select('*').ilike('name', customerName).maybeSingle();
+          if (ilikeErr) throw ilikeErr;
+          existing = ilikeMatch ?? null;
+        }
+
+        if (!existing) {
+          const payloadCust: any = { name: customerName, created_by: user.id };
+          const { data: newC, error: insertErr } = await supabase.from('customers').insert(payloadCust).select().maybeSingle();
+          if (insertErr) throw insertErr;
+          try { await (async () => { /* refresh customers list in this component */
+            const { data } = await supabase.from('customers').select('id,name,email,created_by').order('created_at', { ascending: false });
+            setCustomersList(data ?? []);
+          })(); } catch (e) { /* non-fatal */ }
+          // notify sidebar/top notifications
+          // Insert a persistent notification for this user (best-effort)
+          try {
+            await supabase.from('notifications').insert({
+              id: crypto.randomUUID(),
+              user_id: user.id,
+              type: 'customer',
+              title: 'Customer created',
+              message: `Created customer "${customerName}" — please complete the customer profile.`,
+              is_read: false,
+              created_by: user.id,
+            });
+            // let other UI parts know to refresh notification list
+            try { window.dispatchEvent(new CustomEvent('notifications:updated')); } catch (e) {}
+          } catch (err) {
+            // if notifications table doesn't exist or insert fails, fall back to in-memory notify
+            try { window.dispatchEvent(new CustomEvent('app:notify', { detail: { type: 'customer', id: newC?.id, title: 'Customer created', message: `Created customer \"${customerName}\" — please complete the customer profile.` } })); } catch (e) {}
+          }
+          try { window.dispatchEvent(new CustomEvent('customers:updated')); } catch (e) {}
+          toast({ title: 'Customer created', description: `Created customer "${customerName}" — please complete the customer profile.` });
+        }
+      } catch (e) {
+        console.error('ensureCustomer error', e);
       }
 
       // Pre-check inventory stock to prevent negative stock
