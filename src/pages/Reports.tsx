@@ -3,8 +3,10 @@ import { Helmet } from "react-helmet-async";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { useCompany } from "@/hooks/useCompany";
 import DataTable from "@/components/dashboard/DataTable";
+import useClientPagination from '@/hooks/useClientPagination';
 
 const toDateOnly = (d?: string | Date) => {
   if (!d) return null;
@@ -57,7 +59,17 @@ const Reports = () => {
 
   const [startDate, setStartDate] = useState<string>(defaultStart);
   const [endDate, setEndDate] = useState<string>(today);
-  const [typeFilter, setTypeFilter] = useState<"both" | "invoices" | "expenses">("both");
+
+  // report selection
+  const [reportType, setReportType] = useState<
+    "profitloss" | "cashflow" | "sales_by_customer" | "expenses_by_vendor" | "custom"
+  >("profitloss");
+
+  // custom report options
+  const [customIncludeInvoices, setCustomIncludeInvoices] = useState(true);
+  const [customIncludeExpenses, setCustomIncludeExpenses] = useState(true);
+  const [customGroupBy, setCustomGroupBy] = useState<"none" | "customer" | "vendor" | "month">("none");
+  const [customAggregate, setCustomAggregate] = useState<"sum" | "count" | "avg">("sum");
 
   const [invoices, setInvoices] = useState<UIInvoice[]>([]);
   const [expenses, setExpenses] = useState<UIExpense[]>([]);
@@ -123,31 +135,148 @@ const Reports = () => {
     };
   }, [startDate, endDate]);
 
+  // Build rows depending on selected report type or custom options
   const rows = useMemo(() => {
-    const invRows = invoices.filter((i) => inRange(i.issueDate)).map((i) => ({
-      type: "Invoice",
-      date: i.issueDate,
-      name: i.customer,
-      amount: i.total,
-      status: i.status,
-      id: i.id,
-    }));
-    const expRows = expenses.filter((e) => inRange(e.date)).map((e) => ({
-      type: "Expense",
-      date: e.date,
-      name: e.vendor,
-      amount: e.amount,
-      status: undefined,
-      id: e.id,
-    }));
-    if (typeFilter === "invoices") return invRows;
-    if (typeFilter === "expenses") return expRows;
-    return [...invRows, ...expRows].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [invoices, expenses, startDate, endDate, typeFilter]);
+    const invFiltered = invoices.filter((i) => inRange(i.issueDate) && i.total != null && !Number.isNaN(i.total));
+    const expFiltered = expenses.filter((e) => inRange(e.date) && e.amount != null && !Number.isNaN(e.amount));
+
+    // helpers
+    const toTx = (i: UIInvoice) => ({ type: 'Invoice', date: i.issueDate, name: i.customer, amount: Number(i.total), status: i.status, id: i.id });
+    const toExp = (e: UIExpense) => ({ type: 'Expense', date: e.date, name: e.vendor, amount: Number(e.amount), status: undefined, id: e.id });
+
+    if (reportType === 'cashflow') {
+      // cashflow: combined chronologically with running balance (invoices positive, expenses negative)
+      const txs = [...invFiltered.filter(i => i.status !== 'draft').map(toTx), ...expFiltered.map(toExp)].map(t => ({ ...t, signed: t.type === 'Invoice' ? Number(t.amount) : -Number(t.amount) }));
+      txs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      let balance = 0;
+      return txs.map((t, idx) => {
+        balance += Number(t.signed || 0);
+        return { id: `${t.id || idx}`, date: t.date, description: `${t.type} • ${t.name}`, inflow: t.signed > 0 ? t.signed : 0, outflow: t.signed < 0 ? Math.abs(t.signed) : 0, balance };
+      });
+    }
+
+    if (reportType === 'sales_by_customer') {
+      const map = new Map<string, { name: string; amount: number; count: number }>();
+      invFiltered.forEach(i => {
+        const k = i.customer || 'Unknown';
+        const cur = map.get(k) ?? { name: k, amount: 0, count: 0 };
+        cur.amount += Number(i.total);
+        cur.count += 1;
+        map.set(k, cur);
+      });
+      return Array.from(map.values()).sort((a, b) => b.amount - a.amount).map((r, idx) => ({ id: String(idx), name: r.name, amount: r.amount, count: r.count }));
+    }
+
+    if (reportType === 'expenses_by_vendor') {
+      const map = new Map<string, { name: string; amount: number; count: number }>();
+      expFiltered.forEach(e => {
+        const k = e.vendor || 'Unknown';
+        const cur = map.get(k) ?? { name: k, amount: 0, count: 0 };
+        cur.amount += Number(e.amount);
+        cur.count += 1;
+        map.set(k, cur);
+      });
+      return Array.from(map.values()).sort((a, b) => b.amount - a.amount).map((r, idx) => ({ id: String(idx), name: r.name, amount: r.amount, count: r.count }));
+    }
+
+    if (reportType === 'profitloss') {
+      // default combined transactions list similar to earlier behaviour
+      const invRows = invFiltered.map(toTx);
+      const expRows = expFiltered.map(toExp);
+      return [...invRows, ...expRows].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map((r, idx) => ({ id: r.id || String(idx), type: r.type, date: r.date, name: r.name, amount: r.amount, status: r.status }));
+    }
+
+    // custom: build based on selections
+    if (reportType === 'custom') {
+      let items: any[] = [];
+      if (customIncludeInvoices) items = items.concat(invFiltered.map(toTx));
+      if (customIncludeExpenses) items = items.concat(expFiltered.map(toExp));
+
+      if (customGroupBy === 'none') {
+        // return raw transactions
+        return items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map((r, idx) => ({ id: r.id || String(idx), type: r.type, date: r.date, name: r.name, amount: r.amount }));
+      }
+
+      if (customGroupBy === 'customer' || customGroupBy === 'vendor') {
+        const keyFn = (r: any) => r.name || 'Unknown';
+        const map = new Map<string, { name: string; amount: number; count: number }>();
+        items.forEach((it) => {
+          const k = keyFn(it);
+          const cur = map.get(k) ?? { name: k, amount: 0, count: 0 };
+          cur.amount += Number(it.amount || 0);
+          cur.count += 1;
+          map.set(k, cur);
+        });
+        const arr = Array.from(map.values());
+        if (customAggregate === 'sum') return arr.map((r, idx) => ({ id: String(idx), name: r.name, value: r.amount, count: r.count }));
+        if (customAggregate === 'count') return arr.map((r, idx) => ({ id: String(idx), name: r.name, value: r.count }));
+        if (customAggregate === 'avg') return arr.map((r, idx) => ({ id: String(idx), name: r.name, value: r.amount / Math.max(1, r.count) }));
+      }
+
+      if (customGroupBy === 'month') {
+        const map = new Map<string, { month: string; amount: number }>();
+        items.forEach(it => {
+          const dt = new Date(it.date);
+          const key = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+          const cur = map.get(key) ?? { month: key, amount: 0 };
+          cur.amount += Number(it.amount || 0);
+          map.set(key, cur);
+        });
+        return Array.from(map.values()).sort((a,b) => a.month.localeCompare(b.month)).map((r, idx) => ({ id: String(idx), month: r.month, value: r.amount }));
+      }
+    }
+
+    return [];
+  }, [invoices, expenses, startDate, endDate, reportType, customIncludeInvoices, customIncludeExpenses, customGroupBy, customAggregate]);
 
   const revenue = invoices.filter((i) => i.status !== "draft").reduce((s, i) => s + i.total, 0);
   const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
   const profit = revenue - totalExpenses;
+
+  // Build table data for current reportType and paginate client-side
+  const tableData = useMemo(() => {
+    if (reportType === 'cashflow') {
+      return rows.map((r) => ({
+        id: r.id,
+        date: r.date ? new Date(r.date).toLocaleDateString() : '-',
+        description: r.description,
+        inflow: r.inflow ? `$${Number(r.inflow).toFixed(2)}` : '-',
+        outflow: r.outflow ? `$${Number(r.outflow).toFixed(2)}` : '-',
+        balance: `$${Number(r.balance || 0).toFixed(2)}`,
+      }));
+    }
+
+    const isGrouped =
+      reportType === 'sales_by_customer' ||
+      reportType === 'expenses_by_vendor' ||
+      (reportType === 'custom' && (customGroupBy === 'customer' || customGroupBy === 'vendor' || customGroupBy === 'month'));
+
+    if (isGrouped) {
+      return rows.map((r) => {
+        const name = r.name ?? r.month ?? '-';
+        const rawValue = r.amount ?? r.value;
+        const value = rawValue !== undefined && rawValue !== null ? `$${Number(rawValue).toFixed(2)}` : '-';
+        const count = r.count ?? null;
+        return { id: r.id, name, value, count };
+      });
+    }
+
+    return rows.map((r) => {
+      const amountRaw = r.amount ?? r.value;
+      const amount = amountRaw !== undefined && amountRaw !== null ? `$${Number(amountRaw).toFixed(2)}` : '-';
+      return {
+        id: r.id,
+        type: r.type,
+        date: r.date ? new Date(r.date).toLocaleDateString() : '-',
+        name: r.name || '-',
+        amount,
+        status: r.status || null,
+      };
+    });
+  }, [rows, reportType, customGroupBy]);
+
+  // tableData can have multiple shapes depending on the report; cast to any for the client-side pagination hook
+  const { paginatedItems, currentPage, totalPages, setPage } = useClientPagination<any>(tableData as any, 10);
 
   const exportCSV = () => {
     const header = ["Type", "Date", "Name", "Amount", "Status"];
@@ -168,15 +297,37 @@ const Reports = () => {
     const companyName = company?.name || 'Your Company';
     const rangeText = `${startDate || 'All dates'} — ${endDate || 'All dates'}`;
 
-    const rowsHtml = rows.map(r => `
-      <tr>
-        <td style="padding:12px;border-bottom:1px solid #eee">${r.type}</td>
-        <td style="padding:12px;border-bottom:1px solid #eee">${new Date(r.date).toLocaleDateString()}</td>
-        <td style="padding:12px;border-bottom:1px solid #eee">${r.name}</td>
-        <td style="padding:12px;border-bottom:1px solid #eee;text-align:right">$${Number(r.amount).toFixed(2)}</td>
+    const rowsHtml = rows.map(r => {
+      // support different row shapes (cashflow, aggregates, transactions)
+      if (r.inflow !== undefined || r.outflow !== undefined) {
+        return `<tr>
+          <td style="padding:12px;border-bottom:1px solid #eee">${new Date(r.date).toLocaleDateString()}</td>
+          <td style="padding:12px;border-bottom:1px solid #eee">${r.description}</td>
+          <td style="padding:12px;border-bottom:1px solid #eee;text-align:right">${r.inflow ? '$' + Number(r.inflow).toFixed(2) : '-'}</td>
+          <td style="padding:12px;border-bottom:1px solid #eee;text-align:right">${r.outflow ? '$' + Number(r.outflow).toFixed(2) : '-'}</td>
+          <td style="padding:12px;border-bottom:1px solid #eee;text-align:right">$${Number(r.balance || 0).toFixed(2)}</td>
+        </tr>`;
+      }
+      if (r.month) {
+        return `<tr>
+          <td style="padding:12px;border-bottom:1px solid #eee">${r.month}</td>
+          <td style="padding:12px;border-bottom:1px solid #eee;text-align:right">$${Number(r.value || 0).toFixed(2)}</td>
+        </tr>`;
+      }
+      if (r.name && r.value !== undefined) {
+        return `<tr>
+          <td style="padding:12px;border-bottom:1px solid #eee">${r.name}</td>
+          <td style="padding:12px;border-bottom:1px solid #eee;text-align:right">$${Number(r.value).toFixed(2)}</td>
+        </tr>`;
+      }
+      return `<tr>
+        <td style="padding:12px;border-bottom:1px solid #eee">${r.type || ''}</td>
+        <td style="padding:12px;border-bottom:1px solid #eee">${r.date ? new Date(r.date).toLocaleDateString() : ''}</td>
+        <td style="padding:12px;border-bottom:1px solid #eee">${r.name || ''}</td>
+        <td style="padding:12px;border-bottom:1px solid #eee;text-align:right">${r.amount !== undefined ? '$' + Number(r.amount).toFixed(2) : (r.count !== undefined ? r.count : '-')}</td>
         <td style="padding:12px;border-bottom:1px solid #eee">${r.status || '-'}</td>
-      </tr>
-    `).join('');
+      </tr>`;
+    }).join('');
 
     const html = `<!doctype html>
       <html>
@@ -259,15 +410,86 @@ const Reports = () => {
             <label className="text-sm text-muted-foreground">End date</label>
             <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="mt-1 px-3 py-2 border rounded" />
           </div>
-          <div className="flex flex-col">
-            <label className="text-sm text-muted-foreground">Type</label>
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as any)} className="mt-1 px-3 py-2 border rounded">
-              <option value="both">Invoices & Expenses</option>
-              <option value="invoices">Invoices</option>
-              <option value="expenses">Expenses</option>
-            </select>
+          <div className="flex items-end">
+            <div className="text-sm text-muted-foreground">Choose a report from the deck below</div>
           </div>
         </div>
+
+        {/* Responsive card deck */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-4xl">
+          <Card onClick={() => setReportType('profitloss')} className={`hover-scale cursor-pointer ${reportType === 'profitloss' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Profit & Loss</CardTitle>
+              <div className="text-xs text-muted-foreground mt-1">Transactions</div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-bold">${profit.toFixed(2)}</div>
+            </CardContent>
+          </Card>
+
+          <Card onClick={() => setReportType('cashflow')} className={`hover-scale cursor-pointer ${reportType === 'cashflow' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Cash Flow</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-bold">View</div>
+              <div className="text-xs text-muted-foreground">Inflows / Outflows</div>
+            </CardContent>
+          </Card>
+
+          <Card onClick={() => setReportType('sales_by_customer')} className={`hover-scale cursor-pointer ${reportType === 'sales_by_customer' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Sales per customer</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-bold">{invoices.length}</div>
+              <div className="text-xs text-muted-foreground">Invoices</div>
+            </CardContent>
+          </Card>
+
+          <Card onClick={() => setReportType('expenses_by_vendor')} className={`hover-scale cursor-pointer ${reportType === 'expenses_by_vendor' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Expenses per vendor</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-bold">${totalExpenses.toFixed(2)}</div>
+              <div className="text-xs text-muted-foreground">Total expenses</div>
+            </CardContent>
+          </Card>
+
+          <Card onClick={() => setReportType('custom')} className={`hover-scale cursor-pointer ${reportType === 'custom' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Custom report</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-xs text-muted-foreground">Build grouped/aggregated reports</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {reportType === 'custom' && (
+          <div className="grid md:grid-cols-4 gap-3 max-w-3xl mt-3">
+            <label className="flex items-center gap-2"><input type="checkbox" checked={customIncludeInvoices} onChange={(e) => setCustomIncludeInvoices(e.target.checked)} /> Include invoices</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={customIncludeExpenses} onChange={(e) => setCustomIncludeExpenses(e.target.checked)} /> Include expenses</label>
+            <div>
+              <label className="text-sm text-muted-foreground">Group by</label>
+              <select value={customGroupBy} onChange={(e) => setCustomGroupBy(e.target.value as any)} className="mt-1 px-3 py-2 border rounded w-full">
+                <option value="none">No grouping (transactions)</option>
+                <option value="customer">Customer</option>
+                <option value="vendor">Vendor</option>
+                <option value="month">Month</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground">Aggregate</label>
+              <select value={customAggregate} onChange={(e) => setCustomAggregate(e.target.value as any)} className="mt-1 px-3 py-2 border rounded w-full">
+                <option value="sum">Sum</option>
+                <option value="count">Count</option>
+                <option value="avg">Average</option>
+              </select>
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-3 max-w-md">
           <div className="flex items-center justify-between"><span>Revenue</span><span className="font-semibold">${revenue.toFixed(2)}</span></div>
@@ -286,25 +508,55 @@ const Reports = () => {
         </div>
 
         <div className="mt-4">
-          <DataTable
-            title="Report results"
-            isLoading={loading}
-            columns={[
-              { key: 'type', label: 'Type', bold: true },
-              { key: 'date', label: 'Date' },
-              { key: 'name', label: 'Name' },
-              { key: 'amount', label: 'Amount' },
-              { key: 'status', label: 'Status' },
-            ]}
-            data={rows.map(r => ({
-              id: r.id,
-              type: r.type,
-              date: new Date(r.date).toLocaleDateString(),
-              name: r.name,
-              amount: `$${r.amount.toFixed(2)}`,
-              status: r.status || null,
-            }))}
-          />
+          {/* Choose columns dynamically based on report type */}
+          {reportType === 'cashflow' ? (
+            <DataTable
+              title="Cash flow"
+              isLoading={loading}
+              columns={[
+                { key: 'date', label: 'Date', bold: true },
+                { key: 'description', label: 'Description' },
+                { key: 'inflow', label: 'Inflow' },
+                { key: 'outflow', label: 'Outflow' },
+                { key: 'balance', label: 'Balance' },
+              ]}
+              data={paginatedItems}
+            />
+          ) : reportType === 'sales_by_customer' || reportType === 'expenses_by_vendor' || (reportType === 'custom' && (customGroupBy === 'customer' || customGroupBy === 'vendor' || customGroupBy === 'month')) ? (
+            <DataTable
+              title="Grouped results"
+              isLoading={loading}
+              columns={reportType === 'sales_by_customer' || reportType === 'expenses_by_vendor' || (customGroupBy === 'customer' || customGroupBy === 'vendor') ? [
+                { key: 'name', label: customGroupBy === 'month' ? 'Month' : 'Name', bold: true },
+                { key: 'value', label: 'Amount' },
+                { key: 'count', label: 'Count' },
+              ] : [ { key: 'month', label: 'Month' }, { key: 'value', label: 'Amount' } ]}
+              data={paginatedItems}
+            />
+          ) : (
+            <DataTable
+              title="Report results"
+              isLoading={loading}
+              columns={[
+                { key: 'type', label: 'Type', bold: true },
+                { key: 'date', label: 'Date' },
+                { key: 'name', label: 'Name' },
+                { key: 'amount', label: 'Amount' },
+                { key: 'status', label: 'Status' },
+              ]}
+              data={paginatedItems}
+            />
+          )}
+        </div>
+
+        <div className="flex justify-center gap-2 mt-4">
+          <Button disabled={currentPage === 1} onClick={() => setPage(1)}>« First</Button>
+          <Button disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>‹ Prev</Button>
+          <span className="flex items-center gap-1">
+            Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+          </span>
+          <Button disabled={currentPage === totalPages} onClick={() => setPage(currentPage + 1)}>Next ›</Button>
+          <Button disabled={currentPage === totalPages} onClick={() => setPage(totalPages)}>Last »</Button>
         </div>
       </div>
     </AppShell>
