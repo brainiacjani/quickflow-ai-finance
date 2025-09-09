@@ -43,6 +43,8 @@ function ProfileMenu() {
 
 export const AppShell = ({ children }: PropsWithChildren) => {
   const { user } = useAuth();
+  // Container class used to constrain content on very large screens while remaining responsive
+  const LAYOUT_CONTAINER = "w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8";
   const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -105,7 +107,7 @@ export const AppShell = ({ children }: PropsWithChildren) => {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-200 via-purple-100 to-pink-200 overflow-x-hidden">
         <header ref={headerRef as any} className={`w-full fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform transition-opacity duration-200 ease-out ${isNavigating ? 'opacity-0 -translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'}`}>
-          <div className="max-w-4xl mx-auto grid grid-cols-3 items-center p-4">
+          <div className={`${LAYOUT_CONTAINER} grid grid-cols-3 items-center p-4`}>
             {/* left: brand (links to landing page) */}
             <div className="flex items-center">
               <a href="/" onClick={(e) => { e.preventDefault(); setMobileNavOpen(false); setIsNavigating(true); setTimeout(() => navigate('/'), 260); }} className="inline-flex items-center gap-2 font-semibold">
@@ -144,7 +146,7 @@ export const AppShell = ({ children }: PropsWithChildren) => {
           {/* mobile dropdown menu */}
           {mobileNavOpen && (
             <div className="sm:hidden border-t bg-background/95">
-              <div className="max-w-4xl mx-auto flex flex-col p-4 gap-3">
+              <div className={`${LAYOUT_CONTAINER} flex flex-col p-4 gap-3`}>
                 <a href="#home" onClick={(e)=>handleNavClick(e,'home')} className={`text-sm ${activeSection === 'home' ? 'text-brand font-semibold' : 'text-foreground/80'}`}>Home</a>
                 <a href="#services" onClick={(e)=>handleNavClick(e,'services')} className={`text-sm ${activeSection === 'services' ? 'text-brand font-semibold' : 'text-foreground/80'}`}>Services</a>
                 <a href="#about" onClick={(e)=>handleNavClick(e,'about')} className={`text-sm ${activeSection === 'about' ? 'text-brand font-semibold' : 'text-foreground/80'}`}>About</a>
@@ -159,15 +161,17 @@ export const AppShell = ({ children }: PropsWithChildren) => {
         </header>
 
         <main className={`flex-1 pt-16 ${isNavigating ? 'opacity-75' : 'opacity-100'}`}>
-          {unconfirmedEmail && (
-            <div className="mb-4">
-              <div className="rounded-md border-l-4 border-yellow-400 bg-yellow-50 px-4 py-3 text-sm">
-                <div className="font-medium">Please confirm your email</div>
-                <div className="text-sm text-muted-foreground">We sent a confirmation link to <strong>{unconfirmedEmail}</strong>. Check your inbox and click the link to confirm your address.</div>
+          <div className={LAYOUT_CONTAINER}>
+            {unconfirmedEmail && (
+              <div className="mb-4">
+                <div className="rounded-md border-l-4 border-yellow-400 bg-yellow-50 px-4 py-3 text-sm">
+                  <div className="font-medium">Please confirm your email</div>
+                  <div className="text-sm text-muted-foreground">We sent a confirmation link to <strong>{unconfirmedEmail}</strong>. Check your inbox and click the link to confirm your address.</div>
+                </div>
               </div>
-            </div>
-          )}
-          {children}
+            )}
+            {children}
+          </div>
         </main>
 
         <footer className="border-t py-8 text-center text-sm text-foreground/60">
@@ -193,20 +197,22 @@ export const AppShell = ({ children }: PropsWithChildren) => {
           </header>
 
           <main className={`flex-1 p-4 sm:p-6 pb-24 sm:pb-6 transition-transform transition-opacity duration-300 ease-in-out ${routeChanging ? 'opacity-0 -translate-y-2' : 'opacity-100 translate-y-0'}`}>
-            {unconfirmedEmail && (
-              <div className="mb-4">
-                <div className="rounded-md border-l-4 border-yellow-400 bg-yellow-50 px-4 py-3 text-sm">
-                  <div className="font-medium">Please confirm your email</div>
-                  <div className="text-sm text-muted-foreground">We sent a confirmation link to <strong>{unconfirmedEmail}</strong>. Check your inbox and click the link to confirm your address.</div>
+            <div className={LAYOUT_CONTAINER}>
+              {unconfirmedEmail && (
+                <div className="mb-4">
+                  <div className="rounded-md border-l-4 border-yellow-400 bg-yellow-50 px-4 py-3 text-sm">
+                    <div className="font-medium">Please confirm your email</div>
+                    <div className="text-sm text-muted-foreground">We sent a confirmation link to <strong>{unconfirmedEmail}</strong>. Check your inbox and click the link to confirm your address.</div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {children}
+              {children}
+            </div>
           </main>
 
           <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="max-w-4xl mx-auto flex justify-between items-center px-4 py-2" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            <div className={`${LAYOUT_CONTAINER} flex justify-between items-center px-4 py-2`} style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
               <Link to="/" className="flex flex-col items-center text-xs text-foreground/70 hover:text-foreground">
                 <svg className="w-6 h-6 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M3 12L12 3l9 9" />
