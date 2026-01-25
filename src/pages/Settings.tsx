@@ -8,12 +8,15 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import useTheme from '@/hooks/useTheme';
 
 const Settings = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { data: profile, refetch: refetchProfile } = useProfile();
   const { data: company, refetch: refetchCompany } = useCompany();
+  const themeHook = useTheme();
+  const [themePref, setThemePref] = useState<'system' | 'light' | 'dark'>('system');
 
   // Local state for forms
   const [pFirst, setPFirst] = useState("");
@@ -36,6 +39,13 @@ const Settings = () => {
       setPFirst(profile.first_name || "");
       setPLast(profile.last_name || "");
       setPDisplay(profile.display_name || [profile.first_name, profile.last_name].filter(Boolean).join(" ").trim());
+      // initialize theme from profile if present
+      if ((profile as any)?.theme) {
+        const t = (profile as any).theme as 'system' | 'light' | 'dark';
+        setThemePref(t);
+        // update client theme hook to reflect saved pref
+        themeHook.setPreference?.(t);
+      }
     }
   }, [profile]);
 
@@ -227,6 +237,44 @@ const Settings = () => {
                 <Button variant="hero" onClick={saveCompany} disabled={savingCompany} className="w-full sm:w-auto">
                   {savingCompany ? "Saving..." : "Save changes"}
                 </Button>
+              </div>
+            </div>
+          </section>
+          
+          <section className="grid gap-3">
+            <h2 className="text-xl font-semibold">Appearance</h2>
+            <div className="rounded-lg border p-4 grid gap-3">
+              <div className="text-sm text-muted-foreground">Choose how QuickFlow should render colors for your account. This preference is saved to your profile.</div>
+              <div className="flex gap-2">
+                <button
+                  className={`px-4 py-2 rounded-md border ${themePref === 'system' ? 'bg-muted text-muted-foreground' : ''}`}
+                  onClick={() => { setThemePref('system'); themeHook.setPreference?.('system'); }}
+                >System</button>
+                <button
+                  className={`px-4 py-2 rounded-md border ${themePref === 'light' ? 'bg-muted text-muted-foreground' : ''}`}
+                  onClick={() => { setThemePref('light'); themeHook.setPreference?.('light'); }}
+                >Light</button>
+                <button
+                  className={`px-4 py-2 rounded-md border ${themePref === 'dark' ? 'bg-muted text-muted-foreground' : ''}`}
+                  onClick={() => { setThemePref('dark'); themeHook.setPreference?.('dark'); }}
+                >Dark</button>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  variant="hero"
+                  onClick={async () => {
+                    if (!user) return;
+                    try {
+                      const { error } = await supabase.from('profiles').update({ theme: themePref }).eq('id', user.id);
+                      if (error) throw error;
+                      toast.success('Theme preference saved');
+                      refetchProfile();
+                    } catch (err: any) {
+                      console.error('Save theme failed', err);
+                      toast.error('Failed to save theme');
+                    }
+                  }}
+                >Save appearance</Button>
               </div>
             </div>
           </section>

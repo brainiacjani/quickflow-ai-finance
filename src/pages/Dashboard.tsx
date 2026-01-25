@@ -1,7 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AppShell } from "@/components/layout/AppShell";
 import { useMemo, useEffect, useState } from "react";
@@ -375,12 +374,12 @@ const Dashboard = () => {
 
         {/* Key Metrics Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className={`hover-scale ${animateDashboard ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'} transition-all duration-700 delay-150`}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+          <div className={`card hover-scale ${animateDashboard ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'} transition-all duration-700 delay-150`}>
+            <div className="p-4 flex items-center justify-between pb-2">
+              <div className="text-sm font-medium">Total Revenue</div>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="p-4">
               <div className="text-2xl font-bold">${metrics.currentRevenue.toLocaleString()}</div>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 {getTrendIcon(metrics.revenueTrend)}
@@ -388,15 +387,15 @@ const Dashboard = () => {
                   {Math.abs(metrics.revenueTrend).toFixed(1)}% from last month
                 </span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className={`hover-scale ${animateDashboard ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'} transition-all duration-700 delay-200`}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Expenses</CardTitle>
+          <div className={`card hover-scale ${animateDashboard ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'} transition-all duration-700 delay-200`}>
+            <div className="p-4 flex items-center justify-between pb-2">
+              <div className="text-sm font-medium">Expenses</div>
               <Receipt className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="p-4">
               <div className="text-2xl font-bold">${metrics.currentExpenses.toLocaleString()}</div>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 {getTrendIcon(-metrics.expenseTrend)}
@@ -404,15 +403,15 @@ const Dashboard = () => {
                   {Math.abs(metrics.expenseTrend).toFixed(1)}% from last month
                 </span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className={`hover-scale ${animateDashboard ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'} transition-all duration-700 delay-250`}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
+          <div className={`card hover-scale ${animateDashboard ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'} transition-all duration-700 delay-250`}>
+            <div className="p-4 flex items-center justify-between pb-2">
+              <div className="text-sm font-medium">Net Profit</div>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="p-4">
               <div className="text-2xl font-bold">${metrics.currentProfit.toLocaleString()}</div>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 {getTrendIcon(metrics.profitTrend)}
@@ -420,32 +419,32 @@ const Dashboard = () => {
                   {Math.abs(metrics.profitTrend).toFixed(1)}% from last month
                 </span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className={`hover-scale ${animateDashboard ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'} transition-all duration-700 delay-300`}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Cash Runway</CardTitle>
+          <div className={`card hover-scale ${animateDashboard ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'} transition-all duration-700 delay-300`}>
+            <div className="p-4 flex items-center justify-between pb-2">
+              <div className="text-sm font-medium">Cash Runway</div>
               <Target className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="p-4">
               <div className="text-2xl font-bold">{metrics.cashDays} days</div>
               <p className="text-xs text-muted-foreground">
                 At current burn rate
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Charts Row */}
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Revenue vs Expenses Chart */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
+          <div className="card lg:col-span-2">
+            <div className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Revenue & Expenses Trend</CardTitle>
-                  <CardDescription>Monthly comparison over the last 12 months</CardDescription>
+                  <div className="text-sm font-medium">Revenue & Expenses Trend</div>
+                  <div className="text-xs text-muted-foreground">Monthly comparison over the last 12 months</div>
                 </div>
                 <Link to="/reports">
                   <Button variant="ghost" size="sm" className="gap-2">
@@ -454,11 +453,11 @@ const Dashboard = () => {
                   </Button>
                 </Link>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ left: 8, right: 8 }}>
+            </div>
+            <div className="p-4">
+               <div className="h-80">
+                 <ResponsiveContainer width="100%" height="100%">
+                   <AreaChart data={chartData} margin={{ left: 8, right: 8 }}>
                     <defs>
                       <linearGradient id="earned" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
@@ -498,19 +497,19 @@ const Dashboard = () => {
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Expense Categories */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Expense Categories</CardTitle>
-              <CardDescription>Breakdown by category this month</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+          <div className="card">
+            <div className="p-4">
+              <div className="text-sm font-medium">Expense Categories</div>
+              <div className="text-xs text-muted-foreground">Breakdown by category this month</div>
+            </div>
+            <div className="p-4">
+               <div className="h-64">
+                 <ResponsiveContainer width="100%" height="100%">
+                   <PieChart>
                     <Pie
                       data={expenseCategories}
                       cx="50%"
@@ -542,20 +541,20 @@ const Dashboard = () => {
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Recent Activity & Quick Stats */}
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Recent Activity */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Latest transactions and updates</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+          <div className="card lg:col-span-2">
+            <div className="p-4">
+              <div className="text-sm font-medium">Recent Activity</div>
+              <div className="text-xs text-muted-foreground">Latest transactions and updates</div>
+            </div>
+            <div className="p-4">
+               <div className="space-y-4">
                 {recentActivity.map((activity, index) => (
                   <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-3">
@@ -571,31 +570,31 @@ const Dashboard = () => {
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Quick Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Stats</CardTitle>
-              <CardDescription>Key business metrics</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Total Invoices</span>
-                  <Badge variant="secondary">{metrics.invoiceCount}</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Paid Invoices</span>
-                  <Badge variant="default">{metrics.paidInvoices}</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Overdue</span>
-                  <Badge variant="destructive">{metrics.overdueInvoices}</Badge>
-                </div>
-              </div>
-              
+          <div className="card">
+            <div className="p-4">
+              <div className="text-sm font-medium">Quick Stats</div>
+              <div className="text-xs text-muted-foreground">Key business metrics</div>
+            </div>
+            <div className="p-4 space-y-6">
+               <div className="space-y-2">
+                 <div className="flex justify-between items-center">
+                   <span className="text-sm text-muted-foreground">Total Invoices</span>
+                   <Badge variant="secondary">{metrics.invoiceCount}</Badge>
+                 </div>
+                 <div className="flex justify-between items-center">
+                   <span className="text-sm text-muted-foreground">Paid Invoices</span>
+                   <Badge variant="default">{metrics.paidInvoices}</Badge>
+                 </div>
+                 <div className="flex justify-between items-center">
+                   <span className="text-sm text-muted-foreground">Overdue</span>
+                   <Badge variant="destructive">{metrics.overdueInvoices}</Badge>
+                 </div>
+               </div>
+               
               <div className="pt-4 border-t">
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
@@ -615,13 +614,13 @@ const Dashboard = () => {
                   </Button>
                 </Link>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-      )}
-    </AppShell>
-  );
-};
-
-export default Dashboard;
+            </div>
+          </div>
+         </div>
+       </div>
+       )}
+     </AppShell>
+   );
+ };
+ 
+ export default Dashboard;

@@ -6,6 +6,7 @@ import { AppSidebar } from "./AppSidebar";
 import { NotificationsTop } from "@/components/notifications/NotificationsTop";
 import { useProfile } from '@/hooks/useProfile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -192,6 +193,7 @@ export const AppShell = ({ children }: PropsWithChildren) => {
             <div className="flex-1 text-center md:text-left font-semibold">QuickFlow</div>
             <div className="hidden md:flex items-center pr-4 gap-3">
               <NotificationsTop />
+              <ThemeToggle />
               <ProfileMenu />
             </div>
           </header>

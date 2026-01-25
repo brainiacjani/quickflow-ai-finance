@@ -20,9 +20,20 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:creator" content="QuickFlow" />
     <meta name="twitter:image" content="/placeholder.svg" />
-  </head>
+    <script>
+      // Apply saved theme or system preference as early as possible to avoid flash
+      (function(){
+        try {
+          var t = localStorage.getItem('theme');
+          if (t === 'dark') document.documentElement.classList.add('dark');
+          else if (t === 'light') document.documentElement.classList.remove('dark');
+          else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
+        } catch (e) { /* ignore */ }
+      })();
+    </script>
+   </head>
 
-  <body>
+   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

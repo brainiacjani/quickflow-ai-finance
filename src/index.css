@@ -139,4 +139,9 @@ All colors MUST be HSL where possible to work with existing tokens.
   thead th { font-weight: 600; }
   tbody tr { background: transparent; }
   tbody tr td { background: hsl(var(--card)); border-radius: 0.75rem; }
+
+  /* Smooth theme transition helper: add 'theme-transition' class to <html> briefly when changing themes */
+  html.theme-transition, html.theme-transition * {
+    transition: background-color 250ms ease, color 250ms ease, border-color 250ms ease, box-shadow 250ms ease, fill 250ms ease, stroke 250ms ease !important;
+  }
 }

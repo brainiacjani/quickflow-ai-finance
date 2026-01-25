@@ -3,7 +3,6 @@ import { Helmet } from "react-helmet-async";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { useCompany } from "@/hooks/useCompany";
 import DataTable from "@/components/dashboard/DataTable";
 import useClientPagination from '@/hooks/useClientPagination';
@@ -417,54 +416,56 @@ const Reports = () => {
 
         {/* Responsive card deck */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-4xl">
-          <Card onClick={() => setReportType('profitloss')} className={`hover-scale cursor-pointer ${reportType === 'profitloss' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Profit & Loss</CardTitle>
-              <div className="text-xs text-muted-foreground mt-1">Transactions</div>
-            </CardHeader>
-            <CardContent className="pt-0">
+          <div onClick={() => setReportType('profitloss')} className={`card hover-scale cursor-pointer ${reportType === 'profitloss' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+            <div className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="text-sm font-medium">Profit & Loss</div>
+                <div className="text-xs text-muted-foreground">Transactions</div>
+              </div>
+            </div>
+            <div className="p-4 pt-0">
               <div className="text-2xl font-bold">${profit.toFixed(2)}</div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card onClick={() => setReportType('cashflow')} className={`hover-scale cursor-pointer ${reportType === 'cashflow' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Cash Flow</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
+          <div onClick={() => setReportType('cashflow')} className={`card hover-scale cursor-pointer ${reportType === 'cashflow' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+            <div className="p-4">
+              <div className="text-sm font-medium">Cash Flow</div>
+            </div>
+            <div className="p-4 pt-0">
               <div className="text-2xl font-bold">View</div>
               <div className="text-xs text-muted-foreground">Inflows / Outflows</div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card onClick={() => setReportType('sales_by_customer')} className={`hover-scale cursor-pointer ${reportType === 'sales_by_customer' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Sales per customer</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
+          <div onClick={() => setReportType('sales_by_customer')} className={`card hover-scale cursor-pointer ${reportType === 'sales_by_customer' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+            <div className="p-4">
+              <div className="text-sm font-medium">Sales per customer</div>
+            </div>
+            <div className="p-4 pt-0">
               <div className="text-2xl font-bold">{invoices.length}</div>
               <div className="text-xs text-muted-foreground">Invoices</div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card onClick={() => setReportType('expenses_by_vendor')} className={`hover-scale cursor-pointer ${reportType === 'expenses_by_vendor' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Expenses per vendor</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
+          <div onClick={() => setReportType('expenses_by_vendor')} className={`card hover-scale cursor-pointer ${reportType === 'expenses_by_vendor' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+            <div className="p-4">
+              <div className="text-sm font-medium">Expenses per vendor</div>
+            </div>
+            <div className="p-4 pt-0">
               <div className="text-2xl font-bold">${totalExpenses.toFixed(2)}</div>
               <div className="text-xs text-muted-foreground">Total expenses</div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card onClick={() => setReportType('custom')} className={`hover-scale cursor-pointer ${reportType === 'custom' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Custom report</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
+          <div onClick={() => setReportType('custom')} className={`card hover-scale cursor-pointer ${reportType === 'custom' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+            <div className="p-4">
+              <div className="text-sm font-medium">Custom report</div>
+            </div>
+            <div className="p-4 pt-0">
               <div className="text-xs text-muted-foreground">Build grouped/aggregated reports</div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {reportType === 'custom' && (

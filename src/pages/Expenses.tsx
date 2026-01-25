@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
+// import { Card, CardContent } from "@/components/ui/card";
 import DataTable from "@/components/dashboard/DataTable";
 import useClientPagination from "@/hooks/useClientPagination";
 
@@ -404,33 +404,55 @@ const Expenses = () => {
               <DialogTitle>Expense details</DialogTitle>
               <DialogDescription>Full details for the selected expense</DialogDescription>
               {selectedExpense ? (
-                <Card className="mt-4 bg-white">
-                  <CardContent>
-                    <div className="grid gap-2">
-                      <div><strong>Date:</strong> {selectedExpense.date}</div>
-                      <div><strong>Vendor:</strong> {selectedExpense.vendor}</div>
-                      <div><strong>Category:</strong> {selectedExpense.category}</div>
-                      <div><strong>Amount:</strong> ${formatCurrency(selectedExpense.amount)}</div>
-                      <div><strong>Notes:</strong></div>
-                      <div className="whitespace-pre-wrap p-2 bg-muted/5 rounded">{selectedExpense.note ?? '—'}</div>
-                      {selectedExpense.receipt_url && (
-                        <div>
-                          <strong>Receipt:</strong>
-                          <div className="mt-2">
-                            <a href={selectedExpense.receipt_url} target="_blank" rel="noreferrer" className="text-primary underline">View receipt</a>
-                          </div>
-                        </div>
-                      )}
-                      <div className="text-sm text-muted-foreground">Created by: {creatorName ?? selectedExpense.created_by ?? '—'}</div>
-                    </div>
-                    <div className="mt-4 flex justify-end">
+                <div className="card mt-4">
+                  <div>
+                    <table className="w-full text-sm">
+                      <tbody>
+                        <tr className="border-b last:border-b-0">
+                          <th className="text-left px-4 py-3 w-1/3 text-muted-foreground">Date</th>
+                          <td className="px-4 py-3">{selectedExpense.date}</td>
+                        </tr>
+                        <tr className="border-b last:border-b-0">
+                          <th className="text-left px-4 py-3 text-muted-foreground">Vendor</th>
+                          <td className="px-4 py-3">{selectedExpense.vendor}</td>
+                        </tr>
+                        <tr className="border-b last:border-b-0">
+                          <th className="text-left px-4 py-3 text-muted-foreground">Category</th>
+                          <td className="px-4 py-3">{selectedExpense.category}</td>
+                        </tr>
+                        <tr className="border-b last:border-b-0">
+                          <th className="text-left px-4 py-3 text-muted-foreground">Amount</th>
+                          <td className="px-4 py-3">${formatCurrency(selectedExpense.amount)}</td>
+                        </tr>
+                        <tr className="border-b last:border-b-0 align-top">
+                          <th className="text-left px-4 py-3 text-muted-foreground">Notes</th>
+                          <td className="px-4 py-3">
+                            <div className="whitespace-pre-wrap p-3 bg-muted/5 rounded">{selectedExpense.note ?? '—'}</div>
+                          </td>
+                        </tr>
+                        {selectedExpense.receipt_url && (
+                          <tr className="border-b last:border-b-0">
+                            <th className="text-left px-4 py-3 text-muted-foreground">Receipt</th>
+                            <td className="px-4 py-3">
+                              <a href={selectedExpense.receipt_url} target="_blank" rel="noreferrer" className="text-primary underline">View receipt</a>
+                            </td>
+                          </tr>
+                        )}
+                        <tr>
+                          <th className="text-left px-4 py-3 text-muted-foreground">Created by</th>
+                          <td className="px-4 py-3">{creatorName ?? selectedExpense.created_by ?? '—'}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                    <div className="mt-4 border-t pt-4 flex justify-end">
                       <Button onClick={() => { closeView(); }}>Close</Button>
                     </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div>Loading…</div>
-              )}
+                  </div>
+                </div>
+               ) : (
+                 <div className="p-4">Loading…</div>
+               )}
             </div>
           </DialogContent>
         </Dialog>
