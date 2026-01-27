@@ -486,7 +486,7 @@ const Invoices = () => {
 
         {/* Create invoice dialog (moves the original inline form into a modal) */}
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogContent className="max-w-full overflow-auto">
+          <DialogContent className="w-full max-w-full sm:max-w-4xl mx-auto sm:rounded-lg p-4 sm:p-6 sm:my-8 max-h-[90vh] overflow-auto">
             <DialogHeader>
               <DialogTitle>Create invoice</DialogTitle>
               <DialogDescription>Fill out the invoice details and save.</DialogDescription>
