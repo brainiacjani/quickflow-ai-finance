@@ -13,65 +13,68 @@ All colors MUST be HSL where possible to work with existing tokens.
     /* Typography */
     --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 
-    /* Palette */
-    --background: 210 20% 98%; /* #F9FAFB */
-    --foreground: 240 6% 12%; /* near-black for text */
+    /* Skype-like Palette (H S L tokens) */
+    --background: 210 100% 99%; /* very light */
+    --foreground: 217 14% 18%;
 
     /* Cards & popovers */
-    --card: 0 0% 100%; /* white cards */
-    --card-foreground: 240 6% 12%;
+    --card: 210 100% 100%; /* white-ish */
+    --card-foreground: 217 14% 18%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 6% 12%;
+    --popover: 210 100% 100%;
+    --popover-foreground: 217 14% 18%;
 
-    /* Primary brand gradient stops (use for gradients) */
-    --primary-1: 243.5 100% 69.4%; /* approx #6C63FF */
-    --primary-2: 264 100% 71%; /* approx #A66BFF */
-    --primary: 253 95% 70%; /* fallback single hue for components */
-    --primary-foreground: 260 100% 6%; /* dark text on light primary if needed */
+    /* Primary brand colors (Skype blue) */
+    --primary: 197 100% 48%;
+    --primary-1: 197 100% 60%;
+    --primary-2: 202 100% 45%;
+    --primary-foreground: 210 100% 98%;
 
-    --secondary: 269 100% 95%; /* #F3E8FF */
-    --secondary-foreground: 264 60% 20%;
+    --secondary: 215 95% 40%;
+    --secondary-foreground: 210 100% 98%;
 
-    --accent: 240 0% 100%;
-    --accent-foreground: 240 6% 12%;
+    --accent: 170 75% 45%;
+    --accent-foreground: 210 100% 98%;
 
     /* Borders / inputs */
-    --border: 240 10% 92%;
-    --input: 240 10% 92%;
-    --ring: 252 100% 65%; /* purple focus ring */
+    --border: 210 14% 92%;
+    --input: 210 100% 100%;
+    --ring: 197 100% 60%; /* skype-like focus ring */
 
     /* Radius & spacing */
-    --radius: 1rem; /* large rounded corners */
+    --radius: 1rem;
 
-    /* Sidebar tokens */
-    --sidebar-background: 260 60% 16%; /* deep purple base */
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 253 95% 70%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 80% 40%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 260 40% 12%;
-    --sidebar-ring: 253 95% 70%;
+    /* Sidebar tokens (tuned for skype palette) */
+    --sidebar-background: 197 100% 10%; /* deep blue */
+    --sidebar-foreground: 210 100% 98%;
+    --sidebar-primary: 197 100% 48%;
+    --sidebar-primary-foreground: 210 100% 98%;
+    --sidebar-accent: 170 75% 45%;
+    --sidebar-accent-foreground: 210 100% 98%;
+    --sidebar-border: 210 12% 16%;
+    --sidebar-ring: 197 100% 60%;
 
-    /* Gradients and brand glows */
+    /* Brand gradient and glow */
     --brand-gradient: linear-gradient(135deg, hsl(var(--primary-1)), hsl(var(--primary-2)));
-    --brand-glow: 0 12px 28px -8px rgba(108,99,255,0.18), 0 6px 18px -8px rgba(166,107,255,0.06);
+    --brand-glow: 0 12px 28px -8px rgba(0,125,255,0.12), 0 6px 18px -8px rgba(0,90,200,0.06);
 
-    /* Effects & motion tokens */
-    --shadow-elegant: 0 10px 30px -12px rgba(16,24,40,0.06), 0 6px 20px -12px rgba(99,102,241,0.06);
-    --shadow-glow: 0 12px 28px -8px rgba(108,99,255,0.12);
+    /* Shadows and motion */
+    --shadow-elegant: 0 10px 30px -12px rgba(16,24,40,0.06), 0 6px 20px -12px rgba(0,125,255,0.06);
+    --shadow-glow: 0 12px 28px -8px rgba(0,125,255,0.12);
     --transition-smooth: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    /* In dark mode keep the purple accents but darker background */
-    --background: 252 14% 8%;
-    --foreground: 210 40% 98%;
-    --card: 252 14% 10%;
-    --card-foreground: 210 40% 98%;
-    --sidebar-background: 252 100% 8%;
-    --brand-glow: 0 18px 44px -12px rgba(166,107,255,0.22);
+    /* Dark mode variants tuned for skype palette */
+    --background: 220 15% 12%;
+    --foreground: 210 16% 96%;
+    --card: 220 15% 10%;
+    --card-foreground: 210 16% 96%;
+    --sidebar-background: 197 100% 8%;
+    --brand-glow: 0 18px 44px -12px rgba(0,125,255,0.22);
+    --primary: 197 100% 60%;
+    --primary-1: 197 100% 64%;
+    --primary-2: 202 100% 50%;
   }
 }
 
