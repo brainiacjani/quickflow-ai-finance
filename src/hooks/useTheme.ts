@@ -102,5 +102,5 @@ export default function useTheme() {
     await setPreference(next);
   };
 
-  return { preference, effective, setPreference, toggle } as const;
+  return { preference, effective, theme: effective, setPreference, toggle } as const;
 }

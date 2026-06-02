@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -10,76 +10,107 @@ All colors MUST be HSL where possible to work with existing tokens.
 
 @layer base {
   :root {
-    /* Typography */
-    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    --font-sans: 'Source Sans 3', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-display: 'Manrope', var(--font-sans);
 
-    /* Skype-like Palette (H S L tokens) */
-    --background: 210 100% 99%; /* very light */
-    --foreground: 217 14% 18%;
+    --background: 42 33% 97%;
+    --foreground: 212 31% 14%;
 
-    /* Cards & popovers */
-    --card: 210 100% 100%; /* white-ish */
-    --card-foreground: 217 14% 18%;
+    --card: 0 0% 100%;
+    --card-foreground: 212 31% 14%;
 
-    --popover: 210 100% 100%;
-    --popover-foreground: 217 14% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 212 31% 14%;
 
-    /* Primary brand colors (Skype blue) */
-    --primary: 197 100% 48%;
-    --primary-1: 197 100% 60%;
-    --primary-2: 202 100% 45%;
-    --primary-foreground: 210 100% 98%;
+    --primary: 164 56% 28%;
+    --primary-1: 164 52% 36%;
+    --primary-2: 205 43% 22%;
+    --primary-foreground: 42 33% 98%;
 
-    --secondary: 215 95% 40%;
-    --secondary-foreground: 210 100% 98%;
+    --secondary: 203 34% 92%;
+    --secondary-foreground: 206 39% 20%;
 
-    --accent: 170 75% 45%;
-    --accent-foreground: 210 100% 98%;
+    --accent: 36 68% 64%;
+    --accent-foreground: 206 39% 16%;
 
-    /* Borders / inputs */
-    --border: 210 14% 92%;
-    --input: 210 100% 100%;
-    --ring: 197 100% 60%; /* skype-like focus ring */
+    --muted: 42 26% 92%;
+    --muted-foreground: 210 15% 42%;
 
-    /* Radius & spacing */
-    --radius: 1rem;
+    --destructive: 6 72% 52%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Sidebar tokens (tuned for skype palette) */
-    --sidebar-background: 197 100% 10%; /* deep blue */
-    --sidebar-foreground: 210 100% 98%;
-    --sidebar-primary: 197 100% 48%;
-    --sidebar-primary-foreground: 210 100% 98%;
-    --sidebar-accent: 170 75% 45%;
-    --sidebar-accent-foreground: 210 100% 98%;
-    --sidebar-border: 210 12% 16%;
-    --sidebar-ring: 197 100% 60%;
+    --border: 210 20% 86%;
+    --input: 0 0% 100%;
+    --ring: 164 52% 36%;
 
-    /* Brand gradient and glow */
+    --radius: 1.25rem;
+
+    --sidebar-background: 203 38% 95%;
+    --sidebar-foreground: 212 31% 18%;
+    --sidebar-primary: 164 56% 28%;
+    --sidebar-primary-foreground: 42 33% 98%;
+    --sidebar-accent: 203 30% 88%;
+    --sidebar-accent-foreground: 212 31% 18%;
+    --sidebar-border: 203 20% 82%;
+    --sidebar-ring: 164 52% 36%;
+
     --brand-gradient: linear-gradient(135deg, hsl(var(--primary-1)), hsl(var(--primary-2)));
-    --brand-glow: 0 12px 28px -8px rgba(0,125,255,0.12), 0 6px 18px -8px rgba(0,90,200,0.06);
+    --brand-glow: 0 24px 60px -26px rgba(16, 60, 55, 0.34);
 
-    /* Shadows and motion */
-    --shadow-elegant: 0 10px 30px -12px rgba(16,24,40,0.06), 0 6px 20px -12px rgba(0,125,255,0.06);
-    --shadow-glow: 0 12px 28px -8px rgba(0,125,255,0.12);
+    --shadow-elegant: 0 24px 60px -32px rgba(31, 41, 55, 0.18);
+    --shadow-soft: 0 14px 30px -20px rgba(31, 41, 55, 0.12);
+    --shadow-glow: 0 28px 56px -32px rgba(16, 60, 55, 0.4);
     --transition-smooth: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    /* Dark mode variants tuned for skype palette */
-    --background: 220 15% 12%;
-    --foreground: 210 16% 96%;
-    --card: 220 15% 10%;
-    --card-foreground: 210 16% 96%;
-    --sidebar-background: 197 100% 8%;
-    --brand-glow: 0 18px 44px -12px rgba(0,125,255,0.22);
-    --primary: 197 100% 60%;
-    --primary-1: 197 100% 64%;
-    --primary-2: 202 100% 50%;
+    --background: 210 23% 10%;
+    --foreground: 42 18% 94%;
+    --card: 210 21% 13%;
+    --card-foreground: 42 18% 94%;
+    --popover: 210 21% 13%;
+    --popover-foreground: 42 18% 94%;
+    --primary: 157 48% 53%;
+    --primary-1: 157 48% 58%;
+    --primary-2: 187 39% 42%;
+    --primary-foreground: 210 23% 10%;
+    --secondary: 210 18% 18%;
+    --secondary-foreground: 42 18% 94%;
+    --accent: 36 72% 61%;
+    --accent-foreground: 210 23% 10%;
+    --muted: 210 14% 18%;
+    --muted-foreground: 214 13% 70%;
+    --destructive: 7 80% 61%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 16% 24%;
+    --input: 210 21% 14%;
+    --ring: 157 48% 58%;
+    --sidebar-background: 206 36% 9%;
+    --sidebar-foreground: 42 18% 94%;
+    --sidebar-primary: 36 72% 61%;
+    --sidebar-primary-foreground: 206 36% 9%;
+    --sidebar-accent: 208 26% 18%;
+    --sidebar-accent-foreground: 42 18% 94%;
+    --sidebar-border: 210 18% 22%;
+    --sidebar-ring: 36 72% 61%;
+    --brand-glow: 0 24px 60px -28px rgba(15, 130, 100, 0.45);
+    --shadow-elegant: 0 24px 60px -30px rgba(0, 0, 0, 0.55);
+    --shadow-soft: 0 18px 38px -24px rgba(0, 0, 0, 0.45);
   }
 }
 
 @layer base {
-  * { box-sizing: border-box; }
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    background:
+      radial-gradient(circle at top, rgba(214, 194, 145, 0.16), transparent 34%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.55), transparent 22%),
+      hsl(var(--background));
+  }
 
   body {
     font-family: var(--font-sans);
@@ -87,37 +118,27 @@ All colors MUST be HSL where possible to work with existing tokens.
     color: hsl(var(--foreground));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    font-feature-settings: 'ss01' 1, 'cv01' 1;
   }
 
-  /* Global card styles used across UI primitives */
-  .card, .card * {
-    border-radius: var(--radius);
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
+  }
+
+  #root {
+    min-height: 100vh;
   }
 
   .card {
     background: hsl(var(--card));
     color: hsl(var(--card-foreground));
     box-shadow: var(--shadow-elegant);
-    padding: 1.5rem;
+    border: 1px solid hsl(var(--border) / 0.9);
+    border-radius: var(--radius);
   }
 
-  /* Top nav styling when using AppShell header */
-  header.sticky, header {
-    background: hsl(var(--accent));
-    box-shadow: 0 6px 18px rgba(16,24,40,0.06);
-    border-radius: 0.75rem;
-  }
-
-  /* Sidebar default look (AppSidebar should pick these up) */
-  .sidebar {
-    background: var(--brand-gradient);
-    color: hsl(var(--sidebar-foreground));
-    border-radius: 1rem 0 0 1rem;
-    box-shadow: var(--shadow-glow);
-    padding: 1.5rem;
-  }
-
-  /* Buttons: pill, gradient, hover */
   .btn-pill {
     border-radius: 9999px;
     background: var(--brand-gradient);
@@ -128,24 +149,50 @@ All colors MUST be HSL where possible to work with existing tokens.
   }
   .btn-pill:hover { transform: translateY(-2px); }
 
-  /* Inputs: subtle purple focus ring */
   input, textarea, select {
     border-radius: calc(var(--radius) - 4px);
     border: 1px solid hsl(var(--border));
     background: hsl(var(--card));
+    color: hsl(var(--foreground));
     padding: 0.75rem 0.9rem;
     transition: var(--transition-smooth);
   }
-  input:focus, textarea:focus, select:focus { outline: none; box-shadow: 0 0 0 4px rgba(108,99,255,0.12); border-color: hsl(var(--ring)); }
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px hsl(var(--ring) / 0.15);
+    border-color: hsl(var(--ring));
+  }
 
-  /* Tables: spaced look */
   table { border-collapse: separate; border-spacing: 0 0.5rem; }
   thead th { font-weight: 600; }
   tbody tr { background: transparent; }
   tbody tr td { background: hsl(var(--card)); border-radius: 0.75rem; }
 
-  /* Smooth theme transition helper: add 'theme-transition' class to <html> briefly when changing themes */
+  ::selection {
+    background: hsl(var(--primary) / 0.18);
+  }
+
   html.theme-transition, html.theme-transition * {
     transition: background-color 250ms ease, color 250ms ease, border-color 250ms ease, box-shadow 250ms ease, fill 250ms ease, stroke 250ms ease !important;
+  }
+}
+
+@layer utilities {
+  .panel-surface {
+    background: linear-gradient(180deg, hsl(var(--card)), hsl(var(--card) / 0.96));
+    border: 1px solid hsl(var(--border) / 0.85);
+    border-radius: calc(var(--radius) + 0.125rem);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .grid-muted {
+    background-image:
+      linear-gradient(to right, hsl(var(--border) / 0.18) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.18) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .text-balance {
+    text-wrap: balance;
   }
 }

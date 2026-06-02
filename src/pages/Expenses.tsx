@@ -267,36 +267,45 @@ const Expenses = () => {
         <link rel="canonical" href="https://quickflow.app/expenses" />
       </Helmet>
 
-      <div className="max-w-full px-4 sm:px-6 lg:px-8 py-8 grid gap-8">
-        <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-2xl font-semibold">Expenses</h1>
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-            <div className="w-full sm:w-56">
-              <input className="w-full rounded-md border bg-background px-3 py-2" placeholder="Search by vendor" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+      <div className="grid max-w-full gap-8 py-6 sm:py-8">
+        <section className="panel-surface grid-muted relative overflow-hidden rounded-[2rem] px-6 py-6 sm:px-8">
+          <div className="absolute inset-y-0 right-0 hidden w-1/3 bg-[radial-gradient(circle_at_top_right,rgba(217,119,6,0.14),transparent_55%)] lg:block" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-3 inline-flex rounded-full border border-border/70 bg-card/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Spend management
+              </div>
+              <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">Expenses</h1>
+              <p className="mt-2 text-base text-muted-foreground">Track spend with cleaner forms, calmer tables, and details that match the upgraded workspace.</p>
+            </div>
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <div className="w-full sm:w-64">
+              <input className="w-full rounded-full border border-border/80 bg-card px-4 py-3 shadow-sm" placeholder="Search by vendor" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
             </div>
             <div>
-              <Button variant="hero" onClick={() => { setVendor(''); setAmount(0); setCategory(''); setNote(''); setCreateDialogOpen(true); }}>Create New Expense</Button>
+              <Button className="rounded-full" variant="hero" onClick={() => { setVendor(''); setAmount(0); setCategory(''); setNote(''); setCreateDialogOpen(true); }}>Create New Expense</Button>
+            </div>
             </div>
           </div>
         </section>
 
         {/* Create expense dialog */}
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogContent className="max-w-full overflow-auto">
+          <DialogContent className="panel-surface max-w-full overflow-auto border-0 bg-card/95 p-4 shadow-[var(--shadow-elegant)] sm:max-w-3xl sm:rounded-[2rem] sm:p-6">
             <DialogHeader>
-              <DialogTitle>Create expense</DialogTitle>
+              <DialogTitle className="font-display text-2xl font-semibold tracking-tight">Create expense</DialogTitle>
               <DialogDescription>Fill out the expense details and save.</DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-2">
-                <label className="text-sm">Date</label>
-                <input type="date" className="rounded-md border bg-background px-3 py-2 w-full" value={date} onChange={e=>setDate(e.target.value)} />
+                <label className="text-sm font-medium text-foreground/80">Date</label>
+                <input type="date" className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3 shadow-sm" value={date} onChange={e=>setDate(e.target.value)} />
               </div>
               <div className="grid gap-2">
-                <label className="text-sm">Vendor</label>
+                <label className="text-sm font-medium text-foreground/80">Vendor</label>
                 <div className="relative">
                   <input
-                    className="rounded-md border bg-background px-3 py-2 w-full"
+                    className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3 shadow-sm"
                     placeholder="Search vendors or type a name"
                     value={vendorQueryLocal || vendor}
                     onFocus={() => { setShowVendorDropdown(true); setVendorQueryLocal(''); }}
@@ -305,7 +314,7 @@ const Expenses = () => {
                     autoComplete="off"
                   />
                   {showVendorDropdown && (
-                    <div className="absolute z-50 top-full left-0 mt-2 w-full max-h-48 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-lg">
+                    <div className="absolute z-50 top-full left-0 mt-2 w-full max-h-48 overflow-auto rounded-2xl border border-border/80 bg-popover text-popover-foreground shadow-[var(--shadow-soft)]">
                       {(() => {
                         const q = (vendorQueryLocal || '').trim().toLowerCase();
                         const filtered = (vendorsList || []).filter((v: any) => {
@@ -321,7 +330,7 @@ const Expenses = () => {
                         }
 
                         return filtered.map((v: any) => (
-                          <div key={v.id} className="px-3 py-2 hover:bg-accent/10 cursor-pointer" onMouseDown={(ev) => ev.preventDefault()} onClick={() => { setVendor(v.name); setVendorQueryLocal(''); setShowVendorDropdown(false); }}>
+                          <div key={v.id} className="cursor-pointer px-4 py-3 hover:bg-secondary/60" onMouseDown={(ev) => ev.preventDefault()} onClick={() => { setVendor(v.name); setVendorQueryLocal(''); setShowVendorDropdown(false); }}>
                             <div className="font-medium">{v.name}</div>
                             {v.email && <div className="text-xs text-muted-foreground">{v.email}</div>}
                           </div>
@@ -332,27 +341,34 @@ const Expenses = () => {
                 </div>
               </div>
               <div className="grid gap-2">
-                <label className="text-sm">Amount</label>
-                <input type="number" className="rounded-md border bg-background px-3 py-2 w-full" value={amount} onChange={e=>setAmount(Number(e.target.value))} />
+                <label className="text-sm font-medium text-foreground/80">Amount</label>
+                <input type="number" className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3 shadow-sm" value={amount} onChange={e=>setAmount(Number(e.target.value))} />
               </div>
               <div className="grid gap-2">
-                <label className="text-sm">Category</label>
-                <input className="rounded-md border bg-background px-3 py-2 w-full" value={category} onChange={e=>setCategory(e.target.value)} placeholder="e.g. Office Supplies" />
-                <p className="text-xs text-muted-foreground">AI suggests: <span className="font-medium">{suggestion.category}</span> ({Math.round(suggestion.confidence*100)}% confidence)</p>
+                <label className="text-sm font-medium text-foreground/80">Category</label>
+                <input className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3 shadow-sm" value={category} onChange={e=>setCategory(e.target.value)} placeholder="e.g. Office Supplies" />
+                <p className="rounded-2xl bg-secondary/45 px-3 py-2 text-xs text-muted-foreground">AI suggests: <span className="font-medium text-foreground">{suggestion.category}</span> ({Math.round(suggestion.confidence*100)}% confidence)</p>
               </div>
               <div className="sm:col-span-2 grid gap-2">
-                <label className="text-sm">Note</label>
-                <textarea className="rounded-md border bg-background px-3 py-2 w-full" value={note} onChange={e=>setNote(e.target.value)} placeholder="Optional" />
+                <label className="text-sm font-medium text-foreground/80">Note</label>
+                <textarea className="min-h-28 w-full rounded-[1.5rem] border border-border/80 bg-card px-4 py-3 shadow-sm" value={note} onChange={e=>setNote(e.target.value)} placeholder="Optional" />
               </div>
             </div>
-            <div className="mt-4">
-              <Button variant="hero" onClick={async () => { await addExpense(); setCreateDialogOpen(false); }}>Save expense</Button>
+            <div className="mt-6 flex items-center justify-between rounded-[1.5rem] border border-border/70 bg-card/80 px-5 py-4">
+              <div>
+                <div className="text-sm text-muted-foreground">Expense total</div>
+                <div className="text-2xl font-bold tracking-tight text-primary">${formatCurrency(amount)}</div>
+              </div>
+              <Button className="rounded-full" variant="hero" onClick={async () => { await addExpense(); setCreateDialogOpen(false); }}>Save expense</Button>
             </div>
           </DialogContent>
          </Dialog>
 
         <section className="grid gap-4">
-          <h2 className="text-xl font-semibold">Recent expenses</h2>
+          <div>
+            <h2 className="font-display text-xl font-semibold tracking-tight">Recent expenses</h2>
+            <p className="text-sm text-muted-foreground">Review vendor activity, inspect line details, and keep expense records readable on every screen.</p>
+          </div>
           <DataTable
             title="Expenses"
             columns={[
@@ -375,63 +391,63 @@ const Expenses = () => {
             renderActions={(row) => (
               <>
                 {/* Pass original expense object to openView to preserve numeric amount and metadata */}
-                <Button size="sm" variant="ghost" onClick={() => openView(expenses.find(ex => ex.id === row.id) ?? row)}>View</Button>
+                <Button size="sm" className="rounded-full" variant="ghost" onClick={() => openView(expenses.find(ex => ex.id === row.id) ?? row)}>View</Button>
               </>
             )}
           />
 
           {/* pagination controls */}
-          <div className="flex flex-wrap items-center justify-between sm:justify-end space-x-3 mt-4 gap-2">
-            <Button size="sm" variant="ghost" onClick={() => setExpensePage(Math.max(1, expensePage - 1))} disabled={expensePage === 1}>Prev</Button>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 sm:justify-end">
+            <Button size="sm" className="rounded-full" variant="ghost" onClick={() => setExpensePage(Math.max(1, expensePage - 1))} disabled={expensePage === 1}>Prev</Button>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               {Array.from({ length: Math.max(1, Math.ceil(filteredExpenses.length / 10)) }).map((_, idx) => {
                 const p = idx + 1;
                 return (
-                  <Button key={p} size="sm" variant={p === expensePage ? 'default' : 'ghost'} onClick={() => setExpensePage(p)}>{p}</Button>
+                  <Button key={p} size="sm" className="rounded-full" variant={p === expensePage ? 'default' : 'ghost'} onClick={() => setExpensePage(p)}>{p}</Button>
                 );
               })}
             </div>
 
-            <Button size="sm" onClick={() => setExpensePage(Math.min(Math.max(1, Math.ceil(filteredExpenses.length / 10)), expensePage + 1))} disabled={expensePage === Math.max(1, Math.ceil(filteredExpenses.length / 10))}>Next</Button>
+            <Button size="sm" className="rounded-full" onClick={() => setExpensePage(Math.min(Math.max(1, Math.ceil(filteredExpenses.length / 10)), expensePage + 1))} disabled={expensePage === Math.max(1, Math.ceil(filteredExpenses.length / 10))}>Next</Button>
           </div>
         </section>
 
         {/* Expense view modal */}
         <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
-          <DialogContent>
+          <DialogContent className="panel-surface border-0 bg-card/95 shadow-[var(--shadow-elegant)] sm:rounded-[2rem]">
             <div className="p-4">
-              <DialogTitle>Expense details</DialogTitle>
+              <DialogTitle className="font-display text-2xl font-semibold tracking-tight">Expense details</DialogTitle>
               <DialogDescription>Full details for the selected expense</DialogDescription>
               {selectedExpense ? (
-                <div className="card mt-4">
+                <div className="mt-4 rounded-[1.5rem] border border-border/70 bg-card/80 p-1 shadow-[var(--shadow-soft)]">
                   <div>
-                    <table className="w-full text-sm">
+                    <table className="w-full border-separate border-spacing-0 text-sm">
                       <tbody>
-                        <tr className="border-b last:border-b-0">
+                        <tr>
                           <th className="text-left px-4 py-3 w-1/3 text-muted-foreground">Date</th>
                           <td className="px-4 py-3">{selectedExpense.date}</td>
                         </tr>
-                        <tr className="border-b last:border-b-0">
+                        <tr>
                           <th className="text-left px-4 py-3 text-muted-foreground">Vendor</th>
                           <td className="px-4 py-3">{selectedExpense.vendor}</td>
                         </tr>
-                        <tr className="border-b last:border-b-0">
+                        <tr>
                           <th className="text-left px-4 py-3 text-muted-foreground">Category</th>
                           <td className="px-4 py-3">{selectedExpense.category}</td>
                         </tr>
-                        <tr className="border-b last:border-b-0">
+                        <tr>
                           <th className="text-left px-4 py-3 text-muted-foreground">Amount</th>
                           <td className="px-4 py-3">${formatCurrency(selectedExpense.amount)}</td>
                         </tr>
-                        <tr className="border-b last:border-b-0 align-top">
+                        <tr className="align-top">
                           <th className="text-left px-4 py-3 text-muted-foreground">Notes</th>
                           <td className="px-4 py-3">
-                            <div className="whitespace-pre-wrap p-3 bg-muted/5 rounded">{selectedExpense.note ?? '—'}</div>
+                            <div className="whitespace-pre-wrap rounded-2xl bg-muted/30 p-3">{selectedExpense.note ?? '—'}</div>
                           </td>
                         </tr>
                         {selectedExpense.receipt_url && (
-                          <tr className="border-b last:border-b-0">
+                          <tr>
                             <th className="text-left px-4 py-3 text-muted-foreground">Receipt</th>
                             <td className="px-4 py-3">
                               <a href={selectedExpense.receipt_url} target="_blank" rel="noreferrer" className="text-primary underline">View receipt</a>
@@ -446,7 +462,7 @@ const Expenses = () => {
                     </table>
 
                     <div className="mt-4 border-t pt-4 flex justify-end">
-                      <Button onClick={() => { closeView(); }}>Close</Button>
+                      <Button className="rounded-full" onClick={() => { closeView(); }}>Close</Button>
                     </div>
                   </div>
                 </div>

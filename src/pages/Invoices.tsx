@@ -12,6 +12,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(value || 0);
+
 const Invoices = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -476,27 +482,36 @@ const Invoices = () => {
         <link rel="canonical" href="https://quickflow.app/invoices" />
       </Helmet>
 
-      <div className="max-w-full px-4 sm:px-6 lg:px-8 py-8 grid gap-8">
-        <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-2xl font-semibold">Invoices</h1>
+      <div className="grid max-w-full gap-8 py-6 sm:py-8">
+        <section className="panel-surface grid-muted relative overflow-hidden rounded-[2rem] px-6 py-6 sm:px-8">
+          <div className="absolute inset-y-0 right-0 hidden w-1/3 bg-[radial-gradient(circle_at_top_right,rgba(15,118,110,0.14),transparent_55%)] lg:block" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-3 inline-flex rounded-full border border-border/70 bg-card/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Revenue operations
+              </div>
+              <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">Invoices</h1>
+              <p className="mt-2 text-base text-muted-foreground">Create polished invoices, manage customer billing, and keep outgoing documents aligned with the new workspace style.</p>
+            </div>
           <div className="w-full sm:w-auto flex justify-end">
-            <Button variant="hero" onClick={() => { setCustomer(''); setCustomerQuery(''); setItems([{ description: "", quantity: 1, unitPrice: 0 }]); setCreateDialogOpen(true); }}>Create New Invoice</Button>
+            <Button className="rounded-full" variant="hero" onClick={() => { setCustomer(''); setCustomerQuery(''); setItems([{ description: "", quantity: 1, unitPrice: 0 }]); setCreateDialogOpen(true); }}>Create New Invoice</Button>
+          </div>
           </div>
         </section>
 
         {/* Create invoice dialog (moves the original inline form into a modal) */}
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogContent className="w-full max-w-full sm:max-w-4xl mx-auto sm:rounded-lg p-4 sm:p-6 sm:my-8 max-h-[90vh] overflow-auto">
+          <DialogContent className="panel-surface w-full max-w-full overflow-auto border-0 bg-card/95 p-4 shadow-[var(--shadow-elegant)] sm:my-8 sm:max-w-4xl sm:rounded-[2rem] sm:p-6 max-h-[90vh]">
             <DialogHeader>
-              <DialogTitle>Create invoice</DialogTitle>
+              <DialogTitle className="font-display text-2xl font-semibold tracking-tight">Create invoice</DialogTitle>
               <DialogDescription>Fill out the invoice details and save.</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Reuse the existing form controls (customer, dates, items) */}
               <div className="grid gap-2 relative overflow-visible">
-                <label className="text-sm">Customer</label>
+                <label className="text-sm font-medium text-foreground/80">Customer</label>
                 <input
-                  className="rounded-md border bg-background px-3 py-2"
+                  className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3 shadow-sm"
                   placeholder="Search customers or type a name"
                   value={customerQuery || customer}
                   onFocus={() => { setShowCustomerDropdown(true); setCustomerQuery(''); }}
@@ -506,7 +521,7 @@ const Invoices = () => {
                   autoComplete="off"
                 />
                 {showCustomerDropdown && (
-                  <div className="absolute z-50 top-full left-0 mt-2 w-full max-h-48 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-lg">
+                  <div className="absolute z-50 top-full left-0 mt-2 w-full max-h-48 overflow-auto rounded-2xl border border-border/80 bg-popover text-popover-foreground shadow-[var(--shadow-soft)]">
                     {(() => {
                       const q = (customerQuery || '').trim().toLowerCase();
                       const filtered = customersList.filter((c: any) => {
@@ -525,7 +540,7 @@ const Invoices = () => {
                       }
 
                       return filtered.map((c: any) => (
-                        <div key={c.id} className="px-3 py-2 hover:bg-accent/10 cursor-pointer" onMouseDown={(ev)=>{ ev.preventDefault(); }} onClick={() => { setCustomer(c.name); setCustomerQuery(''); setShowCustomerDropdown(false); }}>
+                        <div key={c.id} className="cursor-pointer px-4 py-3 hover:bg-secondary/60" onMouseDown={(ev)=>{ ev.preventDefault(); }} onClick={() => { setCustomer(c.name); setCustomerQuery(''); setShowCustomerDropdown(false); }}>
                           <div className="font-medium">{c.name}</div>
                           {c.email && <div className="text-xs text-muted-foreground">{c.email}</div>}
                         </div>
@@ -536,30 +551,33 @@ const Invoices = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="grid gap-2">
-                  <label className="text-sm">Issue date</label>
-                  <input type="date" className="rounded-md border bg-background px-3 py-2" value={issueDate} onChange={e=>setIssueDate(e.target.value)} />
+                  <label className="text-sm font-medium text-foreground/80">Issue date</label>
+                  <input type="date" className="rounded-2xl border border-border/80 bg-card px-4 py-3 shadow-sm" value={issueDate} onChange={e=>setIssueDate(e.target.value)} />
                 </div>
                 <div className="grid gap-2">
-                  <label className="text-sm">Due date</label>
-                  <input type="date" className="rounded-md border bg-background px-3 py-2" value={dueDate} onChange={e=>setDueDate(e.target.value)} />
+                  <label className="text-sm font-medium text-foreground/80">Due date</label>
+                  <input type="date" className="rounded-2xl border border-border/80 bg-card px-4 py-3 shadow-sm" value={dueDate} onChange={e=>setDueDate(e.target.value)} />
                 </div>
               </div>
             </div>
-            <div className="grid gap-2 mt-4">
-              <label className="text-sm">Items</label>
-              <div className="grid gap-2">
+            <div className="mt-6 grid gap-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground/80">Items</label>
+                <div className="text-sm text-muted-foreground">Invoice total updates live as you edit rows.</div>
+              </div>
+              <div className="rounded-[1.5rem] border border-border/70 bg-muted/20 p-3 sm:p-4">
                 {/* header visible only on md+ */}
-                <div className="hidden md:grid grid-cols-6 gap-2 text-sm text-muted-foreground">
+                <div className="hidden md:grid grid-cols-6 gap-3 px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   <div className="col-span-3">Description</div>
                   <div className="col-span-1">Qty</div>
                   <div className="col-span-1">Unit price</div>
                   <div className="col-span-1 text-center">Total</div>
                 </div>
                 {items.map((it, idx) => (
-                  <div key={idx} className="grid grid-cols-1 md:grid-cols-6 gap-2 relative items-center">
+                  <div key={idx} className="relative mt-3 grid grid-cols-1 items-center gap-3 rounded-[1.25rem] border border-border/70 bg-card/90 p-3 md:grid-cols-6">
                     <div className="md:col-span-3 relative">
                       <input
-                        className="w-full rounded-md border bg-background px-3 py-2"
+                        className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3 shadow-sm"
                         placeholder="Search inventory or type a description"
                         value={inventoryDropdownIndex === idx ? inventoryQuery : it.description}
                         onFocus={() => { setInventoryDropdownIndex(idx); setInventoryQuery(it.description || ''); }}
@@ -567,7 +585,7 @@ const Invoices = () => {
                         onBlur={() => { setTimeout(() => { if (inventoryDropdownIndex === idx) setInventoryDropdownIndex(null); }, 150); }}
                       />
                       {inventoryDropdownIndex === idx && (
-                        <div className="absolute z-40 top-full left-0 mt-2 w-full max-h-48 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-lg">
+                        <div className="absolute z-40 top-full left-0 mt-2 w-full max-h-48 overflow-auto rounded-2xl border border-border/80 bg-popover text-popover-foreground shadow-[var(--shadow-soft)]">
                           {(() => {
                             const q = (inventoryQuery || '').trim().toLowerCase();
                             const filtered = inventoryList.filter((inv: any) => {
@@ -579,7 +597,7 @@ const Invoices = () => {
                               return <div className="p-3 text-sm text-muted-foreground">No inventory found</div>;
                             }
                             return filtered.map((inv: any) => (
-                              <div key={inv.id} className="px-3 py-2 hover:bg-accent/10 cursor-pointer" onMouseDown={(ev) => { ev.preventDefault(); }} onClick={() => {
+                              <div key={inv.id} className="cursor-pointer px-4 py-3 hover:bg-secondary/60" onMouseDown={(ev) => { ev.preventDefault(); }} onClick={() => {
                                 updateItem(idx, { description: inv.name, unitPrice: Number(inv.price ?? 0) });
                                 setInventoryDropdownIndex(null);
                                 setInventoryQuery('');
@@ -593,28 +611,34 @@ const Invoices = () => {
                       )}
                     </div>
                     <div className="md:col-span-1 grid grid-cols-3 gap-2 md:block">
-                      <input type="number" className="rounded-md border bg-background px-3 py-2 w-full" value={it.quantity} onChange={e=>updateItem(idx,{ quantity: Number(e.target.value) })} />
+                      <input type="number" className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3 shadow-sm" value={it.quantity} onChange={e=>updateItem(idx,{ quantity: Number(e.target.value) })} />
                     </div>
                     <div className="md:col-span-1 grid grid-cols-1">
-                      <input type="number" className="rounded-md border bg-background px-3 py-2 w-full" value={it.unitPrice} onChange={e=>updateItem(idx,{ unitPrice: Number(e.target.value) })} />
+                      <input type="number" className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3 shadow-sm" value={it.unitPrice} onChange={e=>updateItem(idx,{ unitPrice: Number(e.target.value) })} />
                     </div>
-                    <div className="md:col-span-1 flex items-center justify-center text-sm font-medium">${(it.quantity*it.unitPrice).toFixed(2)}</div>
+                    <div className="md:col-span-1 flex items-center justify-center rounded-2xl bg-secondary/45 px-3 py-3 text-sm font-semibold">{formatCurrency(it.quantity*it.unitPrice)}</div>
                   </div>
                 ))}
               </div>
-              <div className="mt-2"><Button variant="ghost" size="sm" onClick={addItem}>Add item</Button></div>
+              <div className="mt-2"><Button variant="ghost" size="sm" className="rounded-full" onClick={addItem}>Add item</Button></div>
             </div>
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-lg font-semibold">Total: ${total.toFixed(2)}</div>
-              <Button variant="hero" onClick={async () => { await createInvoice(); setCreateDialogOpen(false); }} disabled={saving}>{saving ? 'Saving...' : 'Save invoice'}</Button>
+            <div className="mt-6 flex items-center justify-between rounded-[1.5rem] border border-border/70 bg-card/80 px-5 py-4">
+              <div>
+                <div className="text-sm text-muted-foreground">Invoice total</div>
+                <div className="text-2xl font-bold tracking-tight text-primary">{formatCurrency(total)}</div>
+              </div>
+              <Button className="rounded-full" variant="hero" onClick={async () => { await createInvoice(); setCreateDialogOpen(false); }} disabled={saving}>{saving ? 'Saving...' : 'Save invoice'}</Button>
             </div>
            </DialogContent>
          </Dialog>
         
         <section className="grid gap-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Your invoices</h2>
-            <div className="w-full sm:w-72"><input className="w-full rounded-md border bg-background px-3 py-2" placeholder="Search invoice # or customer" value={invoiceSearch} onChange={(e) => setInvoiceSearch(e.target.value)} /></div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-display text-xl font-semibold tracking-tight">Your invoices</h2>
+              <p className="text-sm text-muted-foreground">Search, print, and send customer invoices from one place.</p>
+            </div>
+            <div className="w-full sm:w-80"><input className="w-full rounded-full border border-border/80 bg-card px-4 py-3 shadow-sm" placeholder="Search invoice # or customer" value={invoiceSearch} onChange={(e) => setInvoiceSearch(e.target.value)} /></div>
           </div>
 
           <DataTable
@@ -637,28 +661,28 @@ const Invoices = () => {
              }))}
             renderActions={(row) => (
               <>
-                <Button size="sm" variant="outline" onClick={() => printInvoice(row.id)}>Print</Button>
+                <Button size="sm" className="rounded-full" variant="outline" onClick={() => printInvoice(row.id)}>Print</Button>
                 {row.status !== 'paid' && (
-                  <Button size="sm" onClick={() => sendInvoice(row.id)}>Send</Button>
+                  <Button size="sm" className="rounded-full" onClick={() => sendInvoice(row.id)}>Send</Button>
                 )}
               </>
             )}
           />
 
           {/* pagination controls */}
-          <div className="flex flex-wrap items-center justify-between sm:justify-end space-x-3 mt-4 gap-2">
-             <Button size="sm" variant="ghost" onClick={() => setInvoicePage(invoicePage - 1)} disabled={invoicePage === 1}>Prev</Button>
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end mt-4">
+             <Button size="sm" className="rounded-full" variant="ghost" onClick={() => setInvoicePage(invoicePage - 1)} disabled={invoicePage === 1}>Prev</Button>
 
-             <div className="flex items-center space-x-2">
+             <div className="flex items-center gap-2">
                {Array.from({ length: invoiceTotalPages }).map((_, idx) => {
                  const p = idx + 1;
                  return (
-                   <Button key={p} size="sm" variant={p === invoicePage ? 'default' : 'ghost'} onClick={() => setInvoicePage(p)}>{p}</Button>
+                   <Button key={p} size="sm" className="rounded-full" variant={p === invoicePage ? 'default' : 'ghost'} onClick={() => setInvoicePage(p)}>{p}</Button>
                  );
                })}
              </div>
 
-             <Button size="sm" onClick={() => setInvoicePage(invoicePage + 1)} disabled={invoicePage === invoiceTotalPages}>Next</Button>
+             <Button size="sm" className="rounded-full" onClick={() => setInvoicePage(invoicePage + 1)} disabled={invoicePage === invoiceTotalPages}>Next</Button>
            </div>
         </section>
       </div>

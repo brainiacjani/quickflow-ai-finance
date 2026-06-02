@@ -155,13 +155,25 @@ const Admin = () => {
         <Helmet>
           <title>Admin | QuickFlow</title>
         </Helmet>
-        <div className="container py-8">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-semibold">Admin</h1>
-            <div className="flex gap-2">
-              <Button onClick={fetchUsers}>Refresh</Button>
+        <div className="grid gap-6 py-8">
+          <section className="panel-surface grid-muted relative overflow-hidden rounded-[2rem] px-6 py-6 sm:px-8 sm:py-7">
+            <div className="absolute inset-y-0 right-0 hidden w-1/3 bg-[radial-gradient(circle_at_top_right,rgba(67,56,202,0.12),transparent_55%)] lg:block" />
+            <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-2xl">
+                <div className="mb-3 inline-flex rounded-full border border-border/70 bg-card/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Admin controls
+                </div>
+                <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Admin</h1>
+                <p className="mt-2 max-w-xl text-base text-muted-foreground">
+                  Review user accounts, roles, and admin access with the same consistent table and dialog treatment used across the workspace.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <div className="rounded-full border border-border/70 bg-card/70 px-3 py-1.5 text-sm text-foreground/80">{users.length} users</div>
+                <Button className="rounded-full" onClick={fetchUsers}>Refresh</Button>
+              </div>
             </div>
-          </div>
+          </section>
 
           <DataTable
             title="Users"
@@ -180,52 +192,54 @@ const Admin = () => {
             }))}
             renderActions={(row) => (
               <>
-                <Button size="sm" variant="ghost" onClick={() => openEdit(row)}>Edit</Button>
+                <Button size="sm" className="rounded-full" variant="ghost" onClick={() => openEdit(row)}>Edit</Button>
                 {!row.email && (
-                  <Button size="sm" variant="ghost" onClick={() => syncEmail(row.id)}>Sync email</Button>
+                  <Button size="sm" className="rounded-full" variant="ghost" onClick={() => syncEmail(row.id)}>Sync email</Button>
                 )}
-                <Button size="sm" variant="outline" onClick={() => toggleAdmin(row.id, row.is_admin === 'Yes')}>{row.is_admin === 'Yes' ? 'Revoke' : 'Make admin'}</Button>
-                <Button size="sm" onClick={() => setRole(row.id, row.role === 'admin' ? 'user' : 'admin')}>{row.role === 'admin' ? 'Demote' : 'Promote'}</Button>
-                <Button size="sm" variant="destructive" onClick={() => deleteUser(row.id)}>Delete</Button>
+                <Button size="sm" className="rounded-full" variant="outline" onClick={() => toggleAdmin(row.id, row.is_admin === 'Yes')}>{row.is_admin === 'Yes' ? 'Revoke' : 'Make admin'}</Button>
+                <Button size="sm" className="rounded-full" onClick={() => setRole(row.id, row.role === 'admin' ? 'user' : 'admin')}>{row.role === 'admin' ? 'Demote' : 'Promote'}</Button>
+                <Button size="sm" className="rounded-full" variant="destructive" onClick={() => deleteUser(row.id)}>Delete</Button>
               </>
             )}
           />
 
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogContent>
-              <div className="p-4">
-                <DialogTitle>Edit user</DialogTitle>
-                <DialogDescription>Update user's profile details stored in the profiles table.</DialogDescription>
+            <DialogContent className="panel-surface max-w-3xl border-0 p-0 shadow-[var(--shadow-elegant)]">
+              <div>
+                <div className="border-b border-border/70 px-5 py-4 sm:px-6">
+                  <DialogTitle className="font-display text-2xl font-semibold tracking-tight">Edit user</DialogTitle>
+                  <DialogDescription className="mt-1">Update user profile details stored in the profiles table.</DialogDescription>
+                </div>
 
-                <div className="grid gap-2 mt-4">
+                <div className="grid gap-3 px-5 py-5 sm:px-6">
                   <div className="grid gap-1">
-                    <label className="text-sm">First name</label>
-                    <Input value={eFirst} onChange={(e:any) => setEFirst(e.target.value)} />
+                    <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">First name</label>
+                    <Input className="rounded-2xl border-border/80 bg-card px-4 py-3" value={eFirst} onChange={(e:any) => setEFirst(e.target.value)} />
                   </div>
                   <div className="grid gap-1">
-                    <label className="text-sm">Last name</label>
-                    <Input value={eLast} onChange={(e:any) => setELast(e.target.value)} />
+                    <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Last name</label>
+                    <Input className="rounded-2xl border-border/80 bg-card px-4 py-3" value={eLast} onChange={(e:any) => setELast(e.target.value)} />
                   </div>
                   <div className="grid gap-1">
-                    <label className="text-sm">Display name</label>
-                    <Input value={eDisplay} onChange={(e:any) => setEDisplay(e.target.value)} />
+                    <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Display name</label>
+                    <Input className="rounded-2xl border-border/80 bg-card px-4 py-3" value={eDisplay} onChange={(e:any) => setEDisplay(e.target.value)} />
                   </div>
                   <div className="grid gap-1">
-                    <label className="text-sm">Email</label>
-                    <Input value={eEmail} onChange={(e:any) => setEEmail(e.target.value)} />
+                    <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Email</label>
+                    <Input className="rounded-2xl border-border/80 bg-card px-4 py-3" value={eEmail} onChange={(e:any) => setEEmail(e.target.value)} />
                   </div>
                   <div className="grid gap-1">
-                    <label className="text-sm">Role</label>
-                    <Input value={eRole} onChange={(e:any) => setERole(e.target.value)} placeholder="user | admin" />
+                    <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Role</label>
+                    <Input className="rounded-2xl border-border/80 bg-card px-4 py-3" value={eRole} onChange={(e:any) => setERole(e.target.value)} placeholder="user | admin" />
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 rounded-[1.25rem] bg-secondary/35 px-4 py-3">
                     <input id="isAdmin" type="checkbox" checked={eIsAdmin} onChange={(ev) => setEIsAdmin((ev.target as HTMLInputElement).checked)} />
                     <label htmlFor="isAdmin" className="text-sm">Is admin</label>
                   </div>
 
-                  <div className="flex justify-end gap-2 mt-4">
-                    <Button variant="outline" onClick={() => { setEditOpen(false); setEditingUser(null); }}>Cancel</Button>
-                    <Button onClick={saveUser} disabled={savingEdit}>{savingEdit ? 'Saving...' : 'Save'}</Button>
+                  <div className="mt-4 flex justify-end gap-2 border-t border-border/70 pt-4">
+                    <Button className="rounded-full" variant="outline" onClick={() => { setEditOpen(false); setEditingUser(null); }}>Cancel</Button>
+                    <Button className="rounded-full" onClick={saveUser} disabled={savingEdit}>{savingEdit ? 'Saving...' : 'Save'}</Button>
                   </div>
                 </div>
               </div>

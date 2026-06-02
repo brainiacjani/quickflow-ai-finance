@@ -141,43 +141,62 @@ const Settings = () => {
         <meta name="description" content="Manage your QuickFlow account and integrations." />
       </Helmet>
 
-      <div className="max-w-full px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-3xl w-full mx-auto grid gap-8">
-          <section className="grid gap-3">
-            <h1 className="text-2xl font-semibold">Account</h1>
-            <div className="rounded-lg border p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-              <div className="flex-1 min-w-0">
-                <div className="font-medium">{pDisplay || [pFirst, pLast].filter(Boolean).join(" ").trim() || user?.email || "Account"}</div>
-                <div className="text-sm text-muted-foreground">Signed in as {user?.email}</div>
+      <div className="max-w-full py-8">
+        <div className="mx-auto grid w-full max-w-4xl gap-8">
+          <section className="panel-surface grid-muted relative overflow-hidden rounded-[2rem] px-6 py-6 sm:px-8 sm:py-7">
+            <div className="absolute inset-y-0 right-0 hidden w-1/3 bg-[radial-gradient(circle_at_top_right,rgba(15,118,110,0.12),transparent_55%)] lg:block" />
+            <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-2xl">
+                <div className="mb-3 inline-flex rounded-full border border-border/70 bg-card/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Workspace preferences
+                </div>
+                <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Settings</h1>
+                <p className="mt-2 max-w-xl text-base text-muted-foreground">
+                  Manage your account, company identity, appearance, and future integrations from one consistent workspace surface.
+                </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <Button variant="outline" onClick={() => navigate("/auth/update-password")} className="w-full sm:w-auto">Change password</Button>
-                <Button variant="outline" onClick={signOut} className="w-full sm:w-auto">Log out</Button>
+              <div className="flex flex-wrap gap-2">
+                <div className="rounded-full border border-border/70 bg-card/70 px-3 py-1.5 text-sm text-foreground/80">{pDisplay || user?.email || "Account"}</div>
+                <div className="rounded-full border border-border/70 bg-card/70 px-3 py-1.5 text-sm text-foreground/80">{cName || "No company set"}</div>
               </div>
             </div>
           </section>
 
           <section className="grid gap-3">
-            <h2 className="text-xl font-semibold">Personal info</h2>
-            <div className="rounded-lg border p-4 grid gap-3">
+            <h2 className="font-display text-xl font-semibold tracking-tight">Account</h2>
+            <div className="panel-surface flex w-full flex-col items-start justify-between gap-4 rounded-[1.75rem] p-5 sm:flex-row sm:items-center sm:p-6">
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-foreground">{pDisplay || [pFirst, pLast].filter(Boolean).join(" ").trim() || user?.email || "Account"}</div>
+                <div className="text-sm text-muted-foreground">Signed in as {user?.email}</div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button variant="outline" onClick={() => navigate("/auth/update-password")} className="w-full rounded-full sm:w-auto">Change password</Button>
+                <Button variant="outline" onClick={signOut} className="w-full rounded-full sm:w-auto">Log out</Button>
+              </div>
+            </div>
+          </section>
+
+          <section className="grid gap-3">
+            <h2 className="font-display text-xl font-semibold tracking-tight">Personal info</h2>
+            <div className="panel-surface grid gap-4 rounded-[1.75rem] p-5 sm:p-6">
               <div className="grid sm:grid-cols-2 gap-3">
                 <div className="grid gap-1">
-                  <label className="text-sm">First name</label>
-                  <input className="rounded-md border bg-background px-3 py-2 w-full" value={pFirst} onChange={(e) => setPFirst(e.target.value)} />
+                  <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">First name</label>
+                  <input className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3" value={pFirst} onChange={(e) => setPFirst(e.target.value)} />
                 </div>
                 <div className="grid gap-1">
-                  <label className="text-sm">Last name</label>
-                  <input className="rounded-md border bg-background px-3 py-2 w-full" value={pLast} onChange={(e) => setPLast(e.target.value)} />
+                  <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Last name</label>
+                  <input className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3" value={pLast} onChange={(e) => setPLast(e.target.value)} />
                 </div>
               </div>
 
               <div className="grid gap-1">
-                <label className="text-sm">Display name</label>
-                <input className="rounded-md border bg-background px-3 py-2 w-full" value={pDisplay} onChange={(e) => setPDisplay(e.target.value)} placeholder="Shown in the app" />
+                <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Display name</label>
+                <input className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3" value={pDisplay} onChange={(e) => setPDisplay(e.target.value)} placeholder="Shown in the app" />
               </div>
 
               <div className="flex justify-end">
-                <Button variant="hero" onClick={saveProfile} disabled={savingProfile} className="w-full sm:w-auto">
+                <Button variant="hero" onClick={saveProfile} disabled={savingProfile} className="w-full rounded-full sm:w-auto">
                   {savingProfile ? "Saving..." : "Save changes"}
                 </Button>
               </div>
@@ -185,39 +204,39 @@ const Settings = () => {
           </section>
 
           <section className="grid gap-3">
-            <h2 className="text-xl font-semibold">Company</h2>
-            <div className="rounded-lg border p-4 grid gap-3">
+            <h2 className="font-display text-xl font-semibold tracking-tight">Company</h2>
+            <div className="panel-surface grid gap-4 rounded-[1.75rem] p-5 sm:p-6">
               <div className="grid gap-1">
-                <label className="text-sm">Company name</label>
-                <input className="rounded-md border bg-background px-3 py-2 w-full" value={cName} onChange={(e) => setCName(e.target.value)} />
+                <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Company name</label>
+                <input className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3" value={cName} onChange={(e) => setCName(e.target.value)} />
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
                 <div className="grid gap-1">
-                  <label className="text-sm">Business type</label>
-                  <input className="rounded-md border bg-background px-3 py-2 w-full" value={cType} onChange={(e) => setCType(e.target.value)} placeholder="Freelancer / Retail / SaaS..." />
+                  <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Business type</label>
+                  <input className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3" value={cType} onChange={(e) => setCType(e.target.value)} placeholder="Freelancer / Retail / SaaS..." />
                 </div>
                 <div className="grid gap-1">
-                  <label className="text-sm">Country/State</label>
-                  <input className="rounded-md border bg-background px-3 py-2 w-full" value={cRegion} onChange={(e) => setCRegion(e.target.value)} placeholder="US / CA / EU..." />
+                  <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Country/State</label>
+                  <input className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3" value={cRegion} onChange={(e) => setCRegion(e.target.value)} placeholder="US / CA / EU..." />
                 </div>
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
                 <div className="grid gap-1">
-                  <label className="text-sm">Currency</label>
-                  <input className="rounded-md border bg-background px-3 py-2 w-full" value={cCurrency} onChange={(e) => setCCurrency(e.target.value)} placeholder="USD" />
+                  <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Currency</label>
+                  <input className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3" value={cCurrency} onChange={(e) => setCCurrency(e.target.value)} placeholder="USD" />
                 </div>
                 <div className="grid gap-1">
-                  <label className="text-sm">Fiscal year start date</label>
-                  <input type="date" className="rounded-md border bg-background px-3 py-2 w-full" value={cStart || ""} onChange={(e) => setCStart(e.target.value)} />
+                  <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Fiscal year start date</label>
+                  <input type="date" className="w-full rounded-2xl border border-border/80 bg-card px-4 py-3" value={cStart || ""} onChange={(e) => setCStart(e.target.value)} />
                 </div>
               </div>
               <div className="grid gap-2">
-                <label className="text-sm">Company logo</label>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Company logo</label>
+                <div className="flex flex-col items-start gap-4 rounded-[1.5rem] bg-secondary/35 p-4 sm:flex-row sm:items-center">
                   {cLogoUrl ? (
-                    <img src={cLogoUrl} alt={`${cName || 'Company'} logo`} className="h-12 w-12 rounded-md border object-cover" loading="lazy" />
+                    <img src={cLogoUrl} alt={`${cName || 'Company'} logo`} className="h-14 w-14 rounded-2xl border border-border/80 object-cover" loading="lazy" />
                   ) : (
-                    <div className="h-12 w-12 rounded-md border grid place-items-center text-xs text-muted-foreground">No logo</div>
+                    <div className="grid h-14 w-14 place-items-center rounded-2xl border border-border/80 text-xs text-muted-foreground">No logo</div>
                   )}
                   <div className="flex flex-col gap-2 w-full sm:w-auto">
                     <input
@@ -234,7 +253,7 @@ const Settings = () => {
                 </div>
               </div>
               <div className="flex justify-end">
-                <Button variant="hero" onClick={saveCompany} disabled={savingCompany} className="w-full sm:w-auto">
+                <Button variant="hero" onClick={saveCompany} disabled={savingCompany} className="w-full rounded-full sm:w-auto">
                   {savingCompany ? "Saving..." : "Save changes"}
                 </Button>
               </div>
@@ -242,25 +261,26 @@ const Settings = () => {
           </section>
           
           <section className="grid gap-3">
-            <h2 className="text-xl font-semibold">Appearance</h2>
-            <div className="rounded-lg border p-4 grid gap-3">
+            <h2 className="font-display text-xl font-semibold tracking-tight">Appearance</h2>
+            <div className="panel-surface grid gap-4 rounded-[1.75rem] p-5 sm:p-6">
               <div className="text-sm text-muted-foreground">Choose how QuickFlow should render colors for your account. This preference is saved to your profile.</div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
-                  className={`px-4 py-2 rounded-md border ${themePref === 'system' ? 'bg-muted text-muted-foreground' : ''}`}
+                  className={`rounded-full border px-4 py-2 text-sm transition ${themePref === 'system' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border/80 hover:bg-secondary/35'}`}
                   onClick={() => { setThemePref('system'); themeHook.setPreference?.('system'); }}
                 >System</button>
                 <button
-                  className={`px-4 py-2 rounded-md border ${themePref === 'light' ? 'bg-muted text-muted-foreground' : ''}`}
+                  className={`rounded-full border px-4 py-2 text-sm transition ${themePref === 'light' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border/80 hover:bg-secondary/35'}`}
                   onClick={() => { setThemePref('light'); themeHook.setPreference?.('light'); }}
                 >Light</button>
                 <button
-                  className={`px-4 py-2 rounded-md border ${themePref === 'dark' ? 'bg-muted text-muted-foreground' : ''}`}
+                  className={`rounded-full border px-4 py-2 text-sm transition ${themePref === 'dark' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border/80 hover:bg-secondary/35'}`}
                   onClick={() => { setThemePref('dark'); themeHook.setPreference?.('dark'); }}
                 >Dark</button>
               </div>
               <div className="flex justify-end">
                 <Button
+                  className="rounded-full"
                   variant="hero"
                   onClick={async () => {
                     if (!user) return;
@@ -280,14 +300,14 @@ const Settings = () => {
           </section>
 
           <section className="grid gap-3">
-            <h2 className="text-xl font-semibold">Integrations</h2>
-            <div className="rounded-lg border p-4 grid gap-4">
-              <div>
-                <div className="font-medium">Stripe (Payments)</div>
+            <h2 className="font-display text-xl font-semibold tracking-tight">Integrations</h2>
+            <div className="panel-surface grid gap-4 rounded-[1.75rem] p-5 sm:p-6">
+              <div className="rounded-[1.5rem] border border-border/70 bg-card/80 p-4">
+                <div className="font-medium text-foreground">Stripe (Payments)</div>
                 <div className="text-sm text-muted-foreground">Enable Stripe Checkout to accept card/ACH. Configure your Stripe secret key in the backend when ready.</div>
               </div>
-              <div>
-                <div className="font-medium">AWS S3 (Receipts)</div>
+              <div className="rounded-[1.5rem] border border-border/70 bg-card/80 p-4">
+                <div className="font-medium text-foreground">AWS S3 (Receipts)</div>
                 <div className="text-sm text-muted-foreground">Connect S3 to store receipts securely. Configure credentials in the backend when ready.</div>
               </div>
             </div>

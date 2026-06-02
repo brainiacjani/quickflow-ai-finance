@@ -8,6 +8,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
+const vendorFormDefaults = {
+  name: "",
+  email: "",
+  phone: "",
+  address: "",
+};
+
 const Vendors = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
@@ -100,18 +107,34 @@ const Vendors = () => {
   return (
     <AppShell>
       <Helmet><title>Vendors | QuickFlow</title></Helmet>
-      <div className="container py-8 grid gap-8">
-        <section className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Vendors</h1>
-          <div>
-            <Button variant="hero" onClick={() => { setEditingId(null); setName(''); setEmail(''); setPhone(''); setAddress(''); setEditDialogOpen(true); }}>Add New</Button>
+      <div className="grid gap-8 py-8">
+        <section className="panel-surface grid-muted relative overflow-hidden rounded-[2rem] px-6 py-6 sm:px-8 sm:py-7">
+          <div className="absolute inset-y-0 right-0 hidden w-1/3 bg-[radial-gradient(circle_at_top_right,rgba(217,119,6,0.12),transparent_55%)] lg:block" />
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-3 inline-flex rounded-full border border-border/70 bg-card/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Supplier management
+              </div>
+              <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Vendors</h1>
+              <p className="mt-2 max-w-xl text-base text-muted-foreground">Manage your vendor directory with the same cleaner search, table, and dialog surfaces used across the workspace.</p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <div className="rounded-full border border-border/70 bg-card/70 px-3 py-1.5 text-sm text-foreground/80">{filteredVendors.length} vendors</div>
+              </div>
+            </div>
+            <div>
+              <Button className="rounded-full" variant="hero" onClick={() => { setEditingId(null); setName(vendorFormDefaults.name); setEmail(vendorFormDefaults.email); setPhone(vendorFormDefaults.phone); setAddress(vendorFormDefaults.address); setEditDialogOpen(true); }}>Add New</Button>
+            </div>
           </div>
         </section>
 
         <section className="grid gap-4">
+          <div>
+            <h2 className="font-display text-xl font-semibold tracking-tight">Vendor directory</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Search and update supplier records with the same consistent surfaces as customers and invoices.</p>
+          </div>
           <div className="pt-2">
             <input
-              className="w-full rounded-md border bg-background px-3 py-2 mb-3"
+              className="mb-3 w-full rounded-2xl border border-border/80 bg-card px-4 py-3 shadow-sm"
               placeholder="Search vendors by name or phone"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -129,40 +152,54 @@ const Vendors = () => {
             data={paginatedVendors.map(c => ({ id: c.id, name: c.name, email: c.email, phone: c.phone, address: c.address }))}
               renderActions={(row) => (
                 <>
-                  <Button size="sm" variant="secondary" onClick={() => editVendor(row.id)}>Edit</Button>
-                  <Button size="sm" variant="destructive" onClick={() => deleteVendor(row.id)}>Delete</Button>
+                  <Button size="sm" className="rounded-full" variant="secondary" onClick={() => editVendor(row.id)}>Edit</Button>
+                  <Button size="sm" className="rounded-full" variant="destructive" onClick={() => deleteVendor(row.id)}>Delete</Button>
                 </>
               )}
             />
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 sm:justify-end">
+            <Button size="sm" className="rounded-full" variant="ghost" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>Prev</Button>
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalPages }).map((_, idx) => {
+                const p = idx + 1;
+                return (
+                  <Button key={p} size="sm" className="rounded-full" variant={p === currentPage ? 'default' : 'ghost'} onClick={() => setCurrentPage(p)}>{p}</Button>
+                );
+              })}
+            </div>
+            <Button size="sm" className="rounded-full" onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}>Next</Button>
+          </div>
           {/* edit dialog */}
           <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-            <DialogContent>
+            <DialogContent className="panel-surface max-w-3xl border-0 p-0 shadow-[var(--shadow-elegant)]">
               <DialogHeader>
-                <DialogTitle>{editingId ? 'Edit vendor' : 'Add New vendor'}</DialogTitle>
-                <DialogDescription>{editingId ? 'Update the vendor details and click Update to save changes.' : 'Enter the new vendor details and click Save to add the vendor.'}</DialogDescription>
+                <div className="border-b border-border/70 px-5 py-4 sm:px-6">
+                  <DialogTitle className="font-display text-2xl font-semibold tracking-tight">{editingId ? 'Edit vendor' : 'Add new vendor'}</DialogTitle>
+                  <DialogDescription className="mt-1">{editingId ? 'Update the vendor details and click Update to save changes.' : 'Enter the new vendor details and click Save to add the vendor.'}</DialogDescription>
+                </div>
               </DialogHeader>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+              <div className="grid grid-cols-1 gap-4 px-5 py-5 sm:grid-cols-2 sm:px-6">
                 <div className="grid gap-2">
-                  <label className="text-sm">Name</label>
-                  <input className="rounded-md border bg-background px-3 py-2" value={name} onChange={e=>setName(e.target.value)} />
+                  <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Name</label>
+                  <input className="rounded-2xl border border-border/80 bg-card px-4 py-3" value={name} onChange={e=>setName(e.target.value)} />
                 </div>
                 <div className="grid gap-2">
-                  <label className="text-sm">Email</label>
-                  <input className="rounded-md border bg-background px-3 py-2" value={email} onChange={e=>setEmail(e.target.value)} />
+                  <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Email</label>
+                  <input className="rounded-2xl border border-border/80 bg-card px-4 py-3" value={email} onChange={e=>setEmail(e.target.value)} />
                 </div>
                 <div className="grid gap-2">
-                  <label className="text-sm">Phone</label>
-                  <input className="rounded-md border bg-background px-3 py-2" value={phone} onChange={e=>setPhone(e.target.value)} />
+                  <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Phone</label>
+                  <input className="rounded-2xl border border-border/80 bg-card px-4 py-3" value={phone} onChange={e=>setPhone(e.target.value)} />
                 </div>
                 <div className="sm:col-span-2 grid gap-2">
-                  <label className="text-sm">Address</label>
-                  <textarea className="rounded-md border bg-background px-3 py-2" value={address} onChange={e=>setAddress(e.target.value)} />
+                  <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Address</label>
+                  <textarea className="min-h-28 rounded-2xl border border-border/80 bg-card px-4 py-3" value={address} onChange={e=>setAddress(e.target.value)} />
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className="border-t border-border/70 px-5 py-4 sm:px-6">
                 <div className="flex gap-2">
-                  <Button variant="hero" onClick={async () => { await saveVendor(); setEditDialogOpen(false); }}>{editingId ? 'Update' : 'Save'}</Button>
-                  <Button variant="ghost" onClick={() => { setEditDialogOpen(false); }}>Cancel</Button>
+                  <Button className="rounded-full" variant="hero" onClick={async () => { await saveVendor(); setEditDialogOpen(false); }}>{editingId ? 'Update' : 'Save'}</Button>
+                  <Button className="rounded-full" variant="ghost" onClick={() => { setEditDialogOpen(false); }}>Cancel</Button>
                 </div>
               </DialogFooter>
             </DialogContent>

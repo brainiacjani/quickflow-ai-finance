@@ -25,14 +25,14 @@ function ProfileMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-accent transition">
+        <button className="flex items-center gap-2 rounded-full border border-border/70 bg-card/80 px-2 py-1 shadow-sm transition hover:border-primary/30 hover:bg-card">
           <Avatar className="h-8 w-8">
             <AvatarImage src={(profile as any)?.avatar_url ?? undefined} alt="Profile picture" />
             <AvatarFallback>{(displayName || 'U').slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-56 rounded-2xl border-border/80 bg-popover/95 shadow-[var(--shadow-elegant)] backdrop-blur">
         <DropdownMenuLabel>{displayName}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <Link to="/settings"><DropdownMenuItem>Settings</DropdownMenuItem></Link>
@@ -106,28 +106,31 @@ export const AppShell = ({ children }: PropsWithChildren) => {
   // If user is not authenticated: render public landing header
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-200 via-purple-100 to-pink-200 overflow-x-hidden">
-        <header ref={headerRef as any} className={`w-full fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform transition-opacity duration-200 ease-out ${isNavigating ? 'opacity-0 -translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'}`}>
-          <div className={`${LAYOUT_CONTAINER} grid grid-cols-3 items-center p-4`}>
+      <div className="min-h-screen flex flex-col overflow-x-hidden bg-[radial-gradient(circle_at_top,_rgba(192,160,92,0.18),_transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.72),transparent_28%)]">
+        <header ref={headerRef as any} className={`fixed top-0 left-0 right-0 z-50 transition-transform transition-opacity duration-200 ease-out ${isNavigating ? 'pointer-events-none opacity-0 -translate-y-4' : 'opacity-100 translate-y-0'}`}>
+          <div className={`${LAYOUT_CONTAINER} pt-4`}>
+            <div className="panel-surface grid grid-cols-3 items-center px-4 py-3 backdrop-blur-xl">
             {/* left: brand (links to landing page) */}
             <div className="flex items-center">
-              <a href="/" onClick={(e) => { e.preventDefault(); setMobileNavOpen(false); setIsNavigating(true); setTimeout(() => navigate('/'), 260); }} className="inline-flex items-center gap-2 font-semibold">
-                <div className="h-7 w-7 rounded-md" style={{ background: "radial-gradient(120% 120% at 0% 0%, hsl(var(--brand)) 0%, hsl(var(--brand-glow)) 60%, hsl(var(--brand)) 100%)", boxShadow: "var(--shadow-glow)" as any }} />
-                <span>QuickFlow</span>
+              <a href="/" onClick={(e) => { e.preventDefault(); setMobileNavOpen(false); setIsNavigating(true); setTimeout(() => navigate('/'), 260); }} className="inline-flex items-center gap-3 font-semibold tracking-tight text-foreground">
+                <div className="grid h-9 w-9 place-items-center rounded-2xl text-sm font-bold text-primary-foreground shadow-[var(--shadow-glow)]" style={{ background: 'var(--brand-gradient)' }}>
+                  QF
+                </div>
+                <span className="font-display text-lg">QuickFlow</span>
               </a>
             </div>
 
             {/* center: nav (centered) */}
             <nav className="flex justify-center">
               <div className="hidden sm:flex items-center gap-6">
-                <a href="#home" onClick={(e) => handleNavClick(e, 'home')} className={`text-sm ${activeSection === 'home' ? 'text-brand font-semibold' : 'text-foreground/80 hover:text-foreground'}`}>Home</a>
-                <a href="#services" onClick={(e) => handleNavClick(e, 'services')} className={`text-sm ${activeSection === 'services' ? 'text-brand font-semibold' : 'text-foreground/80 hover:text-foreground'}`}>Services</a>
-                <a href="#about" onClick={(e) => handleNavClick(e, 'about')} className={`text-sm ${activeSection === 'about' ? 'text-brand font-semibold' : 'text-foreground/80 hover:text-foreground'}`}>About</a>
-                <a href="#contact" onClick={(e) => handleNavClick(e, 'contact')} className={`text-sm ${activeSection === 'contact' ? 'text-brand font-semibold' : 'text-foreground/80 hover:text-foreground'}`}>Contact</a>
+                <a href="#home" onClick={(e) => handleNavClick(e, 'home')} className={`text-sm transition ${activeSection === 'home' ? 'font-semibold text-primary' : 'text-foreground/70 hover:text-foreground'}`}>Home</a>
+                <a href="#services" onClick={(e) => handleNavClick(e, 'services')} className={`text-sm transition ${activeSection === 'services' ? 'font-semibold text-primary' : 'text-foreground/70 hover:text-foreground'}`}>Services</a>
+                <a href="#about" onClick={(e) => handleNavClick(e, 'about')} className={`text-sm transition ${activeSection === 'about' ? 'font-semibold text-primary' : 'text-foreground/70 hover:text-foreground'}`}>About</a>
+                <a href="#contact" onClick={(e) => handleNavClick(e, 'contact')} className={`text-sm transition ${activeSection === 'contact' ? 'font-semibold text-primary' : 'text-foreground/70 hover:text-foreground'}`}>Contact</a>
               </div>
               {/* mobile hamburger */}
               <div className="sm:hidden">
-                <button aria-expanded={mobileNavOpen} aria-label="Toggle navigation" onClick={() => setMobileNavOpen(v => !v)} className="p-2 rounded-md hover:bg-accent/10">
+                <button aria-expanded={mobileNavOpen} aria-label="Toggle navigation" onClick={() => setMobileNavOpen(v => !v)} className="rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm hover:bg-card">
                   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d={mobileNavOpen ? 'M6 18L18 6M6 6l12 12' : 'M3 12h18M3 6h18M3 18h18'} />
                   </svg>
@@ -138,21 +141,22 @@ export const AppShell = ({ children }: PropsWithChildren) => {
             {/* right: auth buttons - hidden on very small screens (mobile menu will surface them) */}
             <div className="flex justify-end space-x-2">
               <div className="hidden sm:flex items-center gap-2">
-                <a href="/auth/login" onClick={(e) => { e.preventDefault(); setIsNavigating(true); setTimeout(() => navigate('/auth/login'), 260); }}><Button variant="ghost" size="sm">Log in</Button></a>
+                <a href="/auth/login" onClick={(e) => { e.preventDefault(); setIsNavigating(true); setTimeout(() => navigate('/auth/login'), 260); }}><Button variant="ghost" size="sm" className="hover:bg-secondary">Log in</Button></a>
                 <a href="/auth/signup" onClick={(e) => { e.preventDefault(); setIsNavigating(true); setTimeout(() => navigate('/auth/signup'), 260); }}><Button variant="hero" size="sm">Start free trial</Button></a>
               </div>
+            </div>
             </div>
           </div>
 
           {/* mobile dropdown menu */}
           {mobileNavOpen && (
-            <div className="sm:hidden border-t bg-background/95">
-              <div className={`${LAYOUT_CONTAINER} flex flex-col p-4 gap-3`}>
-                <a href="#home" onClick={(e)=>handleNavClick(e,'home')} className={`text-sm ${activeSection === 'home' ? 'text-brand font-semibold' : 'text-foreground/80'}`}>Home</a>
-                <a href="#services" onClick={(e)=>handleNavClick(e,'services')} className={`text-sm ${activeSection === 'services' ? 'text-brand font-semibold' : 'text-foreground/80'}`}>Services</a>
-                <a href="#about" onClick={(e)=>handleNavClick(e,'about')} className={`text-sm ${activeSection === 'about' ? 'text-brand font-semibold' : 'text-foreground/80'}`}>About</a>
-                <a href="#contact" onClick={(e)=>handleNavClick(e,'contact')} className={`text-sm ${activeSection === 'contact' ? 'text-brand font-semibold' : 'text-foreground/80'}`}>Contact</a>
-                <div className="pt-2 border-t mt-2">
+            <div className="sm:hidden px-4 pb-3">
+              <div className={`${LAYOUT_CONTAINER} panel-surface flex flex-col gap-3 px-4 py-4`}>
+                <a href="#home" onClick={(e)=>handleNavClick(e,'home')} className={`text-sm ${activeSection === 'home' ? 'font-semibold text-primary' : 'text-foreground/80'}`}>Home</a>
+                <a href="#services" onClick={(e)=>handleNavClick(e,'services')} className={`text-sm ${activeSection === 'services' ? 'font-semibold text-primary' : 'text-foreground/80'}`}>Services</a>
+                <a href="#about" onClick={(e)=>handleNavClick(e,'about')} className={`text-sm ${activeSection === 'about' ? 'font-semibold text-primary' : 'text-foreground/80'}`}>About</a>
+                <a href="#contact" onClick={(e)=>handleNavClick(e,'contact')} className={`text-sm ${activeSection === 'contact' ? 'font-semibold text-primary' : 'text-foreground/80'}`}>Contact</a>
+                <div className="mt-2 border-t border-border/70 pt-2">
                   <a href="/auth/login" onClick={(e) => { e.preventDefault(); setIsNavigating(true); setTimeout(() => navigate('/auth/login'), 260); }}><Button variant="ghost" size="sm" className="w-full">Log in</Button></a>
                   <a href="/auth/signup" onClick={(e) => { e.preventDefault(); setIsNavigating(true); setTimeout(() => navigate('/auth/signup'), 260); }}><Button variant="hero" size="sm" className="w-full mt-2">Start free trial</Button></a>
                 </div>
@@ -161,11 +165,11 @@ export const AppShell = ({ children }: PropsWithChildren) => {
           )}
         </header>
 
-        <main className={`flex-1 pt-16 ${isNavigating ? 'opacity-75' : 'opacity-100'}`}>
+        <main className={`flex-1 pt-24 ${isNavigating ? 'opacity-75' : 'opacity-100'}`}>
           <div className={LAYOUT_CONTAINER}>
             {unconfirmedEmail && (
               <div className="mb-4">
-                <div className="rounded-md border-l-4 border-yellow-400 bg-yellow-50 px-4 py-3 text-sm">
+                <div className="panel-surface border-l-4 border-l-accent px-4 py-3 text-sm">
                   <div className="font-medium">Please confirm your email</div>
                   <div className="text-sm text-muted-foreground">We sent a confirmation link to <strong>{unconfirmedEmail}</strong>. Check your inbox and click the link to confirm your address.</div>
                 </div>
@@ -175,7 +179,7 @@ export const AppShell = ({ children }: PropsWithChildren) => {
           </div>
         </main>
 
-        <footer className="border-t py-8 text-center text-sm text-foreground/60">
+        <footer className="border-t border-border/60 py-8 text-center text-sm text-foreground/60">
           © {new Date().getFullYear()} QuickFlow. All rights reserved.
         </footer>
       </div>
@@ -185,16 +189,24 @@ export const AppShell = ({ children }: PropsWithChildren) => {
   // Authenticated layout
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-purple-200 via-purple-100 to-pink-200 overflow-x-hidden">
+      <div className="min-h-screen flex w-full overflow-x-hidden bg-[radial-gradient(circle_at_top,_rgba(192,160,92,0.14),_transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.52),transparent_22%)]">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
-          <header className="h-12 flex items-center border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm px-3 sm:px-0">
-            <SidebarTrigger className="ml-4" />
-            <div className="flex-1 text-center md:text-left font-semibold">QuickFlow</div>
-            <div className="hidden md:flex items-center pr-4 gap-3">
-              <NotificationsTop />
-              <ThemeToggle />
-              <ProfileMenu />
+          <header className="px-3 pt-3 sm:px-6 sm:pt-5">
+            <div className="panel-surface flex min-h-16 items-center gap-3 px-3 sm:px-5">
+              <SidebarTrigger className="ml-0 rounded-xl border border-border/70 bg-card shadow-sm" />
+              <div className="min-w-0 flex-1">
+                <div className="font-display text-lg font-semibold tracking-tight">QuickFlow</div>
+                <div className="hidden text-sm text-muted-foreground md:block">Calm operations for invoices, cash flow, and reporting.</div>
+              </div>
+              <div className="hidden md:flex items-center gap-3">
+                <NotificationsTop />
+                <ThemeToggle />
+                <ProfileMenu />
+              </div>
+              <div className="md:hidden">
+                <ProfileMenu />
+              </div>
             </div>
           </header>
 
@@ -202,7 +214,7 @@ export const AppShell = ({ children }: PropsWithChildren) => {
             <div className={LAYOUT_CONTAINER}>
               {unconfirmedEmail && (
                 <div className="mb-4">
-                  <div className="rounded-md border-l-4 border-yellow-400 bg-yellow-50 px-4 py-3 text-sm">
+                  <div className="panel-surface border-l-4 border-l-accent px-4 py-3 text-sm">
                     <div className="font-medium">Please confirm your email</div>
                     <div className="text-sm text-muted-foreground">We sent a confirmation link to <strong>{unconfirmedEmail}</strong>. Check your inbox and click the link to confirm your address.</div>
                   </div>
@@ -213,8 +225,8 @@ export const AppShell = ({ children }: PropsWithChildren) => {
             </div>
           </main>
 
-          <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className={`${LAYOUT_CONTAINER} flex justify-between items-center px-4 py-2`} style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <nav className="fixed bottom-3 left-3 right-3 z-40 md:hidden">
+            <div className={`${LAYOUT_CONTAINER} panel-surface flex justify-between items-center px-4 py-2 backdrop-blur-xl`} style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.5rem)' }}>
               <Link to="/" className="flex flex-col items-center text-xs text-foreground/70 hover:text-foreground">
                 <svg className="w-6 h-6 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M3 12L12 3l9 9" />

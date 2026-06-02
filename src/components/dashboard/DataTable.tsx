@@ -28,13 +28,13 @@ export default function DataTable({
   isLoading = false,
 }: DataTableProps) {
   return (
-    <Card className="rounded-xl bg-white shadow-md">
-      <CardHeader className="p-4">
+    <Card className="panel-surface overflow-hidden rounded-[1.75rem] border-0 bg-card/90 shadow-[var(--shadow-soft)]">
+      <CardHeader className="border-b border-border/70 px-5 py-4 sm:px-6">
         <div className="flex items-center justify-between gap-4">
-          <CardTitle className="text-lg">{title}</CardTitle>
+          <CardTitle className="font-display text-lg font-semibold tracking-tight text-foreground">{title}</CardTitle>
           {onAdd && (
             <div className="flex items-center gap-2">
-              <Button variant="default" size="sm" onClick={onAdd}>
+              <Button variant="default" size="sm" className="rounded-full" onClick={onAdd}>
                 Add New
               </Button>
             </div>
@@ -45,19 +45,19 @@ export default function DataTable({
       <CardContent className="p-0">
         {/* Desktop / tablet: table view */}
         <div className="hidden md:block w-full overflow-x-auto">
-          <table className="w-full table-auto">
+          <table className="w-full table-auto border-separate border-spacing-0">
             <thead>
-              <tr className="sticky top-0 z-10">
+              <tr className="sticky top-0 z-10 bg-muted/40 backdrop-blur-sm">
                 {columns.map((c) => (
                   <th
                     key={c.key}
-                    className="px-4 py-3 text-left text-sm font-bold bg-[#f9fafb] border-b border-gray-200"
+                    className="border-b border-border/70 bg-muted/40 px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground"
                   >
                     {c.label}
                   </th>
                 ))}
                 {renderActions && (
-                  <th className="px-4 py-3 text-left text-sm font-bold bg-[#f9fafb] border-b border-gray-200">Actions</th>
+                  <th className="border-b border-border/70 bg-muted/40 px-5 py-4 text-right text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Actions</th>
                 )}
               </tr>
             </thead>
@@ -65,7 +65,7 @@ export default function DataTable({
             {isLoading ? (
               <tbody>
                 <tr>
-                  <td colSpan={columns.length + (renderActions ? 1 : 0)} className="px-4 py-12">
+                  <td colSpan={columns.length + (renderActions ? 1 : 0)} className="px-6 py-16">
                     <div className="flex flex-col items-center justify-center gap-3">
                       <svg className="animate-spin h-6 w-6 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -80,7 +80,7 @@ export default function DataTable({
               <tbody>
                 {data.length === 0 && (
                   <tr>
-                    <td colSpan={columns.length + (renderActions ? 1 : 0)} className="px-4 py-6 text-center text-sm text-muted-foreground">
+                    <td colSpan={columns.length + (renderActions ? 1 : 0)} className="px-6 py-14 text-center text-sm text-muted-foreground">
                       No records found.
                     </td>
                   </tr>
@@ -89,12 +89,12 @@ export default function DataTable({
                 {data.map((row, idx) => (
                   <tr
                     key={row[primaryKey] ?? idx}
-                    className={`border-b border-gray-200 bg-white even:bg-[#f9fafb] hover:bg-gray-100`}
+                    className="border-b border-border/60 bg-card/70 transition-colors hover:bg-secondary/35"
                   >
                     {columns.map((c) => (
                       <td
                         key={c.key}
-                        className={`px-4 py-3 text-sm ${c.bold ? "font-semibold whitespace-nowrap" : ""}`}
+                        className={`border-b border-border/60 px-5 py-4 text-sm align-middle text-foreground ${c.bold ? "font-semibold whitespace-nowrap" : ""}`}
                       >
                         {c.key === "status" ? (
                           <StatusBadge status={row[c.key]} />
@@ -105,7 +105,7 @@ export default function DataTable({
                     ))}
 
                     {renderActions && (
-                      <td className="px-4 py-3 text-sm">
+                      <td className="border-b border-border/60 px-5 py-4 text-sm">
                         <div className="flex items-center gap-2 justify-end">
                           {renderActions(row)}
                         </div>
@@ -119,9 +119,9 @@ export default function DataTable({
         </div>
 
         {/* Mobile: stacked cards view */}
-        <div className="md:hidden p-2">
+        <div className="space-y-3 p-3 md:hidden">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-8">
+            <div className="flex flex-col items-center justify-center py-10">
               <svg className="animate-spin h-6 w-6 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
@@ -129,16 +129,16 @@ export default function DataTable({
               <div className="text-sm text-muted-foreground mt-2">Loading…</div>
             </div>
           ) : data.length === 0 ? (
-            <div className="px-4 py-6 text-center text-sm text-muted-foreground">No records found.</div>
+            <div className="rounded-[1.5rem] border border-dashed border-border bg-muted/20 px-4 py-10 text-center text-sm text-muted-foreground">No records found.</div>
           ) : (
             data.map((row, idx) => (
-              <div key={row[primaryKey] ?? idx} className="mb-3 rounded-lg border bg-white p-3 shadow-sm">
+              <div key={row[primaryKey] ?? idx} className="rounded-[1.5rem] border border-border/70 bg-card/80 p-4 shadow-[var(--shadow-soft)]">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     {columns.map((c) => (
-                      <div key={c.key} className="mb-1">
-                        <div className="text-xs text-muted-foreground">{c.label}</div>
-                        <div className={`text-sm ${c.bold ? 'font-semibold' : ''} truncate`}>{row[c.key]}</div>
+                      <div key={c.key} className="mb-2 last:mb-0">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{c.label}</div>
+                        <div className={`mt-1 text-sm ${c.bold ? 'font-semibold' : ''} truncate`}>{c.key === "status" ? <StatusBadge status={row[c.key]} /> : row[c.key]}</div>
                       </div>
                     ))}
                   </div>
@@ -160,8 +160,9 @@ export default function DataTable({
 function StatusBadge({ status }: { status: string | undefined }) {
   if (!status) return null
   const s = String(status).toLowerCase()
-  if (s === "paid") return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Paid</span>
-  if (s === "pending") return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
-  if (s === "overdue") return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Overdue</span>
-  return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{status}</span>
+  if (s === "paid") return <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">Paid</span>
+  if (s === "pending" || s === "sent") return <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">{status}</span>
+  if (s === "overdue") return <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-800 dark:bg-red-500/15 dark:text-red-300">Overdue</span>
+  if (s === "draft") return <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-500/15 dark:text-slate-300">Draft</span>
+  return <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-foreground/75">{status}</span>
 }

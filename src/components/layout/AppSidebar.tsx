@@ -140,26 +140,33 @@ export function AppSidebar() {
   }, [user?.id]);
 
   return (
-    <Sidebar collapsible="icon" className="border-r bg-white">
-      <SidebarHeader className="border-b pb-2">
-        <div className="flex items-center gap-2 px-4 py-2">
+    <Sidebar collapsible="icon" className="border-r-0 bg-transparent p-3 pt-5">
+      <SidebarHeader className="panel-surface overflow-hidden border-0 pb-2 text-sidebar-foreground shadow-[var(--shadow-glow)]" style={{ background: 'linear-gradient(180deg, hsl(var(--sidebar-background)), hsl(206 38% 12%))' }}>
+        <div className="flex items-center gap-3 px-4 py-3">
           <div
-            className="h-8 w-8 rounded-lg flex-shrink-0"
+            className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-2xl text-sm font-bold text-sidebar-primary-foreground"
             style={{
-              background:
-                "radial-gradient(120% 120% at 0% 0%, hsl(var(--brand)) 0%, hsl(var(--brand-glow)) 60%, hsl(var(--brand)) 100%)",
+              background: 'linear-gradient(135deg, hsl(var(--sidebar-primary)), hsl(var(--accent)))',
               boxShadow: "var(--shadow-glow)" as any,
             }}
-          />
+          >
+            QF
+          </div>
           {!isCollapsed && (
-            <span className="font-extrabold text-lg">QuickFlow</span>
+            <div className="min-w-0">
+              <span className="block font-display text-lg font-extrabold tracking-tight">QuickFlow</span>
+              <span className="block text-xs text-sidebar-foreground/65">Finance workspace</span>
+            </div>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent
+        className="mt-3 border border-sidebar-border/70 p-2 text-sidebar-foreground shadow-[var(--shadow-soft)] backdrop-blur"
+        style={{ background: 'linear-gradient(180deg, hsl(var(--sidebar-background) / 0.96), hsl(var(--sidebar-accent) / 0.94))' }}
+      >
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-3 pt-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/55">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {visibleNavItems.map((item) => (
@@ -168,6 +175,7 @@ export function AppSidebar() {
                     asChild
                     isActive={isActive(item.url)}
                     tooltip={item.title}
+                    className="h-11 rounded-2xl px-3 text-[0.95rem] text-sidebar-foreground transition data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-[var(--shadow-soft)] hover:bg-sidebar-accent/90 hover:text-sidebar-accent-foreground"
                   >
                     <NavLink to={item.url}>
                       <item.icon className="h-4 w-4" />
@@ -190,11 +198,11 @@ export function AppSidebar() {
 
         {user && (
           <SidebarGroup>
-            <SidebarGroupLabel>Account</SidebarGroupLabel>
+            <SidebarGroupLabel className="px-3 pt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/55">Account</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/settings")} tooltip="Settings">
+                  <SidebarMenuButton asChild isActive={isActive("/settings")} tooltip="Settings" className="h-11 rounded-2xl px-3 text-[0.95rem] text-sidebar-foreground transition data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground hover:bg-sidebar-accent/90 hover:text-sidebar-accent-foreground">
                     <NavLink to="/settings">
                       <Settings className="h-4 w-4" />
                       <span>Settings</span>
@@ -208,12 +216,12 @@ export function AppSidebar() {
       </SidebarContent>
 
       {user && (
-        <SidebarFooter className="border-t bg-white">
+        <SidebarFooter className="mt-3 rounded-[calc(var(--radius)+0.125rem)] border border-sidebar-border/80 bg-sidebar/95 text-sidebar-foreground shadow-[var(--shadow-soft)] backdrop-blur">
            <DropdownMenu>
              <DropdownMenuTrigger asChild>
                <SidebarMenuButton
                  size="lg"
-                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                 className="h-16 rounded-[calc(var(--radius)-0.125rem)] text-sidebar-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                >
                 <Avatar className="h-8 w-8 rounded-full">
                    <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
@@ -221,12 +229,12 @@ export function AppSidebar() {
                  </Avatar>
                  <div className="grid flex-1 text-left text-sm leading-tight">
                    <span className="truncate font-semibold">{displayName}</span>
-                   <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                   <span className="truncate text-xs text-sidebar-foreground/60">{user.email}</span>
                  </div>
                </SidebarMenuButton>
              </DropdownMenuTrigger>
              <DropdownMenuContent
-               className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+               className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-2xl border-sidebar-border/80 bg-sidebar/95 text-sidebar-foreground shadow-[var(--shadow-elegant)]"
                side="bottom"
                align="end"
                sideOffset={4}
@@ -239,7 +247,7 @@ export function AppSidebar() {
                    </Avatar>
                    <div className="grid flex-1 text-left text-sm leading-tight">
                      <span className="truncate font-semibold">{displayName}</span>
-                     <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                     <span className="truncate text-xs text-sidebar-foreground/60">{user.email}</span>
                    </div>
                  </div>
                </DropdownMenuLabel>

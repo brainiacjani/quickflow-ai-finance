@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
-import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 import Landing from "./pages/Landing";
@@ -36,44 +35,42 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <AuthProvider>
-            <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/pricing" element={<Pricing />} />
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuthProvider>
+          <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/pricing" element={<Pricing />} />
 
-                  <Route path="/auth/login" element={<RedirectIfAuthed><Login /></RedirectIfAuthed>} />
-                  <Route path="/auth/signup" element={<RedirectIfAuthed><Signup /></RedirectIfAuthed>} />
-                  <Route path="/auth/reset" element={<RedirectIfAuthed><Reset /></RedirectIfAuthed>} />
-                  <Route path="/auth/update-password" element={<UpdatePassword />} />
+                <Route path="/auth/login" element={<RedirectIfAuthed><Login /></RedirectIfAuthed>} />
+                <Route path="/auth/signup" element={<RedirectIfAuthed><Signup /></RedirectIfAuthed>} />
+                <Route path="/auth/reset" element={<RedirectIfAuthed><Reset /></RedirectIfAuthed>} />
+                <Route path="/auth/update-password" element={<UpdatePassword />} />
 
-                  <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
+                <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
 
-                  <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-                  <Route path="/invoices" element={<RequireAuth><Invoices /></RequireAuth>} />
-                  <Route path="/expenses" element={<RequireAuth><Expenses /></RequireAuth>} />
-                  <Route path="/customers" element={<RequireAuth><Customers /></RequireAuth>} />
-                  <Route path="/inventory" element={<RequireAuth><Inventory /></RequireAuth>} />
-                  <Route path="/vendors" element={<RequireAuth><Vendors /></RequireAuth>} />
-                  <Route path="/reports" element={<RequireAuth><Reports /></RequireAuth>} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
-                  <Route path="/contact" element={<Contact />} />
+                <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                <Route path="/invoices" element={<RequireAuth><Invoices /></RequireAuth>} />
+                <Route path="/expenses" element={<RequireAuth><Expenses /></RequireAuth>} />
+                <Route path="/customers" element={<RequireAuth><Customers /></RequireAuth>} />
+                <Route path="/inventory" element={<RequireAuth><Inventory /></RequireAuth>} />
+                <Route path="/vendors" element={<RequireAuth><Vendors /></RequireAuth>} />
+                <Route path="/reports" element={<RequireAuth><Reports /></RequireAuth>} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+                <Route path="/contact" element={<Contact />} />
 
-                  <Route path="/payment-success" element={<PaymentSuccess />} />
-                  <Route path="/payment-canceled" element={<PaymentCanceled />} />
+                <Route path="/payment-success" element={<PaymentSuccess />} />
+                <Route path="/payment-canceled" element={<PaymentCanceled />} />
 
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-            </BrowserRouter>
-          </AuthProvider>
-        </TooltipProvider>
-      </ThemeProvider>
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
     </HelmetProvider>
   </QueryClientProvider>
 );

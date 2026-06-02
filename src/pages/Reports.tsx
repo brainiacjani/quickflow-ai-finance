@@ -7,6 +7,13 @@ import { useCompany } from "@/hooks/useCompany";
 import DataTable from "@/components/dashboard/DataTable";
 import useClientPagination from '@/hooks/useClientPagination';
 
+const formatMoney = (value: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+  }).format(value || 0);
+
 const toDateOnly = (d?: string | Date) => {
   if (!d) return null;
   const dt = typeof d === "string" ? new Date(d) : d;
@@ -397,26 +404,41 @@ const Reports = () => {
         <link rel="canonical" href="https://quickflow.app/reports" />
       </Helmet>
 
-      <div className="container py-8 grid gap-6">
-        <h1 className="text-2xl font-semibold">Reports</h1>
+      <div className="grid gap-6 py-8">
+        <section className="panel-surface grid-muted relative overflow-hidden rounded-[2rem] px-6 py-6 sm:px-8 sm:py-7">
+          <div className="absolute inset-y-0 right-0 hidden w-1/3 bg-[radial-gradient(circle_at_top_right,rgba(67,56,202,0.12),transparent_55%)] lg:block" />
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-3 inline-flex rounded-full border border-border/70 bg-card/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Analytics studio
+              </div>
+              <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Reports</h1>
+              <p className="mt-2 max-w-xl text-base text-muted-foreground">Review revenue, spend, and grouped performance with cleaner filters, stronger report cards, and the same table treatment used throughout the workspace.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <div className="rounded-full border border-border/70 bg-card/70 px-3 py-1.5 text-sm text-foreground/80">Revenue {formatMoney(revenue)}</div>
+              <div className="rounded-full border border-border/70 bg-card/70 px-3 py-1.5 text-sm text-foreground/80">Expenses {formatMoney(totalExpenses)}</div>
+            </div>
+          </div>
+        </section>
 
-        <div className="grid md:grid-cols-3 gap-3 max-w-3xl">
+        <div className="panel-surface grid max-w-4xl gap-4 rounded-[1.75rem] p-5 md:grid-cols-3">
           <div className="flex flex-col">
-            <label className="text-sm text-muted-foreground">Start date</label>
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-1 px-3 py-2 border rounded" />
+            <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Start date</label>
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-2 rounded-2xl border border-border/80 bg-card px-4 py-3" />
           </div>
           <div className="flex flex-col">
-            <label className="text-sm text-muted-foreground">End date</label>
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="mt-1 px-3 py-2 border rounded" />
+            <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">End date</label>
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="mt-2 rounded-2xl border border-border/80 bg-card px-4 py-3" />
           </div>
           <div className="flex items-end">
-            <div className="text-sm text-muted-foreground">Choose a report from the deck below</div>
+            <div className="rounded-[1.5rem] bg-secondary/45 px-4 py-3 text-sm text-muted-foreground">Choose a report from the deck below to change how the table and exports are generated.</div>
           </div>
         </div>
 
         {/* Responsive card deck */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-4xl">
-          <div onClick={() => setReportType('profitloss')} className={`card hover-scale cursor-pointer ${reportType === 'profitloss' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+        <div className="grid max-w-5xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div onClick={() => setReportType('profitloss')} className={`panel-surface cursor-pointer rounded-[1.5rem] p-0 transition ${reportType === 'profitloss' ? 'border-primary bg-primary/8' : 'hover:bg-secondary/35'}`}>
             <div className="p-4">
               <div className="flex items-start justify-between">
                 <div className="text-sm font-medium">Profit & Loss</div>
@@ -424,11 +446,11 @@ const Reports = () => {
               </div>
             </div>
             <div className="p-4 pt-0">
-              <div className="text-2xl font-bold">${profit.toFixed(2)}</div>
+              <div className="text-2xl font-bold">{formatMoney(profit)}</div>
             </div>
           </div>
 
-          <div onClick={() => setReportType('cashflow')} className={`card hover-scale cursor-pointer ${reportType === 'cashflow' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+          <div onClick={() => setReportType('cashflow')} className={`panel-surface cursor-pointer rounded-[1.5rem] p-0 transition ${reportType === 'cashflow' ? 'border-primary bg-primary/8' : 'hover:bg-secondary/35'}`}>
             <div className="p-4">
               <div className="text-sm font-medium">Cash Flow</div>
             </div>
@@ -438,7 +460,7 @@ const Reports = () => {
             </div>
           </div>
 
-          <div onClick={() => setReportType('sales_by_customer')} className={`card hover-scale cursor-pointer ${reportType === 'sales_by_customer' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+          <div onClick={() => setReportType('sales_by_customer')} className={`panel-surface cursor-pointer rounded-[1.5rem] p-0 transition ${reportType === 'sales_by_customer' ? 'border-primary bg-primary/8' : 'hover:bg-secondary/35'}`}>
             <div className="p-4">
               <div className="text-sm font-medium">Sales per customer</div>
             </div>
@@ -448,17 +470,17 @@ const Reports = () => {
             </div>
           </div>
 
-          <div onClick={() => setReportType('expenses_by_vendor')} className={`card hover-scale cursor-pointer ${reportType === 'expenses_by_vendor' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+          <div onClick={() => setReportType('expenses_by_vendor')} className={`panel-surface cursor-pointer rounded-[1.5rem] p-0 transition ${reportType === 'expenses_by_vendor' ? 'border-primary bg-primary/8' : 'hover:bg-secondary/35'}`}>
             <div className="p-4">
               <div className="text-sm font-medium">Expenses per vendor</div>
             </div>
             <div className="p-4 pt-0">
-              <div className="text-2xl font-bold">${totalExpenses.toFixed(2)}</div>
+              <div className="text-2xl font-bold">{formatMoney(totalExpenses)}</div>
               <div className="text-xs text-muted-foreground">Total expenses</div>
             </div>
           </div>
 
-          <div onClick={() => setReportType('custom')} className={`card hover-scale cursor-pointer ${reportType === 'custom' ? 'border-indigo-500 bg-indigo-50' : ''}`}>
+          <div onClick={() => setReportType('custom')} className={`panel-surface cursor-pointer rounded-[1.5rem] p-0 transition ${reportType === 'custom' ? 'border-primary bg-primary/8' : 'hover:bg-secondary/35'}`}>
             <div className="p-4">
               <div className="text-sm font-medium">Custom report</div>
             </div>
@@ -469,12 +491,12 @@ const Reports = () => {
         </div>
 
         {reportType === 'custom' && (
-          <div className="grid md:grid-cols-4 gap-3 max-w-3xl mt-3">
-            <label className="flex items-center gap-2"><input type="checkbox" checked={customIncludeInvoices} onChange={(e) => setCustomIncludeInvoices(e.target.checked)} /> Include invoices</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={customIncludeExpenses} onChange={(e) => setCustomIncludeExpenses(e.target.checked)} /> Include expenses</label>
+          <div className="panel-surface mt-3 grid max-w-4xl gap-4 rounded-[1.75rem] p-5 md:grid-cols-4">
+            <label className="flex items-center gap-2 rounded-2xl bg-secondary/35 px-3 py-3"><input type="checkbox" checked={customIncludeInvoices} onChange={(e) => setCustomIncludeInvoices(e.target.checked)} /> Include invoices</label>
+            <label className="flex items-center gap-2 rounded-2xl bg-secondary/35 px-3 py-3"><input type="checkbox" checked={customIncludeExpenses} onChange={(e) => setCustomIncludeExpenses(e.target.checked)} /> Include expenses</label>
             <div>
-              <label className="text-sm text-muted-foreground">Group by</label>
-              <select value={customGroupBy} onChange={(e) => setCustomGroupBy(e.target.value as any)} className="mt-1 px-3 py-2 border rounded w-full">
+              <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Group by</label>
+              <select value={customGroupBy} onChange={(e) => setCustomGroupBy(e.target.value as any)} className="mt-2 w-full rounded-2xl border border-border/80 bg-card px-4 py-3">
                 <option value="none">No grouping (transactions)</option>
                 <option value="customer">Customer</option>
                 <option value="vendor">Vendor</option>
@@ -482,8 +504,8 @@ const Reports = () => {
               </select>
             </div>
             <div>
-              <label className="text-sm text-muted-foreground">Aggregate</label>
-              <select value={customAggregate} onChange={(e) => setCustomAggregate(e.target.value as any)} className="mt-1 px-3 py-2 border rounded w-full">
+              <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Aggregate</label>
+              <select value={customAggregate} onChange={(e) => setCustomAggregate(e.target.value as any)} className="mt-2 w-full rounded-2xl border border-border/80 bg-card px-4 py-3">
                 <option value="sum">Sum</option>
                 <option value="count">Count</option>
                 <option value="avg">Average</option>
@@ -492,15 +514,15 @@ const Reports = () => {
           </div>
         )}
 
-        <div className="grid gap-3 max-w-md">
-          <div className="flex items-center justify-between"><span>Revenue</span><span className="font-semibold">${revenue.toFixed(2)}</span></div>
-          <div className="flex items-center justify-between"><span>Expenses</span><span className="font-semibold">${totalExpenses.toFixed(2)}</span></div>
-          <div className="flex items-center justify-between border-t pt-2"><span>Profit</span><span className="font-semibold">${profit.toFixed(2)}</span></div>
+        <div className="grid max-w-md gap-3 rounded-[1.75rem] border border-border/70 bg-card/80 p-5 shadow-[var(--shadow-soft)]">
+          <div className="flex items-center justify-between"><span>Revenue</span><span className="font-semibold">{formatMoney(revenue)}</span></div>
+          <div className="flex items-center justify-between"><span>Expenses</span><span className="font-semibold">{formatMoney(totalExpenses)}</span></div>
+          <div className="flex items-center justify-between border-t border-border/70 pt-3"><span>Profit</span><span className="font-semibold">{formatMoney(profit)}</span></div>
         </div>
 
         <div className="flex gap-3">
-          <Button variant="outline" onClick={exportCSV}>Export CSV</Button>
-          <Button onClick={printPDF}>Export PDF</Button>
+          <Button className="rounded-full" variant="outline" onClick={exportCSV}>Export CSV</Button>
+          <Button className="rounded-full" onClick={printPDF}>Export PDF</Button>
         </div>
 
         <div className="mt-2">
@@ -550,14 +572,14 @@ const Reports = () => {
           )}
         </div>
 
-        <div className="flex justify-center gap-2 mt-4">
-          <Button disabled={currentPage === 1} onClick={() => setPage(1)}>« First</Button>
-          <Button disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>‹ Prev</Button>
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <Button className="rounded-full" disabled={currentPage === 1} onClick={() => setPage(1)}>« First</Button>
+          <Button className="rounded-full" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>‹ Prev</Button>
           <span className="flex items-center gap-1">
             Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
           </span>
-          <Button disabled={currentPage === totalPages} onClick={() => setPage(currentPage + 1)}>Next ›</Button>
-          <Button disabled={currentPage === totalPages} onClick={() => setPage(totalPages)}>Last »</Button>
+          <Button className="rounded-full" disabled={currentPage === totalPages} onClick={() => setPage(currentPage + 1)}>Next ›</Button>
+          <Button className="rounded-full" disabled={currentPage === totalPages} onClick={() => setPage(totalPages)}>Last »</Button>
         </div>
       </div>
     </AppShell>
